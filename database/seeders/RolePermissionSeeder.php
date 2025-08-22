@@ -1,0 +1,165 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
+
+class RolePermissionSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Reset cached roles and permissions
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Crear permisos
+        $permissions = [
+            // Dashboard
+            'view_dashboard',
+
+            // Clientes
+            'view_clients',
+            'create_clients',
+            'edit_clients',
+            'delete_clients',
+
+            // Proyectos
+            'view_projects',
+            'create_projects',
+            'edit_projects',
+            'delete_projects',
+
+            // Unidades
+            'view_units',
+            'create_units',
+            'edit_units',
+            'delete_units',
+
+            // Oportunidades
+            'view_opportunities',
+            'create_opportunities',
+            'edit_opportunities',
+            'delete_opportunities',
+
+            // Reservas
+            'view_reservations',
+            'create_reservations',
+            'edit_reservations',
+            'delete_reservations',
+
+            // Comisiones
+            'view_commissions',
+            'create_commissions',
+            'edit_commissions',
+            'delete_commissions',
+
+            // Tareas
+            'view_tasks',
+            'create_tasks',
+            'edit_tasks',
+            'delete_tasks',
+
+            // Actividades
+            'view_activities',
+            'create_activities',
+            'edit_activities',
+            'delete_activities',
+
+            // Interacciones
+            'view_interactions',
+            'create_interactions',
+            'edit_interactions',
+            'delete_interactions',
+
+            // Documentos
+            'view_documents',
+            'create_documents',
+            'edit_documents',
+            'delete_documents',
+
+            // Reportes
+            'view_reports',
+            'export_reports',
+
+            // Usuarios y roles
+            'view_users',
+            'create_users',
+            'edit_users',
+            'delete_users',
+            'manage_roles',
+            'manage_permissions',
+
+            // Configuración
+            'view_settings',
+            'edit_settings',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::create(['name' => $permission]);
+        }
+
+        // Crear roles
+        $adminRole = Role::create(['name' => 'admin']);
+        $advisorRole = Role::create(['name' => 'advisor']);
+        $userRole = Role::create(['name' => 'user']);
+
+        // Asignar todos los permisos al admin
+        $adminRole->givePermissionTo(Permission::all());
+
+        // Asignar permisos al advisor
+        $advisorRole->givePermissionTo([
+            'view_dashboard',
+            'view_clients',
+            'create_clients',
+            'edit_clients',
+            'view_projects',
+            'view_units',
+            'view_opportunities',
+            'create_opportunities',
+            'edit_opportunities',
+            'view_reservations',
+            'create_reservations',
+            'edit_reservations',
+            'view_commissions',
+            'create_commissions',
+            'edit_commissions',
+            'view_tasks',
+            'create_tasks',
+            'edit_tasks',
+            'view_activities',
+            'create_activities',
+            'edit_activities',
+            'view_interactions',
+            'create_interactions',
+            'edit_interactions',
+            'view_documents',
+            'create_documents',
+            'edit_documents',
+            'view_reports',
+            'view_settings',
+        ]);
+
+        // Asignar permisos básicos al user
+        $userRole->givePermissionTo([
+            'view_dashboard',
+            'view_clients',
+            'view_projects',
+            'view_units',
+            'view_opportunities',
+            'view_tasks',
+            'create_tasks',
+            'edit_tasks',
+            'view_activities',
+            'create_activities',
+            'view_interactions',
+            'create_interactions',
+            'view_documents',
+            'view_reports',
+        ]);
+    }
+}
