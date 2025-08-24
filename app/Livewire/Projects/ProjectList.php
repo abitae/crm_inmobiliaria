@@ -17,8 +17,10 @@ class ProjectList extends Component
     public $typeFilter = '';
     public $stageFilter = '';
     public $locationFilter = '';
-    public $showCreateModal = false;
-    public $showEditModal = false;
+    public $withAvailableUnits = false;
+    public $orderBy = 'created_at';
+    public $orderDirection = 'desc';
+    public $showFormModal = false;
     public $showDeleteModal = false;
     public $showAssignAdvisorModal = false;
     public $selectedProject = null;
@@ -42,6 +44,16 @@ class ProjectList extends Component
     public $end_date = '';
     public $delivery_date = '';
     public $status = 'activo';
+
+    // Multimedia fields
+    public $path_images = [];
+    public $path_videos = [];
+    public $path_documents = [];
+
+    // File upload properties
+    public $imageFiles = [];
+    public $videoFiles = [];
+    public $documentFiles = [];
 
     // Advisor assignment
     public $selectedAdvisorId = '';
@@ -68,7 +80,13 @@ class ProjectList extends Component
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'delivery_date' => 'nullable|date|after_or_equal:start_date',
-        'status' => 'required|in:activo,inactivo,suspendido,finalizado'
+        'status' => 'required|in:activo,inactivo,suspendido,finalizado',
+        'path_images.*.type' => 'nullable|string|max:100',
+        'path_videos.*.type' => 'nullable|string|max:100',
+        'path_documents.*.type' => 'nullable|string|max:100',
+        'imageFiles.*' => 'nullable|image|max:2048', // 2MB max
+        'videoFiles.*' => 'nullable|mimes:mp4,avi,mov,wmv|max:10240', // 10MB max
+        'documentFiles.*' => 'nullable|mimes:pdf,doc,docx|max:5120', // 5MB max
     ];
 
     public function boot(ProjectService $projectService)
@@ -101,10 +119,43 @@ class ProjectList extends Component
         $this->resetPage();
     }
 
+    public function updatedLocationFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedWithAvailableUnits()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedOrderBy()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedOrderDirection()
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->statusFilter = '';
+        $this->typeFilter = '';
+        $this->stageFilter = '';
+        $this->locationFilter = '';
+        $this->withAvailableUnits = false;
+        $this->orderBy = 'created_at';
+        $this->orderDirection = 'desc';
+        $this->resetPage();
+    }
+
     public function openCreateModal()
     {
         $this->resetForm();
-        $this->showCreateModal = true;
+        $this->showFormModal = true;
     }
 
     public function openEditModal($projectId)
@@ -112,7 +163,7 @@ class ProjectList extends Component
         $this->editingProject = $this->projectService->getProjectById($projectId);
         if ($this->editingProject) {
             $this->fillFormFromProject($this->editingProject);
-            $this->showEditModal = true;
+            $this->showFormModal = true;
         }
     }
 
@@ -130,8 +181,7 @@ class ProjectList extends Component
 
     public function closeModals()
     {
-        $this->showCreateModal = false;
-        $this->showEditModal = false;
+        $this->showFormModal = false;
         $this->showDeleteModal = false;
         $this->showAssignAdvisorModal = false;
         $this->resetForm();
@@ -161,6 +211,15 @@ class ProjectList extends Component
         $this->end_date = '';
         $this->delivery_date = '';
         $this->status = 'activo';
+        $this->path_images = [];
+        $this->path_videos = [];
+        $this->path_documents = [];
+        $this->imageFiles = [];
+        $this->videoFiles = [];
+        $this->documentFiles = [];
+        $this->selectedAdvisorId = '';
+        $this->isPrimaryAdvisor = false;
+        $this->advisorNotes = '';
     }
 
     public function fillFormFromProject($project)
@@ -182,11 +241,17 @@ class ProjectList extends Component
         $this->end_date = $project->end_date ? $project->end_date->format('Y-m-d') : '';
         $this->delivery_date = $project->delivery_date ? $project->delivery_date->format('Y-m-d') : '';
         $this->status = $project->status;
+        $this->path_images = $project->path_images ?? [];
+        $this->path_videos = $project->path_videos ?? [];
+        $this->path_documents = $project->path_documents ?? [];
     }
 
     public function createProject()
     {
         $this->validate();
+
+        // Procesar archivos subidos
+        $this->processUploadedFiles();
 
         $data = [
             'name' => $this->name,
@@ -206,6 +271,9 @@ class ProjectList extends Component
             'end_date' => $this->end_date,
             'delivery_date' => $this->delivery_date,
             'status' => $this->status,
+            'path_images' => $this->path_images,
+            'path_videos' => $this->path_videos,
+            'path_documents' => $this->path_documents,
         ];
 
         $this->projectService->createProject($data);
@@ -223,6 +291,9 @@ class ProjectList extends Component
             return;
         }
 
+        // Procesar archivos subidos
+        $this->processUploadedFiles();
+
         $data = [
             'name' => $this->name,
             'description' => $this->description,
@@ -241,6 +312,9 @@ class ProjectList extends Component
             'end_date' => $this->end_date,
             'delivery_date' => $this->delivery_date,
             'status' => $this->status,
+            'path_images' => $this->path_images,
+            'path_videos' => $this->path_videos,
+            'path_documents' => $this->path_documents,
         ];
 
         $this->projectService->updateProject($this->editingProject->id, $data);
@@ -288,6 +362,92 @@ class ProjectList extends Component
         session()->flash('message', 'Conteo de unidades actualizado.');
     }
 
+    // Métodos para manejar campos multimedia
+    public function addImage()
+    {
+        $this->path_images[] = [
+            'type' => '',
+            'path' => '',
+            'name' => ''
+        ];
+        $this->imageFiles[] = null;
+    }
+
+    public function removeImage($index)
+    {
+        unset($this->path_images[$index]);
+        unset($this->imageFiles[$index]);
+        $this->path_images = array_values($this->path_images);
+        $this->imageFiles = array_values($this->imageFiles);
+    }
+
+    public function addVideo()
+    {
+        $this->path_videos[] = [
+            'type' => '',
+            'path' => '',
+            'name' => ''
+        ];
+        $this->videoFiles[] = null;
+    }
+
+    public function removeVideo($index)
+    {
+        unset($this->path_videos[$index]);
+        unset($this->videoFiles[$index]);
+        $this->path_videos = array_values($this->path_videos);
+        $this->videoFiles = array_values($this->videoFiles);
+    }
+
+    public function addDocument()
+    {
+        $this->path_documents[] = [
+            'type' => '',
+            'path' => '',
+            'name' => ''
+        ];
+        $this->documentFiles[] = null;
+    }
+
+    public function removeDocument($index)
+    {
+        unset($this->path_documents[$index]);
+        unset($this->documentFiles[$index]);
+        $this->path_documents = array_values($this->path_documents);
+        $this->documentFiles = array_values($this->documentFiles);
+    }
+
+    // Método para procesar archivos subidos
+    private function processUploadedFiles()
+    {
+        // Procesar imágenes
+        foreach ($this->imageFiles as $index => $file) {
+            if ($file && isset($this->path_images[$index]) && $this->path_images[$index]['type']) {
+                $path = $file->store('projects/images', 'public');
+                $this->path_images[$index]['path'] = '/storage/' . $path;
+                $this->path_images[$index]['name'] = $file->getClientOriginalName();
+            }
+        }
+
+        // Procesar videos
+        foreach ($this->videoFiles as $index => $file) {
+            if ($file && isset($this->path_videos[$index]) && $this->path_videos[$index]['type']) {
+                $path = $file->store('projects/videos', 'public');
+                $this->path_videos[$index]['path'] = '/storage/' . $path;
+                $this->path_videos[$index]['name'] = $file->getClientOriginalName();
+            }
+        }
+
+        // Procesar documentos
+        foreach ($this->documentFiles as $index => $file) {
+            if ($file && isset($this->path_documents[$index]) && $this->path_documents[$index]['type']) {
+                $path = $file->store('projects/documents', 'public');
+                $this->path_documents[$index]['path'] = '/storage/' . $path;
+                $this->path_documents[$index]['name'] = $file->getClientOriginalName();
+            }
+        }
+    }
+
     public function render()
     {
         $filters = [
@@ -295,12 +455,21 @@ class ProjectList extends Component
             'status' => $this->statusFilter,
             'type' => $this->typeFilter,
             'stage' => $this->stageFilter,
-            'location' => $this->locationFilter ? [
-                'district' => $this->locationFilter,
-                'province' => $this->locationFilter,
-                'region' => $this->locationFilter
-            ] : null,
+            'order_by' => $this->orderBy,
+            'order_direction' => $this->orderDirection,
         ];
+
+        // Agregar filtro de ubicación solo si está seleccionado
+        if ($this->locationFilter) {
+            $filters['location'] = [
+                'region' => $this->locationFilter
+            ];
+        }
+
+        // Agregar filtro de unidades disponibles
+        if ($this->withAvailableUnits) {
+            $filters['with_available_units'] = true;
+        }
 
         $projects = $this->projectService->getAllProjects(15, $filters);
 

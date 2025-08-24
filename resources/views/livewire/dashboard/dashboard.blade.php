@@ -8,10 +8,9 @@
                     <p class="text-sm text-gray-600">Vista general de tu negocio inmobiliario</p>
                 </div>
                 <div class="flex space-x-2">
-                    <x-filament::button size="xs" variant="outline" wire:click="refreshDashboard">
-                        <x-filament::icon name="heroicon-o-arrow-path" class="w-4 h-4 mr-1" />
+                    <flux:button icon="arrow-path" size="xs" variant="outline" wire:click="refreshDashboard">
                         Actualizar
-                    </x-filament::button>
+                    </flux:button>
                 </div>
             </div>
         </div>

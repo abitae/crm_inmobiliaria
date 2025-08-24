@@ -23,7 +23,6 @@ class ClientService
             $query = Client::with(['assignedAdvisor', 'createdBy'])
                 ->withCount(['opportunities', 'interactions', 'tasks']);
 
-            // Aplicar filtros
             $this->applyFilters($query, $filters);
 
             return $query->orderBy('created_at', 'desc')->paginate($perPage);
@@ -57,8 +56,7 @@ class ClientService
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
+                $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('document_number', 'like', "%{$search}%");
@@ -67,7 +65,7 @@ class ClientService
     }
 
     /**
-     * Obtener cliente por ID con todas las relaciones
+     * Obtener cliente por ID con relaciones básicas
      */
     public function getClientById(int $id): ?Client
     {
@@ -79,17 +77,9 @@ class ClientService
             return Client::with([
                 'assignedAdvisor',
                 'createdBy',
-                'updatedBy',
                 'opportunities.project',
-                'opportunities.unit',
                 'interactions',
-                'tasks',
-                'activities',
-                'documents',
-                'reservations.project',
-                'reservations.unit',
-                'projects',
-                'units'
+                'tasks'
             ])->find($id);
         } catch (\Exception $e) {
             Log::error("Error al obtener cliente ID {$id}: " . $e->getMessage());
@@ -103,8 +93,6 @@ class ClientService
     public function createClient(array $data): Client
     {
         try {
-            DB::beginTransaction();
-
             $this->validateClientData($data);
 
             $data['created_by'] = Auth::id();
@@ -112,12 +100,9 @@ class ClientService
 
             $client = Client::create($data);
 
-            DB::commit();
-
             Log::info("Cliente creado exitosamente ID: {$client->id}");
             return $client;
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error('Error al crear cliente: ' . $e->getMessage());
             throw new \Exception('Error al crear el cliente: ' . $e->getMessage());
         }
@@ -129,8 +114,6 @@ class ClientService
     public function updateClient(int $id, array $data): bool
     {
         try {
-            DB::beginTransaction();
-
             if ($id <= 0) {
                 throw new ValidationException('ID de cliente inválido');
             }
@@ -146,15 +129,12 @@ class ClientService
             $updated = $client->update($data);
 
             if ($updated) {
-                DB::commit();
                 Log::info("Cliente actualizado exitosamente ID: {$id}");
                 return true;
             }
 
-            DB::rollBack();
             return false;
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error("Error al actualizar cliente ID {$id}: " . $e->getMessage());
             throw new \Exception('Error al actualizar el cliente: ' . $e->getMessage());
         }
@@ -195,36 +175,6 @@ class ClientService
     }
 
     /**
-     * Asignar asesor a cliente
-     */
-    public function assignAdvisor(int $clientId, int $advisorId): bool
-    {
-        try {
-            if ($clientId <= 0 || $advisorId <= 0) {
-                throw new ValidationException('IDs de cliente o asesor inválidos');
-            }
-
-            $client = Client::find($clientId);
-            if (!$client) {
-                throw new \Exception('Cliente no encontrado');
-            }
-
-            $advisor = User::find($advisorId);
-            if (!$advisor) {
-                throw new \Exception('Asesor no encontrado');
-            }
-
-            $client->assignAdvisor($advisorId);
-
-            Log::info("Asesor {$advisorId} asignado al cliente {$clientId}");
-            return true;
-        } catch (\Exception $e) {
-            Log::error("Error al asignar asesor {$advisorId} al cliente {$clientId}: " . $e->getMessage());
-            throw new \Exception('Error al asignar el asesor: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Cambiar estado del cliente
      */
     public function changeStatus(int $clientId, string $newStatus): bool
@@ -234,7 +184,7 @@ class ClientService
                 throw new ValidationException('ID de cliente inválido');
             }
 
-            $validStatuses = ['active', 'inactive', 'prospect', 'en_seguimiento', 'cierre', 'perdido'];
+            $validStatuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
             if (!in_array($newStatus, $validStatuses)) {
                 throw new ValidationException('Estado de cliente inválido');
             }
@@ -244,7 +194,7 @@ class ClientService
                 throw new \Exception('Cliente no encontrado');
             }
 
-            $client->changeStatus($newStatus);
+            $client->update(['status' => $newStatus]);
 
             Log::info("Estado del cliente {$clientId} cambiado a: {$newStatus}");
             return true;
@@ -273,7 +223,7 @@ class ClientService
                 throw new \Exception('Cliente no encontrado');
             }
 
-            $client->updateScore($newScore);
+            $client->update(['score' => $newScore]);
 
             Log::info("Score del cliente {$clientId} actualizado a: {$newScore}");
             return true;
@@ -284,106 +234,27 @@ class ClientService
     }
 
     /**
-     * Obtener estadísticas de clientes
-     */
-    public function getClientStats(): array
-    {
-        try {
-            $totalClients = Client::count();
-            $activeClients = Client::active()->count();
-            $newClients = Client::byStatus('nuevo')->count();
-            $inFollowUp = Client::byStatus('en_seguimiento')->count();
-            $closing = Client::byStatus('cierre')->count();
-            $lost = Client::byStatus('perdido')->count();
-
-            return [
-                'total' => $totalClients,
-                'active' => $activeClients,
-                'new' => $newClients,
-                'in_follow_up' => $inFollowUp,
-                'closing' => $closing,
-                'lost' => $lost,
-                'conversion_rate' => $totalClients > 0 ? round(($closing / $totalClients) * 100, 2) : 0
-            ];
-        } catch (\Exception $e) {
-            Log::error('Error al obtener estadísticas de clientes: ' . $e->getMessage());
-            throw new \Exception('Error al obtener las estadísticas de clientes');
-        }
-    }
-
-    /**
-     * Obtener clientes por asesor
-     */
-    public function getClientsByAdvisor(int $advisorId): Collection
-    {
-        try {
-            if ($advisorId <= 0) {
-                throw new ValidationException('ID de asesor inválido');
-            }
-
-            return Client::with(['assignedAdvisor'])
-                ->byAdvisor($advisorId)
-                ->withCount(['opportunities', 'interactions', 'tasks'])
-                ->get();
-        } catch (\Exception $e) {
-            Log::error("Error al obtener clientes del asesor {$advisorId}: " . $e->getMessage());
-            throw new \Exception('Error al obtener los clientes del asesor');
-        }
-    }
-
-    /**
-     * Obtener clientes con oportunidades activas
-     */
-    public function getClientsWithActiveOpportunities(): Collection
-    {
-        try {
-            return Client::whereHas('opportunities', function ($query) {
-                $query->where('status', 'activa');
-            })->with(['opportunities.project'])->get();
-        } catch (\Exception $e) {
-            Log::error('Error al obtener clientes con oportunidades activas: ' . $e->getMessage());
-            throw new \Exception('Error al obtener clientes con oportunidades activas');
-        }
-    }
-
-    /**
-     * Buscar clientes por término
-     */
-    public function searchClients(string $term): Collection
-    {
-        try {
-            $term = trim($term);
-            if (strlen($term) < 2) {
-                throw new ValidationException('El término de búsqueda debe tener al menos 2 caracteres');
-            }
-
-            return Client::where('first_name', 'like', "%{$term}%")
-                ->orWhere('last_name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")
-                ->orWhere('document_number', 'like', "%{$term}%")
-                ->limit(10)
-                ->get();
-        } catch (\Exception $e) {
-            Log::error('Error al buscar clientes: ' . $e->getMessage());
-            throw new \Exception('Error al buscar clientes: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Validar datos del cliente
      */
     private function validateClientData(array $data, ?int $clientId = null): void
     {
         $rules = [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'document_number' => 'nullable|string|max:20',
-            'status' => 'nullable|string|in:active,inactive,prospect,en_seguimiento,cierre,perdido',
-            'source' => 'nullable|string|max:100',
-            'score' => 'nullable|integer|min:0|max:100',
+            'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
+            'document_number' => 'required|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'district' => 'nullable|string|max:255',
+            'province' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'client_type' => 'required|in:inversor,comprador,empresa,constructor',
+            'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
+            'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
+            'score' => 'required|integer|min:0|max:100',
+            'notes' => 'nullable|string',
+            'assigned_advisor_id' => 'nullable|exists:users,id'
         ];
 
         // Validar email único excepto para el cliente actual

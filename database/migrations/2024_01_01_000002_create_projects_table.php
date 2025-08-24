@@ -34,6 +34,9 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->date('delivery_date')->nullable();
             $table->enum('status', ['activo', 'inactivo', 'suspendido', 'finalizado'])->default('activo');
+            $table->json('path_images')->nullable();
+            $table->json('path_videos')->nullable();
+            $table->json('path_documents')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

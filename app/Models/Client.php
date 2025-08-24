@@ -14,8 +14,7 @@ class Client extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
+        'name',
         'email',
         'phone',
         'document_type', // DNI, RUC, CE, PASAPORTE
@@ -134,13 +133,38 @@ class Client extends Model
     // Accessors
     public function getFullNameAttribute(): string
     {
-        return "{$this->first_name} {$this->last_name}";
+        return $this->name;
     }
 
     public function getFullAddressAttribute(): string
     {
         $parts = array_filter([$this->address, $this->district, $this->province, $this->region, $this->country]);
         return implode(', ', $parts);
+    }
+
+    public function getLastInteractionAttribute()
+    {
+        return $this->interactions()->latest()->first();
+    }
+
+    public function getFullDocumentAttribute(): string
+    {
+        if ($this->document_type && $this->document_number) {
+            return $this->document_type . ': ' . $this->document_number;
+        }
+        return 'Sin documento';
+    }
+
+    public function getClientTypeFormattedAttribute(): string
+    {
+        $types = [
+            'inversor' => 'Inversor',
+            'comprador' => 'Comprador',
+            'empresa' => 'Empresa',
+            'constructor' => 'Constructor'
+        ];
+
+        return $types[$this->client_type] ?? ucfirst($this->client_type);
     }
 
     // Métodos

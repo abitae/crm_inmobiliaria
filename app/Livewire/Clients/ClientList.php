@@ -6,26 +6,26 @@ use App\Services\ClientService;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\WithFileUploads;
 
 class ClientList extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
+    // Filtros
     public $search = '';
     public $statusFilter = '';
     public $typeFilter = '';
     public $sourceFilter = '';
     public $advisorFilter = '';
-    public $showCreateModal = false;
-    public $showEditModal = false;
+
+    // Modales
+    public $showFormModal = false;
     public $showDeleteModal = false;
     public $selectedClient = null;
     public $editingClient = null;
 
-    // Form fields
-    public $first_name = '';
-    public $last_name = '';
+    // Campos del formulario
+    public $name = '';
     public $email = '';
     public $phone = '';
     public $document_type = '';
@@ -46,8 +46,7 @@ class ClientList extends Component
     public $advisors = [];
 
     protected $rules = [
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
+        'name' => 'required|string|max:255',
         'email' => 'required|email|max:255',
         'phone' => 'nullable|string|max:20',
         'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
@@ -73,46 +72,49 @@ class ClientList extends Component
     public function mount()
     {
         $this->advisors = User::getAdvisorsAndAdmins();
+        $this->status = 'nuevo';
     }
 
+    // Métodos para resetear paginación cuando cambian los filtros
     public function updatedSearch()
     {
         $this->resetPage();
     }
-
     public function updatedStatusFilter()
     {
         $this->resetPage();
     }
-
     public function updatedTypeFilter()
     {
         $this->resetPage();
     }
-
     public function updatedSourceFilter()
     {
         $this->resetPage();
     }
-
     public function updatedAdvisorFilter()
     {
         $this->resetPage();
     }
 
-    public function openCreateModal()
+    public function clearFilters()
     {
-        $this->resetForm();
-        $this->showCreateModal = true;
+        $this->reset(['search', 'statusFilter', 'typeFilter', 'sourceFilter', 'advisorFilter']);
+        $this->resetPage();
     }
 
-    public function openEditModal($clientId)
+    public function openCreateModal($clientId = null)
     {
-        $this->editingClient = $this->clientService->getClientById($clientId);
-        if ($this->editingClient) {
-            $this->fillFormFromClient($this->editingClient);
-            $this->showEditModal = true;
+        if ($clientId) {
+            $this->editingClient = $this->clientService->getClientById($clientId);
+            if ($this->editingClient) {
+                $this->fillFormFromClient($this->editingClient);
+            }
+        } else {
+            $this->resetForm();
+            $this->editingClient = null;
         }
+        $this->showFormModal = true;
     }
 
     public function openDeleteModal($clientId)
@@ -123,39 +125,37 @@ class ClientList extends Component
 
     public function closeModals()
     {
-        $this->showCreateModal = false;
-        $this->showEditModal = false;
-        $this->showDeleteModal = false;
+        $this->reset(['showFormModal', 'showDeleteModal', 'editingClient', 'selectedClient']);
         $this->resetForm();
-        $this->editingClient = null;
-        $this->selectedClient = null;
     }
 
     public function resetForm()
     {
-        $this->first_name = '';
-        $this->last_name = '';
-        $this->email = '';
-        $this->phone = '';
-        $this->document_type = '';
-        $this->document_number = '';
-        $this->address = '';
-        $this->district = '';
-        $this->province = '';
-        $this->region = '';
-        $this->country = '';
-        $this->client_type = '';
-        $this->source = '';
+        $this->reset([
+            'name',
+            'email',
+            'phone',
+            'document_type',
+            'document_number',
+            'address',
+            'district',
+            'province',
+            'region',
+            'country',
+            'client_type',
+            'source',
+            'status',
+            'score',
+            'notes',
+            'assigned_advisor_id'
+        ]);
         $this->status = 'nuevo';
         $this->score = 0;
-        $this->notes = '';
-        $this->assigned_advisor_id = '';
     }
 
     public function fillFormFromClient($client)
     {
-        $this->first_name = $client->first_name;
-        $this->last_name = $client->last_name;
+        $this->name = $client->name;
         $this->email = $client->email;
         $this->phone = $client->phone;
         $this->document_type = $client->document_type;
@@ -177,26 +177,7 @@ class ClientList extends Component
     {
         $this->validate();
 
-        $data = [
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'document_type' => $this->document_type,
-            'document_number' => $this->document_number,
-            'address' => $this->address,
-            'district' => $this->district,
-            'province' => $this->province,
-            'region' => $this->region,
-            'country' => $this->country,
-            'client_type' => $this->client_type,
-            'source' => $this->source,
-            'status' => $this->status,
-            'score' => $this->score,
-            'notes' => $this->notes,
-            'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
-        ];
-
+        $data = $this->getFormData();
         $this->clientService->createClient($data);
 
         $this->closeModals();
@@ -212,26 +193,7 @@ class ClientList extends Component
             return;
         }
 
-        $data = [
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'document_type' => $this->document_type,
-            'document_number' => $this->document_number,
-            'address' => $this->address,
-            'district' => $this->district,
-            'province' => $this->province,
-            'region' => $this->region,
-            'country' => $this->country,
-            'client_type' => $this->client_type,
-            'source' => $this->source,
-            'status' => $this->status,
-            'score' => $this->score,
-            'notes' => $this->notes,
-            'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
-        ];
-
+        $data = $this->getFormData();
         $this->clientService->updateClient($this->editingClient->id, $data);
 
         $this->closeModals();
@@ -264,6 +226,28 @@ class ClientList extends Component
         $this->clientService->updateScore($clientId, $newScore);
         $this->dispatch('client-score-updated');
         session()->flash('message', 'Score del cliente actualizado.');
+    }
+
+    private function getFormData(): array
+    {
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'document_type' => $this->document_type,
+            'document_number' => $this->document_number,
+            'address' => $this->address,
+            'district' => $this->district,
+            'province' => $this->province,
+            'region' => $this->region,
+            'country' => $this->country,
+            'client_type' => $this->client_type,
+            'source' => $this->source,
+            'status' => $this->status,
+            'score' => $this->score,
+            'notes' => $this->notes,
+            'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
+        ];
     }
 
     public function render()

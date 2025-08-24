@@ -34,8 +34,7 @@ class ClientSeeder extends Seeder
 
         $clients = [
             [
-                'first_name' => 'Juan Carlos',
-                'last_name' => 'Vargas Mendoza',
+                'name' => 'Juan Carlos Vargas Mendoza',
                 'email' => 'juan.vargas@email.com',
                 'phone' => '+51 999 123 456',
                 'document_type' => 'DNI',
@@ -52,8 +51,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Cliente interesado en departamentos de 2-3 dormitorios en Miraflores',
             ],
             [
-                'first_name' => 'María Elena',
-                'last_name' => 'Torres Ríos',
+                'name' => 'María Elena Torres Ríos',
                 'email' => 'maria.torres@email.com',
                 'phone' => '+51 999 234 567',
                 'document_type' => 'DNI',
@@ -70,8 +68,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Inversora buscando propiedades para alquiler',
             ],
             [
-                'first_name' => 'Roberto',
-                'last_name' => 'Silva Castro',
+                'name' => 'Roberto Silva Castro',
                 'email' => 'roberto.silva@empresa.com',
                 'phone' => '+51 999 345 678',
                 'document_type' => 'RUC',
@@ -88,8 +85,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Empresa buscando oficinas corporativas',
             ],
             [
-                'first_name' => 'Carmen',
-                'last_name' => 'Flores Díaz',
+                'name' => 'Carmen Flores Díaz',
                 'email' => 'carmen.flores@email.com',
                 'phone' => '+51 999 456 789',
                 'document_type' => 'DNI',
@@ -106,8 +102,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Cliente VIP, busca casa familiar en Surco',
             ],
             [
-                'first_name' => 'Fernando',
-                'last_name' => 'Mendoza Ruiz',
+                'name' => 'Fernando Mendoza Ruiz',
                 'email' => 'fernando.mendoza@constructor.com',
                 'phone' => '+51 999 567 890',
                 'document_type' => 'RUC',
@@ -124,8 +119,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Constructor interesado en lotes para desarrollo',
             ],
             [
-                'first_name' => 'Patricia',
-                'last_name' => 'Ríos Morales',
+                'name' => 'Patricia Ríos Morales',
                 'email' => 'patricia.rios@email.com',
                 'phone' => '+51 999 678 901',
                 'document_type' => 'DNI',
@@ -142,8 +136,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Inversora en propiedades de playa',
             ],
             [
-                'first_name' => 'Alberto',
-                'last_name' => 'García Paredes',
+                'name' => 'Alberto García Paredes',
                 'email' => 'alberto.garcia@email.com',
                 'phone' => '+51 999 789 012',
                 'document_type' => 'DNI',
@@ -160,8 +153,7 @@ class ClientSeeder extends Seeder
                 'notes' => 'Cliente que ya compró, mantener relación',
             ],
             [
-                'first_name' => 'Lucía',
-                'last_name' => 'Herrera Vega',
+                'name' => 'Lucía Herrera Vega',
                 'email' => 'lucia.herrera@email.com',
                 'phone' => '+51 999 890 123',
                 'document_type' => 'DNI',

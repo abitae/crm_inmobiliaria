@@ -35,6 +35,9 @@ class Project extends Model
         'end_date',
         'delivery_date',
         'status', // activo, inactivo, suspendido, finalizado
+        'path_images',
+        'path_videos',
+        'path_documents',
         'created_by',
         'updated_by',
     ];
@@ -55,6 +58,9 @@ class Project extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'path_images' => 'array',
+        'path_videos' => 'array',
+        'path_documents' => 'array',
     ];
 
     // Relaciones
