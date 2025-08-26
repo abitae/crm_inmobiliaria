@@ -21,6 +21,7 @@ class Dashboard extends Component
     public $upcomingClosings = [];
     public $advisorPerformance = [];
     public $conversionBySource = [];
+    public $closedOpportunitiesBySeller = [];
 
     // Filtros del dashboard
     public $dateRange = 'this_month';
@@ -50,11 +51,12 @@ class Dashboard extends Component
         $this->clientsByStatus = $this->dashboardService->getClientsByStatus($filters);
         $this->projectsByType = $this->dashboardService->getProjectsByType($filters);
         $this->salesByMonth = $this->dashboardService->getSalesByMonth($filters);
-        $this->recentActivities = $this->dashboardService->getRecentActivities($filters);
-        $this->pendingTasks = $this->dashboardService->getPendingTasks($filters);
-        $this->upcomingClosings = $this->dashboardService->getUpcomingClosings($filters);
+        $this->recentActivities = $this->dashboardService->getRecentActivities(10, $filters);
+        $this->pendingTasks = $this->dashboardService->getPendingTasks(10, $filters);
+        $this->upcomingClosings = $this->dashboardService->getUpcomingClosings(10, $filters);
         $this->advisorPerformance = $this->dashboardService->getAdvisorPerformance($filters);
         $this->conversionBySource = $this->dashboardService->getConversionBySource($filters);
+        $this->closedOpportunitiesBySeller = $this->dashboardService->getClosedOpportunitiesBySeller($filters);
     }
 
     public function updatedDateRange()

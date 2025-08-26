@@ -123,6 +123,16 @@ class ClientList extends Component
         $this->showDeleteModal = true;
     }
 
+    public function confirmDelete($clientId)
+    {
+        $this->selectedClient = $this->clientService->getClientById($clientId);
+        $this->dispatch('show-confirm', 
+            message: '¿Estás seguro de que quieres eliminar este cliente? Esta acción no se puede deshacer.',
+            title: 'Confirmar eliminación',
+            action: 'deleteClient'
+        );
+    }
+
     public function closeModals()
     {
         $this->reset(['showFormModal', 'showDeleteModal', 'editingClient', 'selectedClient']);
@@ -182,7 +192,7 @@ class ClientList extends Component
 
         $this->closeModals();
         $this->dispatch('client-created');
-        session()->flash('message', 'Cliente creado exitosamente.');
+        $this->dispatch('show-success', message: 'Cliente creado exitosamente.');
     }
 
     public function updateClient()
@@ -198,7 +208,7 @@ class ClientList extends Component
 
         $this->closeModals();
         $this->dispatch('client-updated');
-        session()->flash('message', 'Cliente actualizado exitosamente.');
+        $this->dispatch('show-success', message: 'Cliente actualizado exitosamente.');
     }
 
     public function deleteClient()
@@ -211,21 +221,21 @@ class ClientList extends Component
 
         $this->closeModals();
         $this->dispatch('client-deleted');
-        session()->flash('message', 'Cliente eliminado exitosamente.');
+        $this->dispatch('show-success', message: 'Cliente eliminado exitosamente.');
     }
 
     public function changeStatus($clientId, $newStatus)
     {
         $this->clientService->changeStatus($clientId, $newStatus);
         $this->dispatch('client-status-changed');
-        session()->flash('message', 'Estado del cliente actualizado.');
+        $this->dispatch('show-success', message: 'Estado del cliente actualizado.');
     }
 
     public function updateScore($clientId, $newScore)
     {
         $this->clientService->updateScore($clientId, $newScore);
         $this->dispatch('client-score-updated');
-        session()->flash('message', 'Score del cliente actualizado.');
+        $this->dispatch('show-success', message: 'Score del cliente actualizado.');
     }
 
     private function getFormData(): array

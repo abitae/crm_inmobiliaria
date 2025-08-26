@@ -35,6 +35,8 @@ class Project extends Model
         'end_date',
         'delivery_date',
         'status', // activo, inactivo, suspendido, finalizado
+        'path_image_portada',
+        'path_video_portada',
         'path_images',
         'path_videos',
         'path_documents',

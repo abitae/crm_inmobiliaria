@@ -20,35 +20,7 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Mensajes de éxito/error -->
-        @if (session()->has('message'))
-            <div
-                class="mb-4 p-4 rounded-md {{ str_contains(session('message'), 'exitosamente') ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200' }}">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        @if (str_contains(session('message'), 'exitosamente'))
-                            <flux:icon name="check-circle" class="h-5 w-5 text-green-400" />
-                        @else
-                            <flux:icon name="exclamation-circle" class="h-5 w-5 text-red-400" />
-                        @endif
-                    </div>
-                    <div class="ml-3">
-                        <p
-                            class="text-sm font-medium {{ str_contains(session('message'), 'exitosamente') ? 'text-green-800' : 'text-red-800' }}">
-                            {{ session('message') }}
-                        </p>
-                    </div>
-                    <div class="ml-auto pl-3">
-                        <div class="-mx-1.5 -my-1.5">
-                            <button wire:click="$set('message', null)"
-                                class="inline-flex rounded-md p-1.5 {{ str_contains(session('message'), 'exitosamente') ? 'text-green-500 hover:bg-green-100' : 'text-red-500 hover:bg-red-100' }}">
-                                <flux:icon name="x-mark" class="h-5 w-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
+        <!-- SweetAlert2 se maneja a través de JavaScript -->
 
         <!-- Filtros y Búsqueda -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
@@ -202,7 +174,7 @@
                                             <flux:icon name="pencil" class="w-3 h-3" />
                                         </flux:button>
                                         <flux:button size="xs" variant="outline" color="danger"
-                                            wire:click="openDeleteModal({{ $client->id }})">
+                                            wire:click="confirmDelete({{ $client->id }})">
                                             <flux:icon name="trash" class="w-3 h-3" />
                                         </flux:button>
                                     </div>
@@ -425,4 +397,36 @@
             </div>
         </div>
     </flux:modal>
+
+    <!-- Script para SweetAlert2 -->
+    <script>
+        document.addEventListener('livewire:init', () => {
+            // Escuchar eventos de éxito
+            Livewire.on('show-success', (event) => {
+                window.showSuccess(event.message);
+            });
+
+            // Escuchar eventos de confirmación
+            Livewire.on('show-confirm', (event) => {
+                window.showConfirm(event.message, event.title).then((result) => {
+                    if (result.isConfirmed) {
+                        // Ejecutar la acción confirmada
+                        if (event.action === 'deleteClient') {
+                            @this.deleteClient();
+                        }
+                    }
+                });
+            });
+
+            // Escuchar eventos de error
+            Livewire.on('show-error', (event) => {
+                window.showError(event.message);
+            });
+
+            // Escuchar eventos de información
+            Livewire.on('show-info', (event) => {
+                window.showInfo(event.message);
+            });
+        });
+    </script>
 </div>

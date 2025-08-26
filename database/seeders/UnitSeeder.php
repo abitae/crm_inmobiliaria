@@ -80,6 +80,7 @@ class UnitSeeder extends Seeder
 
         $unitData = [
             'project_id' => $project->id,
+            'unit_manzana' => 'Manzana ' . rand(1, 10),
             'unit_number' => $unitNumber,
             'unit_type' => $unitType,
             'status' => $status,

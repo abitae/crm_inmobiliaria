@@ -43,50 +43,52 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2025-06-30',
                 'delivery_date' => '2025-12-31',
                 'status' => 'activo',
+                'path_image_portada' => '/storage/projects/miraflores-park/portada-principal.jpg',
+                'path_video_portada' => '/storage/projects/miraflores-park/video-portada.mp4',
                 'path_images' => [
                     [
-                        'type' => 'portada',
+                        'title' => 'Portada del Proyecto',
                         'path' => '/storage/projects/miraflores-park/portada.jpg',
-                        'name' => 'Portada del Proyecto'
+                        'descripcion' => 'Imagen principal que representa el proyecto'
                     ],
                     [
-                        'type' => 'interior',
+                        'title' => 'Interior de Departamento Modelo',
                         'path' => '/storage/projects/miraflores-park/interior-1.jpg',
-                        'name' => 'Interior de Departamento Modelo'
+                        'descripcion' => 'Vista del interior de un departamento modelo'
                     ],
                     [
-                        'type' => 'exterior',
+                        'title' => 'Vista Exterior del Edificio',
                         'path' => '/storage/projects/miraflores-park/exterior-1.jpg',
-                        'name' => 'Vista Exterior del Edificio'
+                        'descripcion' => 'Fachada principal del edificio residencial'
                     ],
                 ],
                 'path_videos' => [
                     [
-                        'type' => 'tour',
+                        'title' => 'Tour Virtual del Proyecto',
                         'path' => '/storage/projects/miraflores-park/tour-virtual.mp4',
-                        'name' => 'Tour Virtual del Proyecto'
+                        'descripcion' => 'Recorrido virtual por todas las instalaciones'
                     ],
                     [
-                        'type' => 'amenidades',
+                        'title' => 'Video de Amenidades',
                         'path' => '/storage/projects/miraflores-park/amenidades.mp4',
-                        'name' => 'Video de Amenidades'
+                        'descripcion' => 'Presentación de las amenidades disponibles'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'type' => 'brochure',
+                        'title' => 'Brochure Residencial Miraflores Park',
                         'path' => '/storage/projects/miraflores-park/brochure.pdf',
-                        'name' => 'Brochure Residencial Miraflores Park'
+                        'descripcion' => 'Catálogo completo del proyecto residencial'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano General del Proyecto',
                         'path' => '/storage/projects/miraflores-park/plano-general.pdf',
-                        'name' => 'Plano General del Proyecto'
+                        'descripcion' => 'Plano arquitectónico del proyecto completo'
                     ],
                     [
-                        'type' => 'contrato',
+                        'title' => 'Contrato de Compra Venta',
                         'path' => '/storage/projects/miraflores-park/contrato-modelo.pdf',
-                        'name' => 'Contrato de Compra Venta'
+                        'descripcion' => 'Contrato modelo para la compra de unidades'
                     ]
                 ],
             ],
@@ -112,45 +114,47 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2026-08-31',
                 'delivery_date' => '2026-12-31',
                 'status' => 'activo',
+                'path_image_portada' => '/storage/projects/san-isidro-business/portada-corporativa.jpg',
+                'path_video_portada' => '/storage/projects/san-isidro-business/video-corporativo.mp4',
                 'path_images' => [
                     [
-                        'type' => 'fachada',
+                        'title' => 'Fachada Principal del Edificio',
                         'path' => '/storage/projects/san-isidro-business/fachada.jpg',
-                        'name' => 'Fachada Principal del Edificio'
+                        'descripcion' => 'Vista frontal del edificio corporativo'
                     ],
                     [
-                        'type' => 'oficina',
+                        'title' => 'Oficina Modelo',
                         'path' => '/storage/projects/san-isidro-business/oficina-modelo.jpg',
-                        'name' => 'Oficina Modelo'
+                        'descripcion' => 'Oficina modelo completamente equipada'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'type' => 'presentacion',
+                        'title' => 'Presentación del Proyecto',
                         'path' => '/storage/projects/san-isidro-business/presentacion.mp4',
-                        'name' => 'Presentación del Proyecto'
+                        'descripcion' => 'Video corporativo de presentación'
                     ],
                     [
-                        'type' => 'recorrido',
+                        'title' => 'Recorrido por las Instalaciones',
                         'path' => '/storage/projects/san-isidro-business/recorrido.mp4',
-                        'name' => 'Recorrido por las Instalaciones'
+                        'descripcion' => 'Tour completo por todas las instalaciones'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'type' => 'brochure',
+                        'title' => 'Brochure Corporativo Torres San Isidro',
                         'path' => '/storage/projects/san-isidro-business/brochure-corporativo.pdf',
-                        'name' => 'Brochure Corporativo Torres San Isidro'
+                        'descripcion' => 'Catálogo corporativo del proyecto'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano de Oficinas Disponibles',
                         'path' => '/storage/projects/san-isidro-business/plano-oficinas.pdf',
-                        'name' => 'Plano de Oficinas Disponibles'
+                        'descripcion' => 'Plano detallado de oficinas disponibles'
                     ],
                     [
-                        'type' => 'especificaciones',
+                        'title' => 'Especificaciones Técnicas',
                         'path' => '/storage/projects/san-isidro-business/especificaciones-tecnicas.pdf',
-                        'name' => 'Especificaciones Técnicas'
+                        'descripcion' => 'Documento técnico con especificaciones'
                     ]
                 ],
             ],
@@ -176,45 +180,47 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2027-12-31',
                 'delivery_date' => '2027-12-31',
                 'status' => 'activo',
+                'path_image_portada' => '/storage/projects/barranco-golf/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/barranco-golf/video-aereo.mp4',
                 'path_images' => [
                     [
-                        'type' => 'vista',
+                        'title' => 'Vista al Mar desde los Lotes',
                         'path' => '/storage/projects/barranco-golf/vista-mar.jpg',
-                        'name' => 'Vista al Mar desde los Lotes'
+                        'descripcion' => 'Vista panorámica del océano desde los lotes'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano de Lotes Disponibles',
                         'path' => '/storage/projects/barranco-golf/plano-lotes.jpg',
-                        'name' => 'Plano de Lotes Disponibles'
+                        'descripcion' => 'Plano detallado de lotes disponibles'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'type' => 'drone',
+                        'title' => 'Vista Aérea con Drone',
                         'path' => '/storage/projects/barranco-golf/drone-aereo.mp4',
-                        'name' => 'Vista Aérea con Drone'
+                        'descripcion' => 'Vista aérea capturada con drone'
                     ],
                     [
-                        'type' => 'ubicacion',
+                        'title' => 'Video de Ubicación',
                         'path' => '/storage/projects/barranco-golf/ubicacion.mp4',
-                        'name' => 'Video de Ubicación'
+                        'descripcion' => 'Video explicativo de la ubicación'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'type' => 'brochure',
+                        'title' => 'Brochure Lotes Barranco Golf',
                         'path' => '/storage/projects/barranco-golf/brochure-lotes.pdf',
-                        'name' => 'Brochure Lotes Barranco Golf'
+                        'descripcion' => 'Catálogo de lotes disponibles'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano de Lotes Disponibles',
                         'path' => '/storage/projects/barranco-golf/plano-lotes.pdf',
-                        'name' => 'Plano de Lotes Disponibles'
+                        'descripcion' => 'Plano detallado de lotes'
                     ],
                     [
-                        'type' => 'reglamento',
+                        'title' => 'Reglamento de Condominio',
                         'path' => '/storage/projects/barranco-golf/reglamento-condominio.pdf',
-                        'name' => 'Reglamento de Condominio'
+                        'descripcion' => 'Reglamento interno del condominio'
                     ]
                 ],
             ],
@@ -240,45 +246,47 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2024-12-31',
                 'delivery_date' => '2025-03-31',
                 'status' => 'activo',
+                'path_image_portada' => '/storage/projects/surco-family/portada-familiar.jpg',
+                'path_video_portada' => '/storage/projects/surco-family/video-familiar.mp4',
                 'path_images' => [
                     [
-                        'type' => 'casa',
+                        'title' => 'Casa Modelo',
                         'path' => '/storage/projects/surco-family/casa-modelo.jpg',
-                        'name' => 'Casa Modelo'
+                        'descripcion' => 'Vista frontal de la casa modelo'
                     ],
                     [
-                        'type' => 'jardin',
+                        'title' => 'Jardín de la Casa',
                         'path' => '/storage/projects/surco-family/jardin.jpg',
-                        'name' => 'Jardín de la Casa'
+                        'descripcion' => 'Jardín trasero de la casa'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'type' => 'tour',
+                        'title' => 'Tour de la Casa',
                         'path' => '/storage/projects/surco-family/tour-casa.mp4',
-                        'name' => 'Tour de la Casa'
+                        'descripcion' => 'Recorrido completo por la casa'
                     ],
                     [
-                        'type' => 'entorno',
+                        'title' => 'Video del Entorno',
                         'path' => '/storage/projects/surco-family/entorno.mp4',
-                        'name' => 'Video del Entorno'
+                        'descripcion' => 'Video del entorno y vecindario'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'type' => 'brochure',
+                        'title' => 'Brochure Casas Surco Family',
                         'path' => '/storage/projects/surco-family/brochure-familiar.pdf',
-                        'name' => 'Brochure Casas Surco Family'
+                        'descripcion' => 'Catálogo familiar del proyecto'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano de Casas Disponibles',
                         'path' => '/storage/projects/surco-family/plano-casas.pdf',
-                        'name' => 'Plano de Casas Disponibles'
+                        'descripcion' => 'Plano de casas disponibles'
                     ],
                     [
-                        'type' => 'financiamiento',
+                        'title' => 'Opciones de Financiamiento',
                         'path' => '/storage/projects/surco-family/opciones-financiamiento.pdf',
-                        'name' => 'Opciones de Financiamiento'
+                        'descripcion' => 'Documento con opciones de financiamiento'
                     ]
                 ],
             ],
@@ -304,45 +312,47 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2027-06-30',
                 'delivery_date' => '2027-12-31',
                 'status' => 'activo',
+                'path_image_portada' => '/storage/projects/chorrillos-plaza/portada-mixto.jpg',
+                'path_video_portada' => '/storage/projects/chorrillos-plaza/video-mixto.mp4',
                 'path_images' => [
                     [
-                        'type' => 'maqueta',
+                        'title' => 'Maqueta del Proyecto',
                         'path' => '/storage/projects/chorrillos-plaza/maqueta.jpg',
-                        'name' => 'Maqueta del Proyecto'
+                        'descripcion' => 'Maqueta arquitectónica del proyecto'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano General del Proyecto',
                         'path' => '/storage/projects/chorrillos-plaza/plano-general.jpg',
-                        'name' => 'Plano General del Proyecto'
+                        'descripcion' => 'Plano general del proyecto mixto'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'type' => 'concepto',
+                        'title' => 'Video del Concepto',
                         'path' => '/storage/projects/chorrillos-plaza/concepto.mp4',
-                        'name' => 'Video del Concepto'
+                        'descripcion' => 'Video explicativo del concepto'
                     ],
                     [
-                        'type' => 'desarrollo',
+                        'title' => 'Video del Desarrollo',
                         'path' => '/storage/projects/chorrillos-plaza/desarrollo.mp4',
-                        'name' => 'Video del Desarrollo'
+                        'descripcion' => 'Video del desarrollo del proyecto'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'type' => 'brochure',
+                        'title' => 'Brochure Mixto Chorrillos Plaza',
                         'path' => '/storage/projects/chorrillos-plaza/brochure-mixto.pdf',
-                        'name' => 'Brochure Mixto Chorrillos Plaza'
+                        'descripcion' => 'Catálogo del proyecto mixto'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano General del Proyecto Mixto',
                         'path' => '/storage/projects/chorrillos-plaza/plano-mixto.pdf',
-                        'name' => 'Plano General del Proyecto Mixto'
+                        'descripcion' => 'Plano general del proyecto'
                     ],
                     [
-                        'type' => 'estudio-mercado',
+                        'title' => 'Estudio de Mercado',
                         'path' => '/storage/projects/chorrillos-plaza/estudio-mercado.pdf',
-                        'name' => 'Estudio de Mercado'
+                        'descripcion' => 'Estudio de mercado del proyecto'
                     ]
                 ],
             ],
@@ -368,45 +378,47 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'delivery_date' => '2026-03-31',
                 'status' => 'activo',
+                'path_image_portada' => '/storage/projects/san-borja-center/portada-empresarial.jpg',
+                'path_video_portada' => '/storage/projects/san-borja-center/video-empresarial.mp4',
                 'path_images' => [
                     [
-                        'type' => 'edificio',
+                        'title' => 'Vista del Edificio',
                         'path' => '/storage/projects/san-borja-center/edificio.jpg',
-                        'name' => 'Vista del Edificio'
+                        'descripcion' => 'Vista frontal del edificio empresarial'
                     ],
                     [
-                        'type' => 'coworking',
+                        'title' => 'Espacio de Coworking',
                         'path' => '/storage/projects/san-borja-center/coworking.jpg',
-                        'name' => 'Espacio de Coworking'
+                        'descripcion' => 'Área de coworking disponible'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'type' => 'instalaciones',
+                        'title' => 'Video de las Instalaciones',
                         'path' => '/storage/projects/san-borja-center/instalaciones.mp4',
-                        'name' => 'Video de las Instalaciones'
+                        'descripcion' => 'Tour por todas las instalaciones'
                     ],
                     [
-                        'type' => 'ventajas',
+                        'title' => 'Video de Ventajas del Proyecto',
                         'path' => '/storage/projects/san-borja-center/ventajas.mp4',
-                        'name' => 'Video de Ventajas del Proyecto'
+                        'descripcion' => 'Video explicativo de las ventajas'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'type' => 'brochure',
+                        'title' => 'Brochure Empresarial San Borja Center',
                         'path' => '/storage/projects/san-borja-center/brochure-empresarial.pdf',
-                        'name' => 'Brochure Empresarial San Borja Center'
+                        'descripcion' => 'Catálogo empresarial del proyecto'
                     ],
                     [
-                        'type' => 'plano',
+                        'title' => 'Plano de Oficinas y Coworking',
                         'path' => '/storage/projects/san-borja-center/plano-oficinas.pdf',
-                        'name' => 'Plano de Oficinas y Coworking'
+                        'descripcion' => 'Plano de oficinas y espacios coworking'
                     ],
                     [
-                        'type' => 'servicios',
+                        'title' => 'Servicios Incluidos',
                         'path' => '/storage/projects/san-borja-center/servicios-incluidos.pdf',
-                        'name' => 'Servicios Incluidos'
+                        'descripcion' => 'Lista de servicios incluidos'
                     ]
                 ],
             ],

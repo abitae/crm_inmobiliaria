@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Projects\ProjectView;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Dashboard\Dashboard;
 use App\Livewire\Clients\ClientList;
@@ -44,8 +45,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Proyectos
     Route::get('/projects', ProjectList::class)->middleware('permission:view_projects')->name('projects.index');
+    // Vista de Proyecto
+    Route::get('/projects/{projectId}', ProjectView::class)->middleware('permission:view_projects')->name('projects.project-view');
 
-    // Gestión de Oportunidades
+// Gestión de Oportunidades
     Route::get('/opportunities', OpportunityList::class)->middleware('permission:view_opportunities')->name('opportunities.index');
 
     // Gestión de Tareas

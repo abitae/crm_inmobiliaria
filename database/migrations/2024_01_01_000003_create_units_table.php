@@ -14,19 +14,20 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
-            $table->string('unit_number');
-            $table->enum('unit_type', ['lote', 'casa', 'departamento', 'oficina', 'local']);
-            $table->integer('floor')->nullable();
-            $table->string('tower')->nullable();
-            $table->string('block')->nullable();
+            $table->string('unit_manzana')->nullable();//manzana de la unidad
+            $table->string('unit_number');//numero de unidad
+            $table->enum('unit_type', ['lote', 'casa', 'departamento', 'oficina', 'local']);//tipo de unidad
+            $table->integer('floor')->nullable();//piso
+            $table->string('tower')->nullable();//torre
+            $table->string('block')->nullable();//bloque
             $table->decimal('area', 8, 2); // área en m²
-            $table->integer('bedrooms')->default(0);
-            $table->integer('bathrooms')->default(0);
-            $table->integer('parking_spaces')->default(0);
-            $table->integer('storage_rooms')->default(0);
-            $table->decimal('balcony_area', 8, 2)->default(0);
-            $table->decimal('terrace_area', 8, 2)->default(0);
-            $table->decimal('garden_area', 8, 2)->default(0);
+            $table->integer('bedrooms')->default(0);//cuartos
+            $table->integer('bathrooms')->default(0);//baños
+            $table->integer('parking_spaces')->default(0);//espacios de estacionamiento
+            $table->integer('storage_rooms')->default(0);//cocheras
+            $table->decimal('balcony_area', 8, 2)->default(0);//area de balcon
+            $table->decimal('terrace_area', 8, 2)->default(0);//area de terraza
+            $table->decimal('garden_area', 8, 2)->default(0);//area de jardin
             $table->enum('status', ['disponible', 'reservado', 'vendido', 'bloqueado', 'en_construccion'])->default('disponible');
             $table->decimal('base_price', 12, 2); // precio base por m²
             $table->decimal('total_price', 12, 2); // precio total

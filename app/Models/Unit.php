@@ -15,6 +15,7 @@ class Unit extends Model
 
     protected $fillable = [
         'project_id',
+        'unit_manzana',//manzana de la unidad Ejemplo: Manzana 1, Manzana 2, o Letras A, B, C, etc.
         'unit_number',
         'unit_type', // lote, casa, departamento, oficina, local
         'floor',
