@@ -19,29 +19,29 @@ class Project extends Model
         'project_type', // lotes, casas, departamentos, oficinas, mixto
         'stage', // preventa, lanzamiento, venta_activa, cierre
         'legal_status', // con_titulo, en_tramite, habilitado
-        'address',
-        'district',
-        'province',
-        'region',
-        'country',
-        'latitude',
-        'longitude',
-        'total_units',
-        'available_units',
-        'reserved_units',
-        'sold_units',
-        'blocked_units',
-        'start_date',
-        'end_date',
-        'delivery_date',
+        'address', // dirección del proyecto
+        'district', // distrito del proyecto
+        'province', // provincia del proyecto
+        'region', // región del proyecto
+        'country', // país del proyecto
+        'latitude', // latitud del proyecto
+        'longitude', // longitud del proyecto
+        'total_units', // total de unidades del proyecto
+        'available_units', // unidades disponibles del proyecto
+        'reserved_units', // unidades reservadas del proyecto
+        'sold_units', // unidades vendidas del proyecto
+        'blocked_units', // unidades bloqueadas del proyecto
+        'start_date', // fecha de inicio del proyecto
+        'end_date', // fecha de fin del proyecto
+        'delivery_date', // fecha de entrega del proyecto
         'status', // activo, inactivo, suspendido, finalizado
-        'path_image_portada',
-        'path_video_portada',
-        'path_images',
-        'path_videos',
-        'path_documents',
-        'created_by',
-        'updated_by',
+        'path_image_portada', // ruta de la imagen de portada del proyecto
+        'path_video_portada', // ruta del video de portada del proyecto
+        'path_images', // rutas de las imágenes del proyecto
+        'path_videos', // rutas de los videos del proyecto
+        'path_documents', // rutas de los documentos del proyecto
+        'created_by', // usuario que creó el proyecto
+        'updated_by', // usuario que actualizó el proyecto
     ];
 
     protected $casts = [

@@ -349,4 +349,12 @@ class ProjectService
 
         return $validated;
     }
+
+    /**
+     * Obtener el ID del usuario autenticado actual
+     */
+    public function getCurrentUserId(): int
+    {
+        return Auth::user()->id;
+    }
 }

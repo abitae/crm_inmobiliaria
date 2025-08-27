@@ -62,9 +62,9 @@ class UnitPrice extends Model
     {
         $date = $date ?? now();
         return $query->where('valid_from', '<=', $date)
-                    ->where(function ($q) use ($date) {
-                        $q->whereNull('valid_until')
-                          ->orWhere('valid_until', '>=', $date);
-                    });
+            ->where(function ($q) use ($date) {
+                $q->whereNull('valid_until')
+                    ->orWhere('valid_until', '>=', $date);
+            });
     }
 }
