@@ -104,6 +104,7 @@ class ProjectView extends Component
         'unit_number.required' => 'El número de unidad es requerido',
         'unit_number.string' => 'El número de unidad debe ser una cadena de texto',
         'unit_number.max' => 'El número de unidad debe tener menos de 50 caracteres',
+        'unit_number.unique' => 'El número de unidad ya existe en este proyecto',
         'unit_manzana.string' => 'La manzana debe ser una cadena de texto',
         'unit_manzana.max' => 'La manzana debe tener menos de 50 caracteres',
     ];
@@ -142,6 +143,25 @@ class ProjectView extends Component
         $this->statusFilter = '';
         $this->typeFilter = '';
         $this->resetPage();
+    }
+
+    public function checkUnitNumberAvailability()
+    {
+        if (empty($this->unit_number)) {
+            return;
+        }
+
+        $query = $this->project->units()->where('unit_number', $this->unit_number);
+        
+        if ($this->isEditing && $this->editingUnit) {
+            $query->where('id', '!=', $this->editingUnit->id);
+        }
+
+        $exists = $query->exists();
+
+        if ($exists) {
+            $this->dispatch('show-error', message: 'El número de unidad ya existe en este proyecto');
+        }
     }
 
     public function selectUnit($unitId)
@@ -608,7 +628,17 @@ class ProjectView extends Component
 
     public function saveUnit()
     {
-        $this->validate($this->unitRules, $this->unitMessages);
+        // Aplicar reglas de validación dinámicas
+        $rules = $this->unitRules;
+        
+        // Si estamos editando, excluir la unidad actual de la validación de unicidad
+        if ($this->isEditing && $this->editingUnit) {
+            $rules['unit_number'] = 'required|string|max:50|unique:units,unit_number,' . $this->editingUnit->id . ',id,project_id,' . $this->project->id;
+        } else {
+            $rules['unit_number'] = 'required|string|max:50|unique:units,unit_number,NULL,id,project_id,' . $this->project->id;
+        }
+        
+        $this->validate($rules, $this->unitMessages);
         
 
         try {
