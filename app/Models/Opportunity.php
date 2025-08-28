@@ -154,6 +154,63 @@ class Opportunity extends Model
             ->where('status', 'activa');
     }
 
+    // Nuevos scopes optimizados
+    public function scopeBySource($query, $source)
+    {
+        return $query->where('source', $source);
+    }
+
+    public function scopeByCampaign($query, $campaign)
+    {
+        return $query->where('campaign', $campaign);
+    }
+
+    public function scopeByProbabilityRange($query, $min, $max)
+    {
+        return $query->whereBetween('probability', [$min, $max]);
+    }
+
+    public function scopeByValueRange($query, $min, $max)
+    {
+        return $query->whereBetween('expected_value', [$min, $max]);
+    }
+
+    public function scopeByDateRange($query, $from, $to)
+    {
+        return $query->whereBetween('expected_close_date', [$from, $to]);
+    }
+
+    public function scopeByCreatedDateRange($query, $from, $to)
+    {
+        return $query->whereBetween('created_at', [$from, $to]);
+    }
+
+    public function scopeHighValue($query, $minValue = 100000)
+    {
+        return $query->where('expected_value', '>=', $minValue);
+    }
+
+    public function scopeHighProbability($query, $minProbability = 80)
+    {
+        return $query->where('probability', '>=', $minProbability);
+    }
+
+    public function scopeClosingSoon($query, $days = 30)
+    {
+        return $query->where('expected_close_date', '<=', now()->addDays($days))
+                    ->where('status', 'activa');
+    }
+
+    public function scopeRecentlyCreated($query, $days = 7)
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    public function scopeRecentlyUpdated($query, $days = 7)
+    {
+        return $query->where('updated_at', '>=', now()->subDays($days));
+    }
+
     // Accessors
     public function getIsActiveAttribute(): bool
     {

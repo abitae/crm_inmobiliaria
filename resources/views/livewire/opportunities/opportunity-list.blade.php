@@ -49,18 +49,6 @@
                     </flux:select>
                 </div>
                 <div>
-                    <flux:select size="xs" wire:model.live="sourceFilter">
-                        <option value="">Todas las fuentes</option>
-                        <option value="website">Sitio web</option>
-                        <option value="referral">Referido</option>
-                        <option value="social">Redes sociales</option>
-                        <option value="walkin">Visita directa</option>
-                        <option value="cold_call">Llamada en frío</option>
-                        <option value="feria">Feria</option>
-                        <option value="publicidad">Publicidad</option>
-                    </flux:select>
-                </div>
-                <div>
                     <flux:select size="xs" wire:model.live="statusFilter">
                         <option value="">Todos los estados</option>
                         <option value="activa">Activa</option>
@@ -91,6 +79,8 @@
                     </flux:button>
                 </div>
             </div>
+
+
         </div>
 
         <!-- Estadísticas Rápidas -->
