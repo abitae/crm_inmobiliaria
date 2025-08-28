@@ -213,12 +213,12 @@
                                 <div class="flex items-center">
                                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                         <span class="text-sm font-medium text-blue-600">
-                                            {{ strtoupper(substr($sale->client->first_name ?? 'C', 0, 1) . substr($sale->client->last_name ?? 'L', 0, 1)) }}
+                                            {{ strtoupper(substr($sale->client->name ?? 'C', 0, 1)) }}
                                         </span>
                                     </div>
                                     <div class="ml-3">
                                         <div class="text-sm font-medium text-gray-900">
-                                            {{ $sale->client->first_name ?? '' }} {{ $sale->client->last_name ?? '' }}
+                                            {{ $sale->client->name ?? '' }}
                                         </div>
                                         <div class="text-xs text-gray-500">{{ $sale->client->email ?? '' }}</div>
                                     </div>

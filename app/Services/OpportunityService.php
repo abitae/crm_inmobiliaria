@@ -20,6 +20,19 @@ class OpportunityService
             ->withCount(['activities', 'tasks', 'interactions']);
 
         // Aplicar filtros
+        if (isset($filters['search']) && !empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->whereHas('client', function($clientQuery) use ($search) {
+                    $clientQuery->where('name', 'like', "%{$search}%")
+                               ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('project', function($projectQuery) use ($search) {
+                    $projectQuery->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
         if (isset($filters['status'])) {
             $query->byStatus($filters['status']);
         }
@@ -75,8 +88,8 @@ class OpportunityService
      */
     public function createOpportunity(array $data): Opportunity
     {
-        $data['created_by'] = auth()->id();
-        $data['updated_by'] = auth()->id();
+        $data['created_by'] = request()->user() ? request()->user()->id : null;
+        $data['updated_by'] = request()->user() ? request()->user()->id : null;
 
         return Opportunity::create($data);
     }
@@ -91,7 +104,7 @@ class OpportunityService
             return false;
         }
 
-        $data['updated_by'] = auth()->id();
+        $data['updated_by'] = request()->user() ? request()->user()->id : null;
         return $opportunity->update($data);
     }
 
@@ -230,7 +243,7 @@ class OpportunityService
 
         $totalValue = Opportunity::active()->sum('expected_value');
         $wonValue = Opportunity::won()->sum('close_value');
-        $weightedValue = Opportunity::active()->sum(DB::raw('expected_value * probability / 100'));
+        $weightedValue = Opportunity::active()->sum(\Illuminate\Support\Facades\DB::raw('expected_value * probability / 100'));
 
         return [
             'total' => $totalOpportunities,

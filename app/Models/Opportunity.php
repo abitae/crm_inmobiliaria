@@ -13,20 +13,20 @@ class Opportunity extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'client_id',
-        'project_id',
-        'unit_id',
-        'advisor_id',
-        'stage', // captado, calificado, contacto, propuesta, visita, negociacion, cierre
+        'client_id',// id del cliente
+        'project_id',// id del proyecto
+        'unit_id',// id de la unidad
+        'advisor_id',// id del asesor
+        'stage', // captado, calificado, contacto, propuesta, visita, negociacion, cierre, cancelada
         'status', // activa, ganada, perdida, cancelada
-        'probability', // porcentaje de probabilidad de cierre
-        'expected_value', // valor esperado de la venta
-        'expected_close_date', // fecha esperada de cierre
-        'actual_close_date', // fecha real de cierre
-        'close_value', // valor real de la venta
+        'probability', // porcentaje de probabilidad de cierre, 0-100
+        'expected_value', // valor esperado de la venta, 0-1000000,
+        'expected_close_date', // fecha esperada de cierre, YYYY-MM-DD
+        'actual_close_date', // fecha real de cierre, YYYY-MM-DD
+        'close_value', // valor real de la venta, 0-1000000
         'close_reason', // razón del cierre
         'lost_reason', // razón de la pérdida
-        'notes',
+        'notes',// notas de la oportunidad
         'source', // origen de la oportunidad
         'campaign', // campaña asociada
         'created_by',

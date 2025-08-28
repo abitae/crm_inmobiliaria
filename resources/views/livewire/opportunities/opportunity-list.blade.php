@@ -8,12 +8,10 @@
                     <p class="text-sm text-gray-600">Seguimiento de ventas y leads</p>
                 </div>
                 <div class="flex space-x-2">
-                    <flux:button size="xs" wire:click="exportOpportunities">
-                        <flux:icon name="heroicon-o-arrow-down-tray" class="w-4 h-4 mr-1" />
+                    <flux:button icon="arrow-down-tray" size="xs" wire:click="exportOpportunities">
                         Exportar
                     </flux:button>
-                    <flux:button size="xs" color="primary" wire:click="createOpportunity">
-                        <flux:icon name="heroicon-o-plus" class="w-4 h-4 mr-1" />
+                    <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal">
                         Nueva Oportunidad
                     </flux:button>
                 </div>
@@ -22,6 +20,16 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Mensajes de éxito -->
+        @if (session()->has('message'))
+            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('message') }}</span>
+                <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.style.display='none'">
+                    <flux:icon name="x-mark" class="w-4 h-4" />
+                </button>
+            </div>
+        @endif
+
         <!-- Filtros y Búsqueda -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -31,13 +39,13 @@
                 <div>
                     <flux:select size="xs" wire:model.live="stageFilter">
                         <option value="">Todas las etapas</option>
-                        <option value="prospecting">Prospección</option>
-                        <option value="qualification">Calificación</option>
-                        <option value="proposal">Propuesta</option>
-                        <option value="negotiation">Negociación</option>
-                        <option value="closing">Cierre</option>
-                        <option value="won">Ganada</option>
-                        <option value="lost">Perdida</option>
+                        <option value="captado">Captado</option>
+                        <option value="calificado">Calificado</option>
+                        <option value="contacto">Contacto</option>
+                        <option value="propuesta">Propuesta</option>
+                        <option value="visita">Visita</option>
+                        <option value="negociacion">Negociación</option>
+                        <option value="cierre">Cierre</option>
                     </flux:select>
                 </div>
                 <div>
@@ -48,18 +56,29 @@
                         <option value="social">Redes sociales</option>
                         <option value="walkin">Visita directa</option>
                         <option value="cold_call">Llamada en frío</option>
+                        <option value="feria">Feria</option>
+                        <option value="publicidad">Publicidad</option>
                     </flux:select>
                 </div>
                 <div>
-                    <flux:select size="xs" wire:model.live="valueFilter">
-                        <option value="">Todos los valores</option>
-                        <option value="low">Bajo (< 100k)</option>
-                        <option value="medium">Medio (100k - 500k)</option>
-                        <option value="high">Alto (> 500k)</option>
+                    <flux:select size="xs" wire:model.live="statusFilter">
+                        <option value="">Todos los estados</option>
+                        <option value="activa">Activa</option>
+                        <option value="ganada">Ganada</option>
+                        <option value="perdida">Perdida</option>
+                        <option value="cancelada">Cancelada</option>
                     </flux:select>
                 </div>
                 <div>
-                    <flux:select size="xs" wire:model.live="assignedToFilter">
+                    <flux:select size="xs" wire:model.live="projectFilter">
+                        <option value="">Todos los proyectos</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                        @endforeach
+                    </flux:select>
+                </div>
+                <div>
+                    <flux:select size="xs" wire:model.live="advisorFilter">
                         <option value="">Todos los asesores</option>
                         @foreach($advisors as $advisor)
                             <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
@@ -67,7 +86,7 @@
                     </flux:select>
                 </div>
                 <div>
-                    <flux:button size="xs" variant="outline" wire:click="clearFilters">
+                    <flux:button icon="x-mark" size="xs" variant="outline" wire:click="clearFilters">
                         Limpiar filtros
                     </flux:button>
                 </div>
@@ -79,7 +98,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <x-filament::icon name="heroicon-o-funnel" class="w-4 h-4 text-blue-600" />
+                        <flux:icon name="funnel" class="w-4 h-4 text-blue-600" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-500">Total</p>
@@ -90,7 +109,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <x-filament::icon name="heroicon-o-check-circle" class="w-4 h-4 text-green-600" />
+                        <flux:icon name="check-circle" class="w-4 h-4 text-green-600" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-500">Ganadas</p>
@@ -101,7 +120,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <x-filament::icon name="heroicon-o-clock" class="w-4 h-4 text-yellow-600" />
+                        <flux:icon name="clock" class="w-4 h-4 text-yellow-600" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-500">En Proceso</p>
@@ -112,7 +131,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <x-filament::icon name="heroicon-o-currency-dollar" class="w-4 h-4 text-purple-600" />
+                        <flux:icon name="currency-dollar" class="w-4 h-4 text-purple-600" />
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-500">Valor Total</p>
@@ -158,12 +177,12 @@
                                 <div class="flex items-center">
                                     <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                         <span class="text-sm font-medium text-blue-600">
-                                            {{ strtoupper(substr($opportunity->client->first_name ?? 'C', 0, 1) . substr($opportunity->client->last_name ?? 'L', 0, 1)) }}
+                                            {{ strtoupper(substr($opportunity->client->name ?? 'C', 0, 1)) }}
                                         </span>
                                     </div>
                                     <div class="ml-3">
                                         <div class="text-sm font-medium text-gray-900">
-                                            {{ $opportunity->client->first_name ?? '' }} {{ $opportunity->client->last_name ?? '' }}
+                                            {{ $opportunity->client->name ?? '' }}
                                         </div>
                                         <div class="text-xs text-gray-500">{{ $opportunity->client->email ?? '' }}</div>
                                     </div>
@@ -186,7 +205,7 @@
                                 <div class="text-xs text-gray-500">{{ $opportunity->probability }}% probabilidad</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $opportunity->assigned_to->name ?? 'Sin asignar' }}</div>
+                                <div class="text-sm text-gray-900">{{ $opportunity->advisor->name ?? 'Sin asignar' }}</div>
                                 <div class="text-xs text-gray-500">{{ $opportunity->source }}</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -194,15 +213,9 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
-                                    <x-filament::button size="xs" variant="outline" wire:click="viewOpportunity({{ $opportunity->id }})">
-                                        <x-filament::icon name="heroicon-o-eye" class="w-3 h-3" />
-                                    </x-filament::button>
-                                    <x-filament::button size="xs" variant="outline" wire:click="editOpportunity({{ $opportunity->id }})">
-                                        <x-filament::icon name="heroicon-o-pencil" class="w-3 h-3" />
-                                    </x-filament::button>
-                                    <x-filament::button size="xs" variant="outline" color="danger" wire:click="deleteOpportunity({{ $opportunity->id }})">
-                                        <x-filament::icon name="heroicon-o-trash" class="w-3 h-3" />
-                                    </x-filament::button>
+                                    <flux:button icon="eye" size="xs" variant="outline" wire:click="openDetailModal({{ $opportunity->id }})" />
+                                    <flux:button icon="pencil" size="xs" variant="outline" wire:click="openEditModal({{ $opportunity->id }})" />
+                                    <flux:button icon="trash" size="xs" variant="outline" color="danger" wire:click="openDeleteModal({{ $opportunity->id }})" />
                                 </div>
                             </td>
                         </tr>
@@ -210,11 +223,11 @@
                         <tr>
                             <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                 <div class="flex flex-col items-center">
-                                    <x-filament::icon name="heroicon-o-funnel" class="w-12 h-12 text-gray-300 mb-2" />
+                                    <flux:icon name="funnel" class="w-12 h-12 text-gray-300 mb-2" />
                                     <p>No se encontraron oportunidades</p>
-                                    <x-filament::button size="xs" color="primary" class="mt-2" wire:click="createOpportunity">
+                                    <flux:button icon="plus" size="xs" color="primary" class="mt-2" wire:click="openCreateModal">
                                         Crear primera oportunidad
-                                    </x-filament::button>
+                                    </flux:button>
                                 </div>
                             </td>
                         </tr>
@@ -238,7 +251,7 @@
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <x-filament::icon name="heroicon-o-exclamation-triangle" class="h-6 w-6 text-red-600" />
+                    <flux:icon name="exclamation-triangle" class="h-6 w-6 text-red-600" />
                 </div>
                 <h3 class="text-lg font-medium text-gray-900 mt-4">Confirmar eliminación</h3>
                 <div class="mt-2 px-7 py-3">
@@ -247,15 +260,19 @@
                     </p>
                 </div>
                 <div class="flex justify-center space-x-3 mt-4">
-                    <x-filament::button size="xs" variant="outline" wire:click="cancelDelete">
+                    <flux:button icon="x-mark" size="xs" variant="outline" wire:click="cancelDelete">
                         Cancelar
-                    </x-filament::button>
-                    <x-filament::button size="xs" color="danger" wire:click="confirmDelete">
+                    </flux:button>
+                    <flux:button icon="trash" size="xs" color="danger" wire:click="confirmDelete">
                         Eliminar
-                    </x-filament::button>
+                    </flux:button>
                 </div>
             </div>
         </div>
     </div>
     @endif
+
+    <!-- Componentes adicionales -->
+    <livewire:opportunities.opportunity-form />
+    <livewire:opportunities.opportunity-detail />
 </div>

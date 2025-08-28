@@ -621,7 +621,7 @@
                             @if ($availableAdvisors->count() > 0)
                                 @foreach ($availableAdvisors as $advisor)
                                     <option value="{{ $advisor->id }}">
-                                        {{ $advisor->name }} {{ $advisor->last_name }}
+                                        {{ $advisor->name }}
                                         ({{ $advisor->email }})
                                     </option>
                                 @endforeach
@@ -656,8 +656,7 @@
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Asesor:</span>
-                                        <span class="font-medium text-gray-800">{{ $selectedAdvisor->name }}
-                                            {{ $selectedAdvisor->last_name }}</span>
+                                        <span class="font-medium text-gray-800">{{ $selectedAdvisor->name }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-gray-600">Email:</span>
@@ -753,7 +752,7 @@
                                                                 class="w-4 h-4 text-blue-600 mr-2" />
                                                             <div>
                                                                 <div class="text-sm font-medium text-gray-900">
-                                                                    {{ $advisor->name }} {{ $advisor->last_name }}
+                                                                    {{ $advisor->name }}
                                                                 </div>
                                                                 <div class="text-xs text-gray-500">
                                                                     {{ $advisor->email }}

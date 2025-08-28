@@ -29,6 +29,14 @@ class OpportunityList extends Component
     public $selectedOpportunity = null;
     public $editingOpportunity = null;
 
+    // Listeners para eventos de otros componentes
+    protected $listeners = [
+        'edit-opportunity' => 'openEditModal',
+        'opportunity-created' => 'refreshOpportunities',
+        'opportunity-updated' => 'refreshOpportunities',
+        'opportunity-deleted' => 'refreshOpportunities',
+    ];
+
     // Form fields
     public $client_id = '';
     public $project_id = '';
@@ -84,13 +92,24 @@ class OpportunityList extends Component
     public function mount()
     {
         $this->clients = Client::all();
-        $this->projects = Project::active()->get();
+        $this->projects = Project::all();
         $this->advisors = User::getAdvisorsAndAdmins();
         $this->expected_close_date = now()->addDays(30)->format('Y-m-d');
     }
 
     public function updatedSearch()
     {
+        $this->resetPage();
+    }
+
+    public function clearFilters()
+    {
+        $this->search = '';
+        $this->statusFilter = '';
+        $this->stageFilter = '';
+        $this->advisorFilter = '';
+        $this->projectFilter = '';
+        $this->clientFilter = '';
         $this->resetPage();
     }
 
@@ -156,6 +175,11 @@ class OpportunityList extends Component
     {
         $this->selectedOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
         $this->showDeleteModal = true;
+    }
+
+    public function openDetailModal($opportunityId)
+    {
+        $this->dispatch('open-opportunity-detail', ['id' => $opportunityId]);
     }
 
     public function openStageModal($opportunityId)
@@ -359,6 +383,12 @@ class OpportunityList extends Component
         session()->flash('message', 'Valor esperado actualizado.');
     }
 
+    public function refreshOpportunities()
+    {
+        // Este método se llama cuando se actualiza la lista
+        // No es necesario hacer nada especial ya que Livewire se actualiza automáticamente
+    }
+
     public function render()
     {
         $filters = [
@@ -371,9 +401,13 @@ class OpportunityList extends Component
         ];
 
         $opportunities = $this->opportunityService->getAllOpportunities(15, $filters);
+        $stats = $this->opportunityService->getOpportunityStats();
+        $projects = Project::active()->orderBy('name')->get();
 
         return view('livewire.opportunities.opportunity-list', [
-            'opportunities' => $opportunities
+            'opportunities' => $opportunities,
+            'stats' => $stats,
+            'projects' => $projects
         ]);
     }
 }
