@@ -4,11 +4,18 @@ namespace Database\Seeders;
 
 use App\Models\Client;
 use App\Models\Project;
-use App\Models\ProjectPrice;
 use App\Models\Unit;
-use App\Models\UnitPrice;
 use App\Models\User;
+use App\Models\Commission;
+use App\Models\Activity;
+use App\Models\Task;
+use App\Models\Interaction;
+use App\Models\Document;
+use App\Models\Reservation;
+use App\Models\Opportunity;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class RelationshipSeeder extends Seeder
 {
@@ -32,11 +39,9 @@ class RelationshipSeeder extends Seeder
         $this->createClientUnitInterests($clients, $units, $admin);
         $this->createAdvisorProjectAssignments($projects, $admin);
 
-        // Crear tablas de precios
-        $this->createProjectPrices($projects, $admin);
-        $this->createUnitPrices($units, $admin);
 
-        $this->command->info('Relaciones y precios creados exitosamente');
+
+        $this->command->info('Relaciones creadas exitosamente');
     }
 
     private function createClientProjectInterests($clients, $projects, $admin): void
@@ -124,82 +129,7 @@ class RelationshipSeeder extends Seeder
         }
     }
 
-    private function createProjectPrices($projects, $admin): void
-    {
-        foreach ($projects as $project) {
-            // Crear historial de precios para cada proyecto
-            $basePrice = $this->getBasePriceByProjectType($project->project_type);
-            $currentDate = now()->subMonths(6);
 
-            for ($i = 0; $i < 3; $i++) {
-                $priceIncrease = rand(0, 15); // 0-15% de incremento
-                $pricePerSqm = $basePrice * (1 + $priceIncrease / 100);
-                $totalUnits = $project->total_units;
-                $baseAmount = $pricePerSqm * $totalUnits * 100; // Área promedio por unidad
-                $discountPercentage = rand(0, 10);
-                $finalPrice = $baseAmount * (1 - $discountPercentage / 100);
-
-                $validFrom = $currentDate->copy();
-                $validUntil = $i < 2 ? $currentDate->copy()->addMonths(2) : null;
-                $isActive = $i === 2; // Solo el último precio está activo
-
-                ProjectPrice::create([
-                    'project_id' => $project->id,
-                    'price_per_sqm' => $pricePerSqm,
-                    'base_price' => $baseAmount,
-                    'discount_percentage' => $discountPercentage,
-                    'final_price' => $finalPrice,
-                    'valid_from' => $validFrom,
-                    'valid_until' => $validUntil,
-                    'is_active' => $isActive,
-                    'notes' => "Precio histórico #" . ($i + 1) . " del proyecto",
-                    'created_by' => $admin->id,
-                    'updated_by' => $admin->id,
-                ]);
-
-                $currentDate->addMonths(2);
-            }
-        }
-    }
-
-    private function createUnitPrices($units, $admin): void
-    {
-        foreach ($units as $unit) {
-            // Crear historial de precios para cada unidad
-            $basePrice = $unit->base_price;
-            $currentDate = now()->subMonths(3);
-
-            for ($i = 0; $i < 2; $i++) {
-                $priceIncrease = rand(-5, 10); // -5% a +10% de variación
-                $pricePerSqm = $basePrice * (1 + $priceIncrease / 100);
-                $totalPrice = $pricePerSqm * $unit->area;
-                $discountPercentage = rand(0, 15);
-                $discountAmount = $totalPrice * ($discountPercentage / 100);
-                $finalPrice = $totalPrice - $discountAmount;
-
-                $validFrom = $currentDate->copy();
-                $validUntil = $i < 1 ? $currentDate->copy()->addMonths(1) : null;
-                $isActive = $i === 1; // Solo el último precio está activo
-
-                UnitPrice::create([
-                    'unit_id' => $unit->id,
-                    'price_per_sqm' => $pricePerSqm,
-                    'base_price' => $totalPrice,
-                    'discount_percentage' => $discountPercentage,
-                    'discount_amount' => $discountAmount,
-                    'final_price' => $finalPrice,
-                    'valid_from' => $validFrom,
-                    'valid_until' => $validUntil,
-                    'is_active' => $isActive,
-                    'notes' => "Precio histórico #" . ($i + 1) . " de la unidad",
-                    'created_by' => $admin->id,
-                    'updated_by' => $admin->id,
-                ]);
-
-                $currentDate->addMonths(1);
-            }
-        }
-    }
 
     private function getBasePriceByProjectType(string $projectType): float
     {

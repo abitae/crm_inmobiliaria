@@ -14,35 +14,35 @@ class Unit extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'project_id',
+        'project_id', // id del proyecto al que pertenece la unidad Ejemplo: 1, 2, 3, etc.
         'unit_manzana',//manzana de la unidad Ejemplo: Manzana 1, Manzana 2, o Letras A, B, C, etc.
-        'unit_number',
+        'unit_number', // numero de la unidad Ejemplo: A-101, B-202, etc.
         'unit_type', // lote, casa, departamento, oficina, local
-        'floor',
-        'tower',
-        'block',
+        'floor', // piso de la unidad Ejemplo: 1, 2, 3, etc.
+        'tower', // torre de la unidad Ejemplo: Torre 1, Torre 2, o Letras A, B, C, etc.
+        'block', // bloque de la unidad Ejemplo: Bloque 1, Bloque 2, o Letras A, B, C, etc.
         'area', // área en m²
-        'bedrooms',
-        'bathrooms',
-        'parking_spaces',
-        'storage_rooms',
-        'balcony_area',
-        'terrace_area',
-        'garden_area',
+        'bedrooms', // cuartos de la unidad Ejemplo: 1, 2, 3, etc.
+        'bathrooms', // baños de la unidad Ejemplo: 1, 2, 3, etc.
+        'parking_spaces', // espacios de estacionamiento de la unidad Ejemplo: 1, 2, 3, etc.
+        'storage_rooms', // cocheras de la unidad Ejemplo: 1, 2, 3, etc.
+        'balcony_area', // área de balcón de la unidad Ejemplo: 10, 20, 30, etc.
+        'terrace_area', // área de terraza de la unidad Ejemplo: 10, 20, 30, etc.
+        'garden_area', // área de jardín de la unidad Ejemplo: 10, 20, 30, etc.
         'status', // disponible, reservado, vendido, bloqueado, en_construccion
-        'base_price', // precio base por m²
-        'total_price', // precio total
-        'discount_percentage',
-        'discount_amount',
+        'base_price', // precio base por m² Ejemplo: 10000, 20000, 30000, etc.
+        'total_price', // precio total Ejemplo: 100000, 200000, 300000, etc.
+        'discount_percentage', // descuento en porcentaje Ejemplo: 10, 20, 30, etc.
+        'discount_amount', // descuento en monto Ejemplo: 10000, 20000, 30000, etc.
         'final_price', // precio final después de descuentos
-        'commission_percentage',
-        'commission_amount',
-        'blocked_until', // fecha hasta cuando está bloqueado
-        'blocked_by',
-        'blocked_reason',
-        'notes',
-        'created_by',
-        'updated_by',
+        'commission_percentage', // comisión en porcentaje Ejemplo: 10, 20, 30, etc.
+        'commission_amount', // comisión en monto Ejemplo: 10000, 20000, 30000, etc.
+        'blocked_until', // fecha hasta cuando está bloqueado Ejemplo: 2025-01-01, 2025-01-02, etc.
+        'blocked_by', // usuario que bloqueó la unidad Ejemplo: 1, 2, 3, etc.
+        'blocked_reason', // razón del bloqueo Ejemplo: Venta, Alquiler, etc.
+        'notes', // notas adicionales sobre la unidad Ejemplo: Notas adicionales, etc.
+        'created_by', // usuario que creó la unidad Ejemplo: 1, 2, 3, etc.
+        'updated_by', // usuario que actualizó la unidad Ejemplo: 1, 2, 3, etc.
     ];
 
     protected $casts = [
@@ -120,10 +120,7 @@ class Unit extends Model
             ->withTimestamps();
     }
 
-    public function prices(): HasMany
-    {
-        return $this->hasMany(UnitPrice::class);
-    }
+
 
     // Scopes
     public function scopeAvailable($query)

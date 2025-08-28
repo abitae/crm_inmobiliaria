@@ -67,6 +67,7 @@ class ProjectList extends Component
     public $selectedAdvisorId = '';
     public $isPrimaryAdvisor = false;
     public $advisorNotes = '';
+    public $currentAdvisors = [];
 
     // ==================== DEPENDENCIAS ====================
     protected $projectService;
@@ -185,7 +186,14 @@ class ProjectList extends Component
     public function openAssignAdvisorModal($projectId)
     {
         $this->selectedProject = $this->projectService->getProjectById($projectId);
-        $this->showAssignAdvisorModal = true;
+        if ($this->selectedProject) {
+            // Limpiar formulario anterior
+            $this->reset(['selectedAdvisorId', 'isPrimaryAdvisor', 'advisorNotes']);
+            
+            // Obtener asesores actuales del proyecto con la relación pivot cargada
+            $this->currentAdvisors = $this->selectedProject->advisors()->withPivot(['assigned_at', 'is_primary', 'notes'])->get();
+            $this->showAssignAdvisorModal = true;
+        }
     }
 
     public function closeModals()
@@ -198,7 +206,8 @@ class ProjectList extends Component
             'selectedProject',
             'selectedAdvisorId',
             'isPrimaryAdvisor',
-            'advisorNotes'
+            'advisorNotes',
+            'currentAdvisors'
         ]);
         $this->resetForm();
     }
@@ -280,7 +289,7 @@ class ProjectList extends Component
 
         $this->closeModals();
         $this->dispatch('project-created');
-        session()->flash('message', 'Proyecto creado exitosamente.');
+        $this->dispatch('show-success', 'Proyecto creado exitosamente.');
     }
 
     public function updateProject()
@@ -297,7 +306,7 @@ class ProjectList extends Component
 
         $this->closeModals();
         $this->dispatch('project-updated');
-        session()->flash('message', 'Proyecto actualizado exitosamente.');
+        $this->dispatch('show-success', 'Proyecto actualizado exitosamente.');
     }
 
     public function deleteProject()
@@ -314,20 +323,95 @@ class ProjectList extends Component
 
     public function assignAdvisor()
     {
+        $this->validate([
+            'selectedAdvisorId' => 'required|exists:users,id',
+            'advisorNotes' => 'nullable|string|max:1000',
+        ]);
+
         if (!$this->selectedProject || !$this->selectedAdvisorId) {
+            $this->dispatch('show-error', 'Error: Proyecto o asesor no válido.');
             return;
         }
 
-        $this->projectService->assignAdvisor(
-            $this->selectedProject->id,
-            $this->selectedAdvisorId,
-            $this->isPrimaryAdvisor,
-            $this->advisorNotes
-        );
+        try {
+            $this->projectService->assignAdvisor(
+                $this->selectedProject->id,
+                $this->selectedAdvisorId,
+                $this->isPrimaryAdvisor,
+                $this->advisorNotes
+            );
 
-        $this->closeModals();
-        $this->dispatch('advisor-assigned');
-        session()->flash('message', 'Asesor asignado exitosamente.');
+            // Actualizar la lista de asesores actuales
+            $this->refreshAdvisorsList();
+
+            $this->closeModals();
+            $this->dispatch('advisor-assigned');
+            $this->dispatch('show-success', 'Asesor asignado exitosamente.');
+        } catch (\Exception $e) {
+            $this->dispatch('show-error', 'Error al asignar el asesor: ' . $e->getMessage());
+        }
+    }
+
+    public function refreshAdvisorsList()
+    {
+        if ($this->selectedProject) {
+            $this->currentAdvisors = $this->selectedProject->fresh()->advisors()->withPivot(['assigned_at', 'is_primary', 'notes'])->get();
+        }
+    }
+
+    public function confirmAssignAdvisor()
+    {
+        if (!$this->selectedAdvisorId) {
+            $this->dispatch('show-error', 'Por favor selecciona un asesor.');
+            return;
+        }
+
+        // Verificar si el asesor ya está asignado
+        $alreadyAssigned = collect($this->currentAdvisors)->contains('id', $this->selectedAdvisorId);
+        if ($alreadyAssigned) {
+            $this->dispatch('show-error', 'Este asesor ya está asignado al proyecto.');
+            return;
+        }
+
+        // Asignar directamente sin confirmación
+        $this->assignAdvisor();
+    }
+
+    public function removeAdvisor($advisorId)
+    {
+        if (!$this->selectedProject) {
+            $this->dispatch('show-error', 'Error: Proyecto no válido.');
+            return;
+        }
+
+        $advisor = collect($this->currentAdvisors)->firstWhere('id', $advisorId);
+        if (!$advisor) {
+            $this->dispatch('show-error', 'Asesor no encontrado.');
+            return;
+        }
+
+        // Verificar si es el último asesor principal
+        if ($advisor->pivot && $advisor->pivot->is_primary) {
+            $primaryAdvisors = collect($this->currentAdvisors)->filter(function($advisor) {
+                return $advisor->pivot && $advisor->pivot->is_primary;
+            })->count();
+            if ($primaryAdvisors <= 1) {
+                $this->dispatch('show-error', 'No puedes eliminar al último asesor principal. Asigna otro asesor principal primero.');
+                return;
+            }
+        }
+
+        // Eliminar directamente sin confirmación
+        try {
+            $this->projectService->removeAdvisor($this->selectedProject->id, $advisorId);
+            
+            // Actualizar la lista de asesores actuales con la relación pivot cargada
+            $this->currentAdvisors = $this->selectedProject->fresh()->advisors()->withPivot(['assigned_at', 'is_primary', 'notes'])->get();
+            $this->showAssignAdvisorModal = false;
+            $this->dispatch('show-success', 'Asesor eliminado exitosamente.');
+        } catch (\Exception $e) {
+            $this->dispatch('show-error', 'Error al eliminar el asesor: ' . $e->getMessage());
+        }
     }
 
     // ==================== MÉTODOS MULTIMEDIA ====================
@@ -516,6 +600,6 @@ class ProjectList extends Component
         // Aquí puedes implementar la lógica de exportación
         // Por ejemplo, generar CSV, Excel, PDF, etc.
 
-        session()->flash('message', 'Exportación iniciada. Los archivos estarán disponibles pronto.');
+        $this->dispatch('show-info', 'Exportación iniciada. Los archivos estarán disponibles pronto.');
     }
 }

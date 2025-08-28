@@ -67,7 +67,6 @@ El modelo `Project` representa a los proyectos inmobiliarios del CRM. Gestiona t
 
 ### Relaciones Uno a Muchos
 - **`units()`** → `Unit[]` - Unidades inmobiliarias del proyecto
-- **`prices()`** → `ProjectPrice[]` - Historial de precios del proyecto
 - **`documents()`** → `Document[]` - Documentos del proyecto
 - **`activities()`** → `Activity[]` - Actividades relacionadas
 - **`opportunities()`** → `Opportunity[]` - Oportunidades de venta
@@ -155,8 +154,7 @@ $project->assignAdvisor($advisorId, true, 'Asesor principal');
 // Remover asesor
 $project->removeAdvisor($advisorId);
 
-// Obtener precio actual
-$currentPrice = $project->getCurrentPrice();
+
 ```
 
 ### Verificaciones
@@ -218,7 +216,6 @@ $mirafloresProjects = Project::byLocation('Miraflores')
 ```php
 $project = Project::with([
     'units',
-    'prices',
     'advisors',
     'clients'
 ])->find(1);
@@ -334,7 +331,7 @@ CREATE INDEX idx_projects_units ON projects(available_units, total_units);
 ### Consultas Optimizadas
 ```php
 // Usar eager loading para evitar N+1 queries
-$projects = Project::with(['units', 'advisors', 'prices'])
+$projects = Project::with(['units', 'advisors'])
     ->active()
     ->get();
 

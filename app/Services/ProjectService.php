@@ -30,7 +30,7 @@ class ProjectService
     public function getAllProjects(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         try {
-            $query = Project::with(['createdBy', 'units', 'prices'])
+            $query = Project::with(['createdBy', 'units'])
                 ->withCount(['units', 'opportunities', 'clients']);
 
             // Aplicar filtros
@@ -109,7 +109,6 @@ class ProjectService
             'createdBy',
             'updatedBy',
             'units',
-            'prices',
             'opportunities.client',
             'opportunities.unit',
             'clients',
@@ -227,7 +226,7 @@ class ProjectService
      */
     public function getProjectsByType(string $type): Collection
     {
-        return Project::with(['units', 'prices'])
+        return Project::with(['units'])
             ->byType($type)
             ->active()
             ->get();
@@ -238,7 +237,7 @@ class ProjectService
      */
     public function getProjectsByLocation(string $district = null, string $province = null, string $region = null): Collection
     {
-        return Project::with(['units', 'prices'])
+        return Project::with(['units'])
             ->byLocation($district, $province, $region)
             ->active()
             ->get();
@@ -263,7 +262,7 @@ class ProjectService
     {
         return Project::with(['units' => function ($query) {
             $query->where('status', 'disponible');
-        }, 'prices'])
+        }])
             ->withAvailableUnits()
             ->active()
             ->get();

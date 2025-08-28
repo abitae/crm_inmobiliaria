@@ -101,10 +101,10 @@ Administración completa de proyectos inmobiliarios y sus unidades disponibles, 
 - [ ] Sistema de bloqueo con validación de fechas
 
 #### Especificaciones Técnicas
-- **Base de Datos**: Tablas `projects`, `units`, `prices`, `locations`
+- **Base de Datos**: Tablas `projects`, `units`, `locations` (precios integrados en units)
 - **APIs**: Endpoints para proyectos, unidades, precios
 - **Mapas**: Integración con Google Maps API o OpenStreetMap
-- **Índices**: project_id, unit_number, status, price_range
+- **Índices**: project_id, unit_number, status, final_price
 
 ---
 

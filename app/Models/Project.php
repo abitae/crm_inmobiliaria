@@ -81,11 +81,6 @@ class Project extends Model
         return $this->hasMany(Unit::class);
     }
 
-    public function prices(): HasMany
-    {
-        return $this->hasMany(ProjectPrice::class);
-    }
-
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
@@ -205,11 +200,6 @@ class Project extends Model
     public function canAcceptReservations(): bool
     {
         return in_array($this->stage, ['preventa', 'lanzamiento', 'venta_activa']) && $this->isActive();
-    }
-
-    public function getCurrentPrice(): ?ProjectPrice
-    {
-        return $this->prices()->where('is_active', true)->first();
     }
 
     public function assignAdvisor(int $advisorId, bool $isPrimary = false, string $notes = null): void

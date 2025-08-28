@@ -36,9 +36,8 @@ Las migraciones deben ejecutarse en el siguiente orden debido a las dependencias
 - `2024_01_01_000012_create_client_unit_interests_table.php` - Intereses de clientes en unidades
 - `2024_01_01_000013_create_advisor_project_assignments_table.php` - Asignaciones de asesores a proyectos
 
-### 9. Tablas de Precios (Dependen de Projects y Units)
-- `2024_01_01_000014_create_project_prices_table.php` - Precios de proyectos
-- `2024_01_01_000015_create_unit_prices_table.php` - Precios de unidades
+### 9. Precios Integrados
+- Los precios se manejan directamente en la tabla `units` con campos para precio base, descuentos, comisiones y precio final
 
 ## Relaciones de Dependencia
 

@@ -19,7 +19,7 @@ Se ha implementado exitosamente la funcionalidad para crear unidades (Unit.php) 
   - `generateUnitsToCreate()`: Genera el array de unidades según la plantilla
   - `updateUnitTemplate()`: Actualiza la configuración de la plantilla
   - `updateUnitField()`: Modifica campos individuales de unidades
-  - `recalculateUnitPrices()`: Recalcula precios automáticamente
+  - `calculateFinalPrice()`: Recalcula precios finales automáticamente
   - `createUnitsForProject()`: Crea las unidades en la base de datos
   - Métodos auxiliares para asignación automática de manzanas, pisos, torres y bloques
 
