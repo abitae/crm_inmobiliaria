@@ -229,7 +229,7 @@
                                 <div class="text-xs text-gray-500">{{ $sale->project->type ?? '' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $sale->unit->name ?? 'N/A' }}
+                                {{ $sale->unit ? $sale->unit->full_identifier : 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $sale->advisor->name ?? 'N/A' }}
