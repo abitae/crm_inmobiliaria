@@ -6,6 +6,7 @@ use App\Models\Opportunity;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Unit;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -35,14 +36,8 @@ class OpportunityService
 
         // Ordenamiento optimizado con índice compuesto
         $query->orderBy('expected_close_date', 'asc')
-              ->orderBy('id', 'desc');
-
-        // Aplicar caché para consultas frecuentes
-        $cacheKey = $this->generateCacheKey($filters, $perPage);
-        
-        return cache()->remember($cacheKey, now()->addMinutes(15), function() use ($query, $perPage) {
-            return $query->paginate($perPage);
-        });
+            ->orderBy('id', 'desc');
+        return $query->paginate($perPage);
     }
 
     /**
@@ -54,16 +49,16 @@ class OpportunityService
         if (isset($filters['search']) && !empty($filters['search'])) {
             $search = trim($filters['search']);
             if (strlen($search) >= 2) { // Solo buscar si hay al menos 2 caracteres
-                $query->where(function($q) use ($search) {
-                    $q->whereHas('client', function($clientQuery) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('client', function ($clientQuery) use ($search) {
                         $clientQuery->select('id')
-                                   ->where('name', 'like', "{$search}%") // Usar prefijo para mejor rendimiento
-                                   ->orWhere('email', 'like', "{$search}%");
+                            ->where('name', 'like', "{$search}%") // Usar prefijo para mejor rendimiento
+                            ->orWhere('email', 'like', "{$search}%");
                     })
-                    ->orWhereHas('project', function($projectQuery) use ($search) {
-                        $projectQuery->select('id')
-                                    ->where('name', 'like', "{$search}%");
-                    });
+                        ->orWhereHas('project', function ($projectQuery) use ($search) {
+                            $projectQuery->select('id')
+                                ->where('name', 'like', "{$search}%");
+                        });
                 });
             }
         }
@@ -237,9 +232,11 @@ class OpportunityService
         $opportunity = Opportunity::find($id);
         if (!$opportunity) {
             return false;
+        } else {
+            $opportunity->stage = $newStage;
+            $opportunity->save();
         }
-
-        return $opportunity->advanceStage($newStage);
+        return true;
     }
 
     /**
@@ -250,9 +247,15 @@ class OpportunityService
         $opportunity = Opportunity::find($id);
         if (!$opportunity) {
             return false;
+        } else {
+            $opportunity->status = 'ganada';
+            $opportunity->close_value = $closeValue;
+            $opportunity->close_reason = $closeReason;
+            $opportunity->actual_close_date = Carbon::now();
+            $opportunity->save();
         }
 
-        return $opportunity->markAsWon($closeValue, $closeReason);
+        return true;
     }
 
     /**
@@ -263,9 +266,14 @@ class OpportunityService
         $opportunity = Opportunity::find($id);
         if (!$opportunity) {
             return false;
+        } else {
+            $opportunity->status = 'perdida';
+            $opportunity->lost_reason = $lostReason;
+            $opportunity->actual_close_date = Carbon::now();
+            $opportunity->save();
         }
 
-        return $opportunity->markAsLost($lostReason);
+        return true;
     }
 
     /**
@@ -331,9 +339,10 @@ class OpportunityService
         $opportunity = Opportunity::find($id);
         if (!$opportunity) {
             return false;
+        } else {
+            $opportunity->advisor_id = $advisorId;
+            $opportunity->save();
         }
-
-        $opportunity->assignAdvisor($advisorId);
         return true;
     }
 
@@ -431,12 +440,12 @@ class OpportunityService
         if (empty($filters) || count($filters) <= 1) {
             return now()->addMinutes(30);
         }
-        
+
         // Caché medio para consultas moderadas
         if (count($filters) <= 3) {
             return now()->addMinutes(15);
         }
-        
+
         // Caché corto para consultas complejas
         return now()->addMinutes(5);
     }
@@ -448,7 +457,7 @@ class OpportunityService
     {
         $pattern = 'opportunities_list_*';
         $keys = cache()->get($pattern) ?: [];
-        
+
         foreach ($keys as $key) {
             cache()->forget($key);
         }
@@ -470,7 +479,7 @@ class OpportunityService
     {
         $pattern = 'opportunities_list_*';
         $keys = cache()->get($pattern) ?: [];
-        
+
         return [
             'total_cached_queries' => count($keys),
             'cache_hit_rate' => $this->calculateCacheHitRate(),
@@ -486,7 +495,7 @@ class OpportunityService
         $hits = cache()->get('opportunities_cache_hits', 0);
         $misses = cache()->get('opportunities_cache_misses', 0);
         $total = $hits + $misses;
-        
+
         return $total > 0 ? round(($hits / $total) * 100, 2) : 0;
     }
 
@@ -498,14 +507,14 @@ class OpportunityService
         $pattern = 'opportunities_list_*';
         $keys = cache()->get($pattern) ?: [];
         $totalSize = 0;
-        
+
         foreach ($keys as $key) {
             $value = cache()->get($key);
             if ($value) {
                 $totalSize += strlen(serialize($value));
             }
         }
-        
+
         return $this->formatBytes($totalSize);
     }
 
@@ -518,9 +527,9 @@ class OpportunityService
         $bytes = max($bytes, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
         $pow = min($pow, count($units) - 1);
-        
+
         $bytes /= pow(1024, $pow);
-        
+
         return round($bytes, 2) . ' ' . $units[$pow];
     }
 }

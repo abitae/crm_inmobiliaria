@@ -60,3 +60,21 @@ window.showInfo = (message, title = 'Información') => {
         confirmButtonText: 'Entendido'
     });
 };
+
+// Listeners para eventos de Livewire
+document.addEventListener('livewire:init', () => {
+    // Listener para alertas de éxito
+    Livewire.on('show-success', (event) => {
+        showSuccess(event.message, event.title);
+    });
+
+    // Listener para alertas de error
+    Livewire.on('show-error', (event) => {
+        showError(event.message, event.title);
+    });
+
+    // Listener para alertas de información
+    Livewire.on('show-info', (event) => {
+        showInfo(event.message, event.title);
+    });
+});
