@@ -105,14 +105,15 @@ class RolePermissionSeeder extends Seeder
 
         // Crear roles
         $adminRole = Role::create(['name' => 'admin']);
-        $advisorRole = Role::create(['name' => 'advisor']);
-        $userRole = Role::create(['name' => 'user']);
+        $liderRole = Role::create(['name' => 'lider']);
+        $vendedorRole = Role::create(['name' => 'vendedor']);
+        $clienteRole = Role::create(['name' => 'cliente']);
 
         // Asignar todos los permisos al admin
         $adminRole->givePermissionTo(Permission::all());
 
-        // Asignar permisos al advisor
-        $advisorRole->givePermissionTo([
+        // Asignar permisos al lider (supervisor de vendedores)
+        $liderRole->givePermissionTo([
             'view_dashboard',
             'view_clients',
             'create_clients',
@@ -141,25 +142,55 @@ class RolePermissionSeeder extends Seeder
             'create_documents',
             'edit_documents',
             'view_reports',
+            'export_reports',
+            'view_users',
             'view_settings',
         ]);
 
-        // Asignar permisos básicos al user
-        $userRole->givePermissionTo([
+        // Asignar permisos al vendedor
+        $vendedorRole->givePermissionTo([
             'view_dashboard',
             'view_clients',
+            'create_clients',
+            'edit_clients',
             'view_projects',
             'view_units',
             'view_opportunities',
+            'create_opportunities',
+            'edit_opportunities',
+            'view_reservations',
+            'create_reservations',
+            'edit_reservations',
+            'view_commissions',
+            'create_commissions',
+            'edit_commissions',
             'view_tasks',
             'create_tasks',
             'edit_tasks',
             'view_activities',
             'create_activities',
+            'edit_activities',
             'view_interactions',
             'create_interactions',
+            'edit_interactions',
             'view_documents',
+            'create_documents',
+            'edit_documents',
             'view_reports',
+        ]);
+
+        // Asignar permisos básicos al cliente
+        $clienteRole->givePermissionTo([
+            'view_dashboard',
+            'view_projects',
+            'view_units',
+            'view_opportunities',
+            'view_reservations',
+            'view_commissions',
+            'view_tasks',
+            'view_activities',
+            'view_interactions',
+            'view_documents',
         ]);
     }
 }

@@ -17,71 +17,102 @@ class UserSeeder extends Seeder
         $admin = User::create([
             'name' => 'Abel Arana',
             'email' => 'abel.arana@hotmail.com',
+            'phone' => '999999999',
             'password' => Hash::make('lobomalo123'),
             'email_verified_at' => now(),
         ]);
         $admin->assignRole('admin');
 
-        // Asesores de ventas
-        $advisors = [
+        // Líderes de ventas
+        $lideres = [
             [
                 'name' => 'María González',
                 'email' => 'maria.gonzalez@crm.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
             [
                 'name' => 'Carlos Rodríguez',
                 'email' => 'carlos.rodriguez@crm.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
+        ];
+
+        foreach ($lideres as $lider) {
+            $user = User::create($lider);
+            $user->assignRole('lider');
+        }
+
+        // Vendedores
+        $vendedores = [
             [
                 'name' => 'Ana Martínez',
                 'email' => 'ana.martinez@crm.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
             [
                 'name' => 'Luis Pérez',
                 'email' => 'luis.perez@crm.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
             [
                 'name' => 'Sofia López',
                 'email' => 'sofia.lopez@crm.com',
+                'phone' => '999999999',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+            [
+                'name' => 'Roberto Silva',
+                'email' => 'roberto.silva@crm.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
         ];
 
-        foreach ($advisors as $advisor) {
-            $user = User::create($advisor);
-            $user->assignRole('advisor');
+        foreach ($vendedores as $vendedor) {
+            $user = User::create($vendedor);
+            $user->assignRole('vendedor');
         }
 
-        // Usuarios adicionales para diferentes roles
-        $additionalUsers = [
+        // Clientes
+        $clientes = [
             [
-                'name' => 'Gerente Ventas',
-                'email' => 'gerente@crm.com',
+                'name' => 'Juan Pérez',
+                'email' => 'juan.perez@cliente.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
             [
-                'name' => 'Supervisor Comercial',
-                'email' => 'supervisor@crm.com',
+                'name' => 'Carmen García',
+                'email' => 'carmen.garcia@cliente.com',
+                'phone' => '999999999',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+            [
+                'name' => 'Miguel Torres',
+                'email' => 'miguel.torres@cliente.com',
+                'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ],
         ];
 
-        foreach ($additionalUsers as $userData) {
-            $user = User::create($userData);
-            $user->assignRole('user');
+        foreach ($clientes as $cliente) {
+            $user = User::create($cliente);
+            $user->assignRole('cliente');
         }
 
-        $this->command->info('Usuarios creados exitosamente');
+        $this->command->info('Usuarios creados exitosamente con los roles: admin, lider, vendedor, cliente');
     }
 }
