@@ -324,7 +324,7 @@ class SalesReport extends Component
 
     public function render()
     {
-        $advisors = \App\Models\User::getAdvisorsAndAdmins();
+        $advisors = \App\Models\User::getAvailableAdvisors();
         $projects = \App\Models\Project::active()->get();
         $clientTypes = ['inversor', 'comprador', 'empresa', 'constructor'];
 

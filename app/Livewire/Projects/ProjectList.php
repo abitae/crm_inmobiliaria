@@ -109,7 +109,7 @@ class ProjectList extends Component
 
     public function mount()
     {
-        $this->advisors = User::getAdvisorsAndAdmins();
+        $this->advisors = User::getAvailableAdvisors();
     }
 
     // ==================== MÉTODOS DE FILTRADO Y BÚSQUEDA ====================

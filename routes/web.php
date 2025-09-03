@@ -25,7 +25,7 @@ use App\Livewire\Settings\Appearance;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Route::get('/home', function () {
     return redirect()->route('dashboard');

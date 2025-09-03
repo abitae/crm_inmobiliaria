@@ -72,20 +72,14 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is advisor
+     * Check if user is advisor (vendedor)
      */
     public function isAdvisor(): bool
     {
-        return $this->hasRole('advisor');
+        return $this->hasRole('vendedor');
     }
 
-    /**
-     * Check if user is admin or advisor
-     */
-    public function isAdminOrAdvisor(): bool
-    {
-        return $this->hasAnyRole(['admin', 'advisor']);
-    }
+
 
     /**
      * Get users by role
@@ -96,11 +90,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get admin and advisor users
+     * Get users who can be assigned as advisors (admin, lider, and vendedor roles)
      */
-    public static function getAdvisorsAndAdmins(): \Illuminate\Database\Eloquent\Collection
+    public static function getAvailableAdvisors(): \Illuminate\Database\Eloquent\Collection
     {
-        return static::role(['admin', 'advisor'])->get();
+        return static::role(['admin', 'lider', 'vendedor'])->get();
     }
 
 }

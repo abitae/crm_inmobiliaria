@@ -45,10 +45,10 @@ class AssignRolesToUsers extends Command
                 continue;
             }
 
-            // Asignar rol por defecto (user)
-            $user->assignRole('user');
+            // Asignar rol por defecto (vendedor)
+            $user->assignRole('vendedor');
             $assigned++;
-            $this->line("Rol 'user' asignado a {$user->email}");
+            $this->line("Rol 'vendedor' asignado a {$user->email}");
         }
 
         $this->info("Se asignaron roles a {$assigned} usuarios.");

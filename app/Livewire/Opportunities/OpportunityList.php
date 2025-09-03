@@ -139,7 +139,7 @@ class OpportunityList extends Component
     {
         $this->clients = Client::all();
         $this->projects = Project::all();
-        $this->advisors = User::getAdvisorsAndAdmins();
+        $this->advisors = User::getAvailableAdvisors();
         $this->expected_close_date = now()->addDays(30)->format('Y-m-d');
     }
 

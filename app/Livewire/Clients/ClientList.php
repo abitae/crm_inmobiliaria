@@ -71,7 +71,7 @@ class ClientList extends Component
 
     public function mount()
     {
-        $this->advisors = User::getAdvisorsAndAdmins();
+        $this->advisors = User::getAvailableAdvisors();
         $this->status = 'nuevo';
     }
 

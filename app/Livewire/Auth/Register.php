@@ -59,8 +59,7 @@ class Register extends Component
         event(new Registered(($user = User::create($validated))));
 
         Auth::login($user);
-        $user->assignRole('admin');
-
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $user->assignRole('vendedor');
+        $this->redirect(route('welcome', absolute: true), navigate: true);
     }
 }

@@ -144,6 +144,8 @@ class RolePermissionSeeder extends Seeder
             'view_reports',
             'export_reports',
             'view_users',
+            'create_users', // Para crear nuevos vendedores
+            'edit_users',   // Para gestionar vendedores
             'view_settings',
         ]);
 

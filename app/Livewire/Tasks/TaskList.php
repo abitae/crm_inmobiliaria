@@ -60,7 +60,7 @@ class TaskList extends Component
         $this->clients = Client::all();
         $this->projects = Project::active()->get();
         $this->opportunities = Opportunity::active()->get();
-        $this->users = User::getAdvisorsAndAdmins();
+        $this->users = User::getAvailableAdvisors();
         $this->due_date = now()->addDays(1)->format('Y-m-d');
     }
 
