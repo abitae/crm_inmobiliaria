@@ -29,14 +29,14 @@ class Client extends Model
         'status', // nuevo, contacto_inicial, en_seguimiento, cierre, perdido
         'score', // scoring del lead
         'notes',
-        'assigned_advisor_id',
+        'assigned_advisor_id', // id del vendedor asignado
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'score' => 'integer',
-        'assigned_advisor_id' => 'integer',
+        'assigned_advisor_id' => 'integer', // id del vendedor asignado
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'created_at' => 'datetime',

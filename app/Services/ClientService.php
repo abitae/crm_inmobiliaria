@@ -22,7 +22,6 @@ class ClientService
         try {
             $query = Client::with(['assignedAdvisor', 'createdBy'])
                 ->withCount(['opportunities', 'interactions', 'tasks']);
-
             $this->applyFilters($query, $filters);
 
             return $query->orderBy('created_at', 'desc')->paginate($perPage);

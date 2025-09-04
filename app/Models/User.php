@@ -24,7 +24,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'created_by',
+        'lider_id',
     ];
 
     /**
@@ -47,7 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'created_by' => 'integer',
+            'lider_id' => 'integer',
         ];
     }
 
@@ -71,6 +71,13 @@ class User extends Authenticatable
         return $this->hasRole('admin');
     }
 
+    /**
+     * Check if user is lider
+     */
+    public function isLider(): bool
+    {
+        return $this->hasRole('lider');
+    }
     /**
      * Check if user is advisor (vendedor)
      */
