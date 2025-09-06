@@ -18,10 +18,21 @@ class Register extends Component
     public string $phone = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public ?int $lider_id = null;
 
     /**
      * Handle an incoming registration request.
      */
+    public $leaders = [];
+
+    public function mount()
+    {
+        $this->leaders = User::whereHas('roles', function($query) {
+            $query->whereIn('name', ['lider', 'admin']);
+        })->get();
+        
+    }
+
     public function register(): void
     {
         $validated = $this->validate([
@@ -29,6 +40,7 @@ class Register extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'lider_id' => ['nullable', 'exists:users,id'],
         ],[
             'name.required' => 'El nombre es requerido',
             'name.string' => 'El nombre debe ser una cadena de texto',
@@ -52,6 +64,8 @@ class Register extends Component
             'phone.required' => 'El teléfono es requerido',
             'phone.string' => 'El teléfono debe ser una cadena de texto',
             'phone.max' => 'El teléfono debe tener menos de 255 caracteres',
+            'lider_id.exists' => 'El líder no existe',
+            'lider_id.nullable' => 'El líder es opcional',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -60,6 +74,6 @@ class Register extends Component
 
         Auth::login($user);
         $user->assignRole('vendedor');
-        $this->redirect(route('welcome', absolute: true), navigate: true);
+        $this->redirect(route('welcome', absolute: true));
     }
 }

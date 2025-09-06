@@ -78,6 +78,16 @@
                 @endcan
             </flux:navlist.group> --}}
 
+            <flux:navlist.group :heading="__('Administración')" class="grid">
+                    <flux:navlist.item icon="cog" :href="route('roles.index')"
+                        :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Roles') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="cog" :href="route('users.index')"
+                        :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
+                    </flux:navlist.item>
+            </flux:navlist.group>
+            
+
             @can('view_reports')
                 <flux:navlist.group :heading="__('Reportes')" class="grid">
                     <flux:navlist.item icon="chart-pie" :href="route('reports.sales')"

@@ -25,6 +25,13 @@
         <flux:input wire:model="password_confirmation" :label="__('Confirmar contraseña')" type="password" required
             autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
 
+        <!-- Líder -->
+        <flux:select wire:model="lider_id" :label="__('Líder')">
+            @foreach ($leaders as $leader)
+                <option value="{{ $leader->id }}">{{ $leader->name }}</option>
+            @endforeach
+        </flux:select>
+
         <div class="flex items-center justify-end">
             <flux:button type="submit" variant="primary" class="w-full">
                 {{ __('Crear cuenta') }}

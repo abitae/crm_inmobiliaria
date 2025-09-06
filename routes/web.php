@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\Projects\ProjectView;
+use App\Livewire\Settings\RoleList;
+use App\Livewire\Settings\UserList;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Dashboard\Dashboard;
 use App\Livewire\Clients\ClientList;
@@ -84,6 +86,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('crm.interactions.index');
         })->middleware('permission:view_interactions')->name('interactions.index');
     });
+
+    // Gestión de Roles y Usuarios
+    Route::get('/roles', RoleList::class)->name('roles.index');
+    Route::get('/users', UserList::class)->name('users.index');
 });
 
 require __DIR__ . '/auth.php';

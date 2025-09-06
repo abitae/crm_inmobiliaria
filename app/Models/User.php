@@ -99,9 +99,36 @@ class User extends Authenticatable
     /**
      * Get users who can be assigned as advisors (admin, lider, and vendedor roles)
      */
-    public static function getAvailableAdvisors(): \Illuminate\Database\Eloquent\Collection
+    public static function getAvailableAdvisors(User $user): \Illuminate\Database\Eloquent\Collection
     {
-        return static::role(['admin', 'lider', 'vendedor'])->get();
+        if ($user->isAdmin()) {
+            return static::role(['admin', 'lider', 'vendedor'])
+                ->get();
+        }
+        if ($user->isLider()) {
+            return static::where('lider_id', $user->id)
+                ->orWhere('id', $user->id)
+                ->get();
+        }
+        if ($user->isAdvisor()) {
+            return static::where('id', $user->id)->get();
+        }
+        return new \Illuminate\Database\Eloquent\Collection();
     }
 
+    /**
+     * Get the leader assigned to this user
+     */
+    public function lider()
+    {
+        return $this->belongsTo(User::class, 'lider_id');
+    }
+
+    /**
+     * Get users assigned to this user as leader
+     */
+    public function subordinados()
+    {
+        return $this->hasMany(User::class, 'lider_id');
+    }
 }

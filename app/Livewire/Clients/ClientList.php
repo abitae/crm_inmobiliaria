@@ -4,6 +4,7 @@ namespace App\Livewire\Clients;
 
 use App\Services\ClientService;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -71,7 +72,9 @@ class ClientList extends Component
 
     public function mount()
     {
-        $this->advisors = User::getAvailableAdvisors();
+        $this->advisors = User::getAvailableAdvisors(Auth::user());
+        $user = Auth::user();
+        $this->advisorFilter = ($user->isAdmin() || $user->isLider()) ? '' : $user->id;
         $this->status = 'nuevo';
     }
 
