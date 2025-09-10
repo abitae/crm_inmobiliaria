@@ -28,11 +28,11 @@
                     </flux:navlist.item>
                 @endcan
 
-                @can('view_projects')
+                {{-- @can('view_projects')
                     <flux:navlist.item icon="building-office" :href="route('projects.index')"
                         :current="request()->routeIs('projects.index')" wire:navigate>{{ __('Proyectos') }}
                     </flux:navlist.item>
-                @endcan
+                @endcan --}}
 
                 @can('view_opportunities')
                     <flux:navlist.item icon="chart-bar" :href="route('opportunities.index')"
