@@ -34,7 +34,7 @@
                     </flux:navlist.item>
                 @endcan --}}
 
-                @can('view_opportunities')
+                {{-- @can('view_opportunities')
                     <flux:navlist.item icon="chart-bar" :href="route('opportunities.index')"
                         :current="request()->routeIs('opportunities.index')" wire:navigate>{{ __('Oportunidades') }}
                     </flux:navlist.item>
@@ -43,7 +43,7 @@
                 @can('view_tasks')
                     <flux:navlist.item icon="check-circle" :href="route('tasks.index')"
                         :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}</flux:navlist.item>
-                @endcan
+                @endcan --}}
             </flux:navlist.group>
 
             {{-- <flux:navlist.group :heading="__('CRM')" class="grid">
@@ -79,9 +79,9 @@
             </flux:navlist.group> --}}
 
             <flux:navlist.group :heading="__('Administración')" class="grid">
-                    <flux:navlist.item icon="cog" :href="route('roles.index')"
+                    {{-- <flux:navlist.item icon="cog" :href="route('roles.index')"
                         :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Roles') }}
-                    </flux:navlist.item>
+                    </flux:navlist.item> --}}
                     <flux:navlist.item icon="cog" :href="route('users.index')"
                         :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
                     </flux:navlist.item>
