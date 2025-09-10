@@ -7,6 +7,11 @@
                     <h1 class="text-xl font-semibold text-gray-900">Usuarios</h1>
                     <p class="text-sm text-gray-600">Gestión de usuarios y asignación de roles del CRM</p>
                 </div>
+                <div>
+                    <flux:button size="xs" variant="outline" wire:click="createUser">
+                        Crear Usuario
+                    </flux:button>
+                </div>
             </div>
         </div>
     </div>
@@ -156,26 +161,32 @@
         <div class="p-4">
             <div class="flex justify-between items-center mb-2">
                 <h3 class="text-base font-semibold text-gray-900">
-                    Editar Usuario
+                    @if($isCreating)
+                        Crear Usuario
+                    @else
+                        Editar Usuario
+                    @endif
                 </h3>
             </div>
 
-            @if ($showUserModal && $selectedUser)
+            @if ($showUserModal)
                 <form wire:submit.prevent="saveUser">
                     <!-- Información del usuario -->
-                    <div class="mb-4 p-3 bg-gray-50 rounded-lg">
-                        <div class="flex items-center space-x-3">
-                            <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                                <span class="text-sm font-medium text-green-600">
-                                    {{ $selectedUser->initials() }}
-                                </span>
-                            </div>
-                            <div>
-                                <div class="text-sm font-medium text-gray-900">{{ $selectedUser->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $selectedUser->email }}</div>
+                    @if(!$isCreating && $selectedUser)
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <span class="text-sm font-medium text-green-600">
+                                        {{ $selectedUser->initials() }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $selectedUser->name }}</div>
+                                    <div class="text-xs text-gray-500">{{ $selectedUser->email }}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <!-- Nombre -->
@@ -220,6 +231,21 @@
                             </flux:select>
                             @error('selectedRole') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
+
+                        <!-- Campos de contraseña solo para creación -->
+                        @if($isCreating)
+                            <div class="col-span-2">
+                                <flux:input id="password" type="password" wire:model="password" size="xs" 
+                                    placeholder="Contraseña *" class="w-full" />
+                                @error('password') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-span-2">
+                                <flux:input id="password_confirmation" type="password" wire:model="password_confirmation" size="xs" 
+                                    placeholder="Confirmar contraseña *" class="w-full" />
+                                @error('password_confirmation') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Botones de acción -->
@@ -230,11 +256,19 @@
                         <flux:button type="submit" color="primary" size="xs" wire:loading.attr="disabled"
                             wire:loading.class="opacity-50 cursor-not-allowed">
                             <span wire:loading.remove>
-                                Actualizar Usuario
+                                @if($isCreating)
+                                    Crear Usuario
+                                @else
+                                    Actualizar Usuario
+                                @endif
                             </span>
                             <span wire:loading>
                                 <flux:icon name="arrow-path" class="w-4 h-4 animate-spin" />
-                                Actualizando...
+                                @if($isCreating)
+                                    Creando...
+                                @else
+                                    Actualizando...
+                                @endif
                             </span>
                         </flux:button>
                     </div>
