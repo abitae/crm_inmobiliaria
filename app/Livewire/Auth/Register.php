@@ -74,6 +74,6 @@ class Register extends Component
 
         Auth::login($user);
         $user->assignRole('vendedor');
-        $this->redirect(route('welcome', absolute: true));
+        $this->redirect(route('dashboard', absolute: true));
     }
 }

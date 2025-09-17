@@ -92,6 +92,7 @@ class RolePermissionSeeder extends Seeder
             'edit_users',
             'delete_users',
             'manage_roles',
+            'manage_users',
             'manage_permissions',
 
             // Configuración
@@ -147,6 +148,9 @@ class RolePermissionSeeder extends Seeder
             'create_users', // Para crear nuevos vendedores
             'edit_users',   // Para gestionar vendedores
             'view_settings',
+            'manage_roles',
+            'manage_users',
+            'manage_permissions',
         ]);
 
         // Asignar permisos al vendedor
@@ -179,6 +183,9 @@ class RolePermissionSeeder extends Seeder
             'create_documents',
             'edit_documents',
             'view_reports',
+            'manage_roles',
+            'manage_users',
+            'manage_permissions',
         ]);
 
         // Asignar permisos básicos al cliente
@@ -193,6 +200,9 @@ class RolePermissionSeeder extends Seeder
             'view_activities',
             'view_interactions',
             'view_documents',
+            'manage_roles',
+            'manage_users',
+            'manage_permissions',
         ]);
     }
 }

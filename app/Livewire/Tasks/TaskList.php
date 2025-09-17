@@ -9,7 +9,7 @@ use App\Models\Opportunity;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
-
+use Illuminate\Support\Facades\Auth;
 class TaskList extends Component
 {
     use WithPagination;
@@ -60,7 +60,7 @@ class TaskList extends Component
         $this->clients = Client::all();
         $this->projects = Project::active()->get();
         $this->opportunities = Opportunity::active()->get();
-        $this->users = User::getAvailableAdvisors();
+        $this->users = User::getAvailableAdvisors(Auth::user());
         $this->due_date = now()->addDays(1)->format('Y-m-d');
     }
 

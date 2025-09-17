@@ -28,19 +28,19 @@
                     </flux:navlist.item>
                 @endcan
 
-                {{-- @can('view_projects')
+                @can('view_projects')
                     <flux:navlist.item icon="building-office" :href="route('projects.index')"
                         :current="request()->routeIs('projects.index')" wire:navigate>{{ __('Proyectos') }}
                     </flux:navlist.item>
-                @endcan --}}
+                @endcan
 
-                {{-- @can('view_opportunities')
+                @can('view_opportunities')
                     <flux:navlist.item icon="chart-bar" :href="route('opportunities.index')"
                         :current="request()->routeIs('opportunities.index')" wire:navigate>{{ __('Oportunidades') }}
                     </flux:navlist.item>
                 @endcan
 
-                @can('view_tasks')
+                {{-- @can('view_tasks')
                     <flux:navlist.item icon="check-circle" :href="route('tasks.index')"
                         :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}</flux:navlist.item>
                 @endcan --}}
@@ -77,14 +77,18 @@
                     </flux:navlist.item>
                 @endcan
             </flux:navlist.group> --}}
-
+            
             <flux:navlist.group :heading="__('Administración')" class="grid">
-                    {{-- <flux:navlist.item icon="cog" :href="route('roles.index')"
+                @can('manage_roles')
+                    <flux:navlist.item icon="cog" :href="route('roles.index')"
                         :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Roles') }}
-                    </flux:navlist.item> --}}
-                    <flux:navlist.item icon="cog" :href="route('users.index')"
+                    </flux:navlist.item>
+                    @endcan
+                    @can('manage_users')
+                    <flux:navlist.item icon="users" :href="route('users.index')"
                         :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
                     </flux:navlist.item>
+                    @endcan
             </flux:navlist.group>
             
 

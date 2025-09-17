@@ -11,7 +11,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Validation\ValidationException;
 use Exception;
-
+use Illuminate\Support\Facades\Auth;
 class OpportunityList extends Component
 {
     use WithPagination;
@@ -139,7 +139,7 @@ class OpportunityList extends Component
     {
         $this->clients = Client::all();
         $this->projects = Project::all();
-        $this->advisors = User::getAvailableAdvisors();
+        $this->advisors = User::getAvailableAdvisors(Auth::user());
         $this->expected_close_date = now()->addDays(30)->format('Y-m-d');
     }
 
@@ -177,7 +177,6 @@ class OpportunityList extends Component
     {
         $this->resetForm();
         $this->showCreateModal = true;
-        $this->dispatch('show-info', message: 'Formulario de nueva oportunidad abierto. Completa todos los campos obligatorios.');
     }
 
     public function openEditModal($opportunityId)

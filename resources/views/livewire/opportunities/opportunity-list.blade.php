@@ -642,7 +642,7 @@
                                     class="text-green-700 font-bold">S/
                                     {{ number_format($selectedOpportunity->expected_value, 2) }}</span></li>
                             <li><span class="font-semibold text-indigo-800">Fecha de cierre:</span>
-                                {{ $selectedOpportunity->expected_close_date->format('d/m/Y') }}</li>
+                                {{ $selectedOpportunity->expected_close_date ? $selectedOpportunity->expected_close_date->format('d/m/Y') : 'N/A' }}</li>
                             <li><span class="font-semibold text-indigo-800">Origen:</span>
                                 {{ $selectedOpportunity->source ?? 'N/A' }}</li>
                             <li><span class="font-semibold text-indigo-800">Campaña:</span>

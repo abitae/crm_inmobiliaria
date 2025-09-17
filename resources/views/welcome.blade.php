@@ -77,6 +77,9 @@
                                 <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-semibold rounded-xl hover:bg-primary-600 hover:text-white transition-all duration-300 hover:scale-105">Iniciar Sesión</a>
                             @endauth
                         @endif
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-semibold rounded-xl hover:bg-primary-600 hover:text-white transition-all duration-300 hover:scale-105">Registrarse</a>
+                        @endif
                     </div>
                 </nav>
             </div>

@@ -7,7 +7,7 @@ use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
-
+use Illuminate\Support\Facades\Auth;
 class ProjectList extends Component
 {
     use WithPagination, WithFileUploads;
@@ -109,7 +109,7 @@ class ProjectList extends Component
 
     public function mount()
     {
-        $this->advisors = User::getAvailableAdvisors();
+        $this->advisors = User::getAvailableAdvisors(Auth::user());
     }
 
     // ==================== MÉTODOS DE FILTRADO Y BÚSQUEDA ====================
