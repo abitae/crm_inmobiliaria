@@ -39,7 +39,7 @@ class OpportunitySeeder extends Seeder
         // Crear oportunidades realistas
         $opportunities = [
             [
-                'client_id' => $clients->where('email', 'juan.vargas@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'Juan Carlos Vargas Mendoza')->first()->id,
                 'project_id' => $projects->where('name', 'Residencial Miraflores Park')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Residencial Miraflores Park')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -53,7 +53,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Cliente muy interesado, ya visitó la propiedad 3 veces. Negociando precio final.',
             ],
             [
-                'client_id' => $clients->where('email', 'maria.torres@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'María Elena Torres Ríos')->first()->id,
                 'project_id' => $projects->where('name', 'Torres San Isidro Business')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
@@ -67,7 +67,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Inversora buscando oficinas para alquiler corporativo. Evaluando diferentes opciones.',
             ],
             [
-                'client_id' => $clients->where('email', 'carmen.flores@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'Carmen Flores Díaz')->first()->id,
                 'project_id' => $projects->where('name', 'Casas Surco Family')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Casas Surco Family')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -81,7 +81,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Cliente VIP, busca casa familiar. Programada visita para la próxima semana.',
             ],
             [
-                'client_id' => $clients->where('email', 'roberto.silva@empresa.com')->first()->id,
+                'client_id' => $clients->where('name', 'Roberto Silva Castro')->first()->id,
                 'project_id' => $projects->where('name', 'Oficinas San Borja Center')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
@@ -95,7 +95,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Empresa buscando oficinas corporativas. En proceso de evaluación de necesidades.',
             ],
             [
-                'client_id' => $clients->where('email', 'fernando.mendoza@constructor.com')->first()->id,
+                'client_id' => $clients->where('name', 'Fernando Mendoza Ruiz')->first()->id,
                 'project_id' => $projects->where('name', 'Lotes Barranco Golf')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
@@ -109,7 +109,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Constructor interesado en lotes para desarrollo. Evaluando viabilidad del proyecto.',
             ],
             [
-                'client_id' => $clients->where('email', 'alberto.garcia@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'Alberto García Paredes')->first()->id,
                 'project_id' => $projects->where('name', 'Residencial Miraflores Park')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Residencial Miraflores Park')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -125,7 +125,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Cliente satisfecho con la compra. Excelente experiencia de venta.',
             ],
             [
-                'client_id' => $clients->where('email', 'patricia.rios@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'Patricia Ríos Morales')->first()->id,
                 'project_id' => $projects->where('name', 'Mixto Chorrillos Plaza')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,

@@ -15,15 +15,11 @@ class Client extends Model
 
     protected $fillable = [
         'name',
-        'email',
         'phone',
         'document_type', // DNI, RUC, CE, PASAPORTE
         'document_number',
         'address',
-        'district',
-        'province',
-        'region',
-        'country',
+        'birth_date', // fecha de nacimiento
         'client_type', // inversor, comprador, empresa, constructor
         'source', // redes_sociales, ferias, referidos, formulario_web, publicidad
         'status', // nuevo, contacto_inicial, en_seguimiento, cierre, perdido
@@ -36,6 +32,7 @@ class Client extends Model
 
     protected $casts = [
         'score' => 'integer',
+        'birth_date' => 'date',
         'assigned_advisor_id' => 'integer', // id del vendedor asignado
         'created_by' => 'integer',
         'updated_by' => 'integer',
@@ -138,8 +135,7 @@ class Client extends Model
 
     public function getFullAddressAttribute(): string
     {
-        $parts = array_filter([$this->address, $this->district, $this->province, $this->region, $this->country]);
-        return implode(', ', $parts);
+        return $this->address ?? '';
     }
 
     public function getLastInteractionAttribute()

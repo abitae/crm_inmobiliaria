@@ -56,7 +56,6 @@ class ClientService
             $search = trim($filters['search']);
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('document_number', 'like', "%{$search}%");
             });
@@ -70,7 +69,7 @@ class ClientService
     {
         try {
             if ($id <= 0) {
-                throw new ValidationException('ID de cliente inválido');
+                throw new \Exception('ID de cliente inválido');
             }
 
             return Client::with([
@@ -114,7 +113,7 @@ class ClientService
     {
         try {
             if ($id <= 0) {
-                throw new ValidationException('ID de cliente inválido');
+                throw new \Exception('ID de cliente inválido');
             }
 
             $client = Client::find($id);
@@ -146,7 +145,7 @@ class ClientService
     {
         try {
             if ($id <= 0) {
-                throw new ValidationException('ID de cliente inválido');
+                throw new \Exception('ID de cliente inválido');
             }
 
             $client = Client::find($id);
@@ -180,12 +179,12 @@ class ClientService
     {
         try {
             if ($clientId <= 0) {
-                throw new ValidationException('ID de cliente inválido');
+                throw new \Exception('ID de cliente inválido');
             }
 
             $validStatuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
             if (!in_array($newStatus, $validStatuses)) {
-                throw new ValidationException('Estado de cliente inválido');
+                throw new \Exception('Estado de cliente inválido');
             }
 
             $client = Client::find($clientId);
@@ -210,11 +209,11 @@ class ClientService
     {
         try {
             if ($clientId <= 0) {
-                throw new ValidationException('ID de cliente inválido');
+                throw new \Exception('ID de cliente inválido');
             }
 
             if ($newScore < 0 || $newScore > 100) {
-                throw new ValidationException('Score debe estar entre 0 y 100');
+                throw new \Exception('Score debe estar entre 0 y 100');
             }
 
             $client = Client::find($clientId);
@@ -239,15 +238,11 @@ class ClientService
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
             'document_number' => 'required|string|max:20',
             'address' => 'nullable|string|max:500',
-            'district' => 'nullable|string|max:255',
-            'province' => 'nullable|string|max:255',
-            'region' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:255',
+            'birth_date' => 'nullable|date',
             'client_type' => 'required|in:inversor,comprador,empresa,constructor',
             'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
             'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
@@ -256,11 +251,11 @@ class ClientService
             'assigned_advisor_id' => 'nullable|exists:users,id'
         ];
 
-        // Validar email único excepto para el cliente actual
+        // Validar documento único excepto para el cliente actual
         if ($clientId) {
-            $rules['email'] = 'required|email|max:255|unique:clients,email,' . $clientId;
+            $rules['document_number'] = 'required|string|max:20|unique:clients,document_number,' . $clientId;
         } else {
-            $rules['email'] = 'required|email|max:255|unique:clients,email';
+            $rules['document_number'] = 'required|string|max:20|unique:clients,document_number';
         }
 
         $validator = Validator::make($data, $rules);

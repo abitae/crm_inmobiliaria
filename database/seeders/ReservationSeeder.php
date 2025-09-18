@@ -39,7 +39,7 @@ class ReservationSeeder extends Seeder
         // Crear reservas realistas
         $reservations = [
             [
-                'client_id' => $clients->where('email', 'juan.vargas@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'Juan Carlos Vargas Mendoza')->first()->id,
                 'project_id' => $projects->where('name', 'Residencial Miraflores Park')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Residencial Miraflores Park')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -59,7 +59,7 @@ class ReservationSeeder extends Seeder
                 'advisor_signature' => true,
             ],
             [
-                'client_id' => $clients->where('email', 'carmen.flores@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'Carmen Flores Díaz')->first()->id,
                 'project_id' => $projects->where('name', 'Casas Surco Family')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Casas Surco Family')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -79,7 +79,7 @@ class ReservationSeeder extends Seeder
                 'advisor_signature' => true,
             ],
             [
-                'client_id' => $clients->where('email', 'maria.torres@email.com')->first()->id,
+                'client_id' => $clients->where('name', 'María Elena Torres Ríos')->first()->id,
                 'project_id' => $projects->where('name', 'Torres San Isidro Business')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Torres San Isidro Business')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -99,7 +99,7 @@ class ReservationSeeder extends Seeder
                 'advisor_signature' => true,
             ],
             [
-                'client_id' => $clients->where('email', 'roberto.silva@empresa.com')->first()->id,
+                'client_id' => $clients->where('name', 'Roberto Silva Castro')->first()->id,
                 'project_id' => $projects->where('name', 'Oficinas San Borja Center')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Oficinas San Borja Center')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
@@ -119,7 +119,7 @@ class ReservationSeeder extends Seeder
                 'advisor_signature' => true,
             ],
             [
-                'client_id' => $clients->where('email', 'fernando.mendoza@constructor.com')->first()->id,
+                'client_id' => $clients->where('name', 'Fernando Mendoza Ruiz')->first()->id,
                 'project_id' => $projects->where('name', 'Lotes Barranco Golf')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Lotes Barranco Golf')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,

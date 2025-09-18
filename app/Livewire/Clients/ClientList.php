@@ -27,18 +27,14 @@ class ClientList extends Component
 
     // Campos del formulario
     public $name = '';
-    public $email = '';
     public $phone = '';
-    public $document_type = '';
+    public $document_type = 'DNI';
     public $document_number = '';
     public $address = '';
-    public $district = '';
-    public $province = '';
-    public $region = '';
-    public $country = '';
-    public $client_type = '';
-    public $source = '';
-    public $status = '';
+    public $birth_date = '';
+    public $client_type = 'Comprador';
+    public $source = 'Redes Sociales';
+    public $status = 'nuevo';
     public $score = 0;
     public $notes = '';
     public $assigned_advisor_id = '';
@@ -48,21 +44,47 @@ class ClientList extends Component
 
     protected $rules = [
         'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255',
         'phone' => 'nullable|string|max:20',
         'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
         'document_number' => 'required|string|max:20',
         'address' => 'nullable|string|max:500',
-        'district' => 'nullable|string|max:255',
-        'province' => 'nullable|string|max:255',
-        'region' => 'nullable|string|max:255',
-        'country' => 'nullable|string|max:255',
+        'birth_date' => 'nullable|date',
         'client_type' => 'required|in:inversor,comprador,empresa,constructor',
         'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
         'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
         'score' => 'required|integer|min:0|max:100',
         'notes' => 'nullable|string',
         'assigned_advisor_id' => 'nullable|exists:users,id'
+    ];
+    protected $messages = [
+        'document_number.unique' => 'El número de documento ya está en uso.',
+        'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
+        'client_type.required' => 'El tipo de cliente es obligatorio.',
+        'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
+        'source.required' => 'El origen es obligatorio.',
+        'source.in' => 'El origen seleccionado no es válido.',
+        'status.required' => 'El estado es obligatorio.',
+        'status.in' => 'El estado seleccionado no es válido.',
+        'score.required' => 'La puntuación es obligatoria.',
+        'score.integer' => 'La puntuación debe ser un número entero.',
+        'score.min' => 'La puntuación debe ser al menos 0.',
+        'score.max' => 'La puntuación no puede exceder 100.',
+        'notes.string' => 'Las notas deben ser una cadena de texto.',
+        'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
+        'document_type.required' => 'El tipo de documento es obligatorio.',
+        'document_type.in' => 'El tipo de documento seleccionado no es válido.',
+        'document_number.required' => 'El número de documento es obligatorio.',
+        'document_number.string' => 'El número de documento debe ser una cadena de texto.',
+        'document_number.max' => 'El número de documento no puede exceder 20 caracteres.',
+        'address.string' => 'La dirección debe ser una cadena de texto.',
+        'address.max' => 'La dirección no puede exceder 500 caracteres.',
+        'name.required' => 'El nombre es obligatorio.',
+        'name.string' => 'El nombre debe ser una cadena de texto.',
+        'name.max' => 'El nombre no puede exceder 255 caracteres.',
+        'phone.string' => 'El teléfono debe ser una cadena de texto.',
+        'phone.max' => 'El teléfono no puede exceder 20 caracteres.',
+        'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
+        'assigned_advisor_id.required' => 'El asesor es obligatorio.',
     ];
 
     public function boot(ClientService $clientService)
@@ -146,15 +168,11 @@ class ClientList extends Component
     {
         $this->reset([
             'name',
-            'email',
             'phone',
             'document_type',
             'document_number',
             'address',
-            'district',
-            'province',
-            'region',
-            'country',
+            'birth_date',
             'client_type',
             'source',
             'status',
@@ -169,15 +187,11 @@ class ClientList extends Component
     public function fillFormFromClient($client)
     {
         $this->name = $client->name;
-        $this->email = $client->email;
         $this->phone = $client->phone;
         $this->document_type = $client->document_type;
         $this->document_number = $client->document_number;
         $this->address = $client->address;
-        $this->district = $client->district;
-        $this->province = $client->province;
-        $this->region = $client->region;
-        $this->country = $client->country;
+        $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : '';
         $this->client_type = $client->client_type;
         $this->source = $client->source;
         $this->status = $client->status;
@@ -194,7 +208,6 @@ class ClientList extends Component
         $this->clientService->createClient($data);
 
         $this->closeModals();
-        $this->dispatch('client-created');
         $this->dispatch('show-success', message: 'Cliente creado exitosamente.');
     }
 
@@ -210,7 +223,6 @@ class ClientList extends Component
         $this->clientService->updateClient($this->editingClient->id, $data);
 
         $this->closeModals();
-        $this->dispatch('client-updated');
         $this->dispatch('show-success', message: 'Cliente actualizado exitosamente.');
     }
 
@@ -223,21 +235,18 @@ class ClientList extends Component
         $this->clientService->deleteClient($this->selectedClient->id);
 
         $this->closeModals();
-        $this->dispatch('client-deleted');
         $this->dispatch('show-success', message: 'Cliente eliminado exitosamente.');
     }
 
     public function changeStatus($clientId, $newStatus)
     {
         $this->clientService->changeStatus($clientId, $newStatus);
-        $this->dispatch('client-status-changed');
         $this->dispatch('show-success', message: 'Estado del cliente actualizado.');
     }
 
     public function updateScore($clientId, $newScore)
     {
         $this->clientService->updateScore($clientId, $newScore);
-        $this->dispatch('client-score-updated');
         $this->dispatch('show-success', message: 'Score del cliente actualizado.');
     }
 
@@ -245,15 +254,11 @@ class ClientList extends Component
     {
         return [
             'name' => $this->name,
-            'email' => $this->email,
             'phone' => $this->phone,
             'document_type' => $this->document_type,
             'document_number' => $this->document_number,
             'address' => $this->address,
-            'district' => $this->district,
-            'province' => $this->province,
-            'region' => $this->region,
-            'country' => $this->country,
+            'birth_date' => $this->birth_date ?: null,
             'client_type' => $this->client_type,
             'source' => $this->source,
             'status' => $this->status,

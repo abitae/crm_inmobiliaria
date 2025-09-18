@@ -14,15 +14,11 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->enum('document_type', ['DNI', 'RUC', 'CE', 'PASAPORTE'])->nullable();
             $table->string('document_number')->nullable();
             $table->text('address')->nullable();
-            $table->string('district')->nullable();
-            $table->string('province')->nullable();
-            $table->string('region')->nullable();
-            $table->string('country')->nullable();
+            $table->date('birth_date')->nullable();
             $table->enum('client_type', ['inversor', 'comprador', 'empresa', 'constructor']);
             $table->enum('source', ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad']);
             $table->enum('status', ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'])->default('nuevo');
@@ -34,7 +30,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['email', 'document_number']);
+            $table->index(['document_number']);
             $table->index(['status', 'client_type']);
             $table->index(['assigned_advisor_id', 'status']);
         });

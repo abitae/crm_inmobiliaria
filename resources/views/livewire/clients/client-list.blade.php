@@ -60,7 +60,7 @@
                 <div>
                     <flux:select size="xs" wire:model.live="advisorFilter">
                         @if (Auth::user()->isAdmin() || Auth::user()->isLider())
-                        <option value="">Todos los asesores</option>
+                            <option value="">Todos los asesores</option>
                         @endif
                         @foreach ($advisors as $advisor)
                             <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
@@ -123,8 +123,14 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $client->email }}</div>
-                                    <div class="text-xs text-gray-500">{{ $client->phone }}</div>
+                                    <div class="text-sm text-gray-900">{{ $client->phone ?: 'Sin teléfono' }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        @if ($client->birth_date)
+                                            Nacimiento: {{ $client->birth_date->format('d/m/Y') }}
+                                        @else
+                                            Sin fecha de nacimiento
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
@@ -220,45 +226,43 @@
 
             <form wire:submit.prevent="{{ $editingClient ? 'updateClient' : 'createClient' }}">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                    <div class="col-span-2">
+                        <!-- Número de Documento -->
+                        <flux:input.group>
+                            <flux:select wire:model="document_type" size="xs">
+                                <flux:select.option selected>DNI</flux:select.option>
+                                <flux:select.option>RUC</flux:select.option>
+                                <flux:select.option>CE</flux:select.option>
+                                <flux:select.option>PASAPORTE</flux:select.option>
+                            </flux:select>
+                            <flux:input wire:model="document_number" size="xs" placeholder="N° Documento *"
+                                class="w-full" />
+                            <flux:button size="xs" icon="eye" wire:click="searchClient"></flux:button>
+                        </flux:input.group>
+                    </div>
                     <!-- Nombre -->
                     <div class="col-span-2">
-                        <flux:input id="name" wire:model="name" size="xs" placeholder="Nombre completo *"
-                            class="w-full" />
+                        <flux:input label="Nombre completo" wire:model="name" size="xs"
+                            placeholder="Nombre completo *" class="w-full" />
                     </div>
 
-                    <!-- Email -->
+                    <!-- Fecha de Nacimiento -->
                     <div class="col-span-2">
-                        <flux:input id="email" type="email" wire:model="email" size="xs"
-                            placeholder="Correo electrónico *" class="w-full" />
+                        <flux:input label="Fecha de nacimiento" type="date" wire:model="birth_date"
+                            size="xs" placeholder="Fecha de nacimiento" class="w-full" />
                     </div>
 
                     <!-- Teléfono -->
                     <div class="col-span-2">
-                        <flux:input id="phone" wire:model="phone" size="xs" placeholder="Teléfono"
+                        <flux:input label="Teléfono" wire:model="phone" size="xs" placeholder="Teléfono"
                             class="w-full" />
 
                     </div>
 
-                    <!-- Tipo de Documento -->
-                    <div>
-                        <flux:select id="document_type" wire:model="document_type" size="xs" class="w-full">
-                            <option value="">Tipo Doc. *</option>
-                            <option value="DNI">DNI</option>
-                            <option value="RUC">RUC</option>
-                            <option value="CE">CE</option>
-                            <option value="PASAPORTE">PASAPORTE</option>
-                        </flux:select>
-                    </div>
-
-                    <!-- Número de Documento -->
-                    <div>
-                        <flux:input id="document_number" wire:model="document_number" size="xs"
-                            placeholder="N° Documento *" class="w-full" />
-                    </div>
-
                     <!-- Tipo de Cliente -->
                     <div>
-                        <flux:select id="client_type" wire:model="client_type" size="xs" class="w-full">
+                        <flux:select label="Tipo Cliente" wire:model="client_type" size="xs" class="w-full">
                             <option value="">Tipo Cliente *</option>
                             <option value="inversor">Inversor</option>
                             <option value="comprador">Comprador</option>
@@ -270,7 +274,7 @@
 
                     <!-- Fuente -->
                     <div>
-                        <flux:select id="source" wire:model="source" size="xs" class="w-full">
+                        <flux:select label="Fuente" wire:model="source" size="xs" class="w-full">
                             <option value="">Fuente *</option>
                             <option value="redes_sociales">Redes Sociales</option>
                             <option value="ferias">Ferias</option>
@@ -283,7 +287,7 @@
 
                     <!-- Estado -->
                     <div>
-                        <flux:select id="status" wire:model="status" size="xs" class="w-full">
+                        <flux:select label="Estado" wire:model="status" size="xs" class="w-full">
                             <option value="">Estado *</option>
                             <option value="nuevo">Nuevo</option>
                             <option value="contacto_inicial">Contacto Inicial</option>
@@ -296,15 +300,14 @@
 
                     <!-- Score -->
                     <div>
-                        <flux:input id="score" type="number" wire:model="score" min="0" max="100"
+                        <flux:input label="Score" type="number" wire:model="score" min="0" max="100"
                             size="xs" placeholder="Score *" class="w-full" />
 
                     </div>
 
                     <!-- Asesor Asignado -->
                     <div>
-                        <flux:select id="assigned_advisor_id" wire:model="assigned_advisor_id" size="xs"
-                            class="w-full">
+                        <flux:select label="Asesor" wire:model="assigned_advisor_id" size="xs" class="w-full">
                             <option value="">Asesor</option>
                             @foreach ($advisors as $advisor)
                                 <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
@@ -315,36 +318,15 @@
 
                     <!-- Dirección -->
                     <div class="col-span-2">
-                        <flux:input id="address" wire:model="address" size="xs" placeholder="Dirección"
+                        <flux:input label="Dirección" wire:model="address" size="xs" placeholder="Dirección"
                             class="w-full" />
 
                     </div>
 
-                    <!-- Distrito -->
-                    <div>
-                        <flux:input id="district" wire:model="district" size="xs" placeholder="Distrito"
-                            class="w-full" />
-                    </div>
-                    <!-- Provincia -->
-                    <div>
-                        <flux:input id="province" wire:model="province" size="xs" placeholder="Provincia"
-                            class="w-full" />
-
-                    </div>
-                    <!-- Región -->
-                    <div>
-                        <flux:input id="region" wire:model="region" size="xs" placeholder="Región"
-                            class="w-full" />
-                    </div>
-                    <!-- País -->
-                    <div>
-                        <flux:input id="country" wire:model="country" size="xs" placeholder="País"
-                            class="w-full" />
-                    </div>
 
                     <!-- Notas -->
                     <div class="col-span-2">
-                        <flux:textarea id="notes" wire:model="notes" rows="2" placeholder="Notas"
+                        <flux:textarea label="Notas" wire:model="notes" rows="2" placeholder="Notas"
                             class="w-full text-xs px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400">
                         </flux:textarea>
                     </div>
