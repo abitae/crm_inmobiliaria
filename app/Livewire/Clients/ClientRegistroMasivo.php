@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Services\ClientService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Rule;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Layout('components.layouts.auth')]
 class ClientRegistroMasivo extends Component

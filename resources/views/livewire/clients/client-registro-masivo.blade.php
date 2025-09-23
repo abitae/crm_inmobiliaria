@@ -12,7 +12,7 @@
                         Lista de Clientes
                     </flux:button>
                     @php
-                        $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)->generate('www.nigmacode.com');
+                        $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(100)->color(255,0,255)->margin(2)->backgroundColor(255,255,0)->generate('www.nigmacode.com');
                     @endphp
                     {{ $qrcode }}
                 </div>
