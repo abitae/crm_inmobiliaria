@@ -11,6 +11,10 @@
                     <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}">
                         Lista de Clientes
                     </flux:button>
+                    
+                    <div class="w-full h-full">
+                        {{ $qrcode }}
+                    </div>
                 </div>
             </div>
         </div>

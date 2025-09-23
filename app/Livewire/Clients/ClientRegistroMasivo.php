@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ClientService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Rule;
+use SimpleSoftwareIO\QrCode\Facades\QrCode as QrCodeGenerator;
 
 #[Layout('components.layouts.auth')]
 class ClientRegistroMasivo extends Component
@@ -58,6 +59,7 @@ class ClientRegistroMasivo extends Component
     public $successMessage = '';
     public $showErrorMessage = false;
     public $errorMessage = '';
+    public $qrcode = '';
 
     // Opciones para los selects
     public $documentTypes = [
@@ -103,6 +105,7 @@ class ClientRegistroMasivo extends Component
     {
         // Asignar automáticamente el usuario autenticado como asesor
         $this->assigned_advisor_id = Auth::id();
+        $this->qrcode = QrCodeGenerator::size(300)->generate('www.nigmacode.com');
     }
 
     // Ya no necesitamos cargar asesores ya que se asigna automáticamente
