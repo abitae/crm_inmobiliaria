@@ -20,8 +20,9 @@ class UserSeeder extends Seeder
             'phone' => '999999999',
             'password' => Hash::make('lobomalo123'),
             'email_verified_at' => now(),
+            'is_active' => true,
         ]);
-        $admin->assignRole('admin');
+        $admin->setRole('admin');
 
         // Líderes de ventas
         $lideres = [
@@ -31,6 +32,7 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
             [
                 'name' => 'Carlos Rodríguez',
@@ -38,12 +40,13 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
         ];
 
         foreach ($lideres as $lider) {
             $user = User::create($lider);
-            $user->assignRole('lider');
+            $user->setRole('lider');
         }
 
         // Vendedores
@@ -54,6 +57,7 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
             [
                 'name' => 'Luis Pérez',
@@ -61,6 +65,7 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
             [
                 'name' => 'Sofia López',
@@ -68,6 +73,7 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
             [
                 'name' => 'Roberto Silva',
@@ -75,12 +81,46 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
         ];
 
         foreach ($vendedores as $vendedor) {
             $user = User::create($vendedor);
-            $user->assignRole('vendedor');
+            $user->setRole('vendedor');
+        }
+
+        // Dateros (captadores de datos)
+        $dateros = [
+            [
+                'name' => 'Pedro Ramírez',
+                'email' => 'pedro.ramirez@crm.com',
+                'phone' => '999999999',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Laura Jiménez',
+                'email' => 'laura.jimenez@crm.com',
+                'phone' => '999999999',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Diego Morales',
+                'email' => 'diego.morales@crm.com',
+                'phone' => '999999999',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($dateros as $datero) {
+            $user = User::create($datero);
+            $user->setRole('datero');
         }
 
         // Clientes
@@ -91,6 +131,7 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
             [
                 'name' => 'Carmen García',
@@ -98,6 +139,7 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
             [
                 'name' => 'Miguel Torres',
@@ -105,14 +147,15 @@ class UserSeeder extends Seeder
                 'phone' => '999999999',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
+                'is_active' => true,
             ],
         ];
 
         foreach ($clientes as $cliente) {
             $user = User::create($cliente);
-            $user->assignRole('cliente');
+            $user->setRole('cliente');
         }
 
-        $this->command->info('Usuarios creados exitosamente con los roles: admin, lider, vendedor, cliente');
+        $this->command->info('Usuarios creados exitosamente con los roles: admin, lider, vendedor, datero, cliente');
     }
 }

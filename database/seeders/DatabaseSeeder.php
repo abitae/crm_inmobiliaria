@@ -42,7 +42,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('¡Base de datos poblada exitosamente!');
         $this->command->info('Usuarios de prueba creados:');
         $this->command->info('- Admin: abel.arana@hotmail.com / lobomalo123');
-        $this->command->info('- Asesores: maria.gonzalez@crm.com, carlos.rodriguez@crm.com, ana.martinez@crm.com, luis.perez@crm.com, sofia.lopez@crm.com / password');
-        $this->command->info('- Usuarios adicionales: gerente@crm.com, supervisor@crm.com / password');
+        $this->command->info('- Líderes: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
+        $this->command->info('- Vendedores: ana.martinez@crm.com, luis.perez@crm.com, sofia.lopez@crm.com, roberto.silva@crm.com / password');
+        $this->command->info('- Dateros: pedro.ramirez@crm.com, laura.jimenez@crm.com, diego.morales@crm.com / password');
+        $this->command->info('- Clientes: juan.perez@cliente.com, carmen.garcia@cliente.com, miguel.torres@cliente.com / password');
     }
 }

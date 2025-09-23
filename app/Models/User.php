@@ -25,6 +25,7 @@ class User extends Authenticatable
         'phone',
         'password',
         'lider_id',
+        'is_active',
     ];
 
     /**
@@ -48,6 +49,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'lider_id' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -86,6 +88,98 @@ class User extends Authenticatable
         return $this->hasRole('vendedor');
     }
 
+    /**
+     * Check if user is datero (captador de datos)
+     */
+    public function isDatero(): bool
+    {
+        return $this->hasRole('datero');
+    }
+
+    /**
+     * Get the user's single role
+     */
+    public function getRole(): ?\Spatie\Permission\Models\Role
+    {
+        return $this->roles->first();
+    }
+
+    /**
+     * Get the user's role name
+     */
+    public function getRoleName(): ?string
+    {
+        $role = $this->getRole();
+        return $role ? $role->name : null;
+    }
+
+    /**
+     * Set a single role for the user (replaces any existing roles)
+     */
+    public function setRole(string $roleName): void
+    {
+        // Remove all existing roles
+        $this->syncRoles([]);
+        // Assign the new role
+        $this->assignRole($roleName);
+    }
+
+    /**
+     * Check if user has any role
+     */
+    public function hasAnyRole(): bool
+    {
+        return $this->roles->count() > 0;
+    }
+
+    /**
+     * Check if user has no roles
+     */
+    public function hasNoRoles(): bool
+    {
+        return $this->roles->count() === 0;
+    }
+
+    /**
+     * Check if user is active
+     */
+    public function isActive(): bool
+    {
+        return $this->is_active === true;
+    }
+
+    /**
+     * Check if user is inactive
+     */
+    public function isInactive(): bool
+    {
+        return $this->is_active === false;
+    }
+
+    /**
+     * Activate user
+     */
+    public function activate(): void
+    {
+        $this->update(['is_active' => true]);
+    }
+
+    /**
+     * Deactivate user
+     */
+    public function deactivate(): void
+    {
+        $this->update(['is_active' => false]);
+    }
+
+    /**
+     * Toggle user active status
+     */
+    public function toggleActiveStatus(): void
+    {
+        $this->update(['is_active' => !$this->is_active]);
+    }
+
 
 
     /**
@@ -97,12 +191,12 @@ class User extends Authenticatable
     }
 
     /**
-     * Get users who can be assigned as advisors (admin, lider, and vendedor roles)
+     * Get users who can be assigned as advisors (admin, lider, vendedor, and datero roles)
      */
     public static function getAvailableAdvisors(User $user): \Illuminate\Database\Eloquent\Collection
     {
         if ($user->isAdmin()) {
-            return static::role(['admin', 'lider', 'vendedor'])
+            return static::role(['admin', 'lider', 'vendedor', 'datero'])
                 ->get();
         }
         if ($user->isLider()) {
@@ -113,7 +207,52 @@ class User extends Authenticatable
         if ($user->isAdvisor()) {
             return static::where('id', $user->id)->get();
         }
+        if ($user->isDatero()) {
+            return static::where('id', $user->id)->get();
+        }
         return new \Illuminate\Database\Eloquent\Collection();
+    }
+
+    /**
+     * Get all users with their single role
+     */
+    public static function withRole(): \Illuminate\Database\Eloquent\Builder
+    {
+        return static::with('roles');
+    }
+
+    /**
+     * Get users by single role name
+     */
+    public static function bySingleRole(string $roleName): \Illuminate\Database\Eloquent\Builder
+    {
+        return static::whereHas('roles', function ($query) use ($roleName) {
+            $query->where('name', $roleName);
+        });
+    }
+
+    /**
+     * Scope to get only active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope to get only inactive users
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    /**
+     * Scope to get users by active status
+     */
+    public function scopeByActiveStatus($query, bool $isActive)
+    {
+        return $query->where('is_active', $isActive);
     }
 
     /**

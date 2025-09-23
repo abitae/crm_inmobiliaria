@@ -101,14 +101,15 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Crear roles
-        $adminRole = Role::create(['name' => 'admin']);
-        $liderRole = Role::create(['name' => 'lider']);
-        $vendedorRole = Role::create(['name' => 'vendedor']);
-        $clienteRole = Role::create(['name' => 'cliente']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $liderRole = Role::firstOrCreate(['name' => 'lider']);
+        $vendedorRole = Role::firstOrCreate(['name' => 'vendedor']);
+        $dateroRole = Role::firstOrCreate(['name' => 'datero']);
+        $clienteRole = Role::firstOrCreate(['name' => 'cliente']);
 
         // Asignar todos los permisos al admin
         $adminRole->givePermissionTo(Permission::all());
@@ -186,6 +187,27 @@ class RolePermissionSeeder extends Seeder
             'manage_roles',
             'manage_users',
             'manage_permissions',
+        ]);
+
+        // Asignar permisos al datero (captador de datos)
+        $dateroRole->givePermissionTo([
+            'view_dashboard',
+            'view_clients',
+            'create_clients',
+            'edit_clients',
+            'view_projects',
+            'view_units',
+            'view_opportunities',
+            'create_opportunities',
+            'view_activities',
+            'create_activities',
+            'view_interactions',
+            'create_interactions',
+            'view_documents',
+            'create_documents',
+            'view_tasks',
+            'create_tasks',
+            'view_reports',
         ]);
 
         // Asignar permisos básicos al cliente
