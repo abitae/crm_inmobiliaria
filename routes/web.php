@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Clients\ClientRegistroMasivo;
 use App\Livewire\Projects\ProjectView;
 use App\Livewire\Settings\RoleList;
 use App\Livewire\Settings\UserList;
@@ -44,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Clientes
     Route::get('/clients', ClientList::class)->middleware('permission:view_clients')->name('clients.index');
+    Route::get('/clients/registro-masivo', ClientRegistroMasivo::class)->name('clients.registro-masivo');
 
     // Gestión de Proyectos
     Route::get('/projects', ProjectList::class)->middleware('permission:view_projects')->name('projects.index');

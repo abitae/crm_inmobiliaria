@@ -8,6 +8,9 @@
                     <p class="text-sm text-gray-600">Gestión de clientes del CRM</p>
                 </div>
                 <div class="flex space-x-2">
+                    <flux:button icon="user-group" size="xs" color="primary" href="{{ route('clients.registro-masivo') }}">
+                        Registro masivo
+                    </flux:button>
                     <flux:button icon="arrow-down-tray" size="xs" wire:click="exportClients">
                         Exportar
                     </flux:button>
@@ -75,108 +78,90 @@
             </div>
         </div>
 
-        <!-- Tabla de Clientes -->
+        <!-- Tabla de Clientes Compacta -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-xs">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Cliente
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Contacto
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Documento
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tipo / Score
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Estado / Fuente
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Última Interacción
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Acciones
-                            </th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Cliente</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Contacto</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Doc.</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Tipo/Score</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Estado/Fuente</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Últ. Interacción</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="bg-white divide-y divide-gray-100">
                         @forelse($clients as $client)
                             <tr wire:key="client-{{ $client->id }}" class="hover:bg-gray-50">
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                            <span class="text-sm font-medium text-blue-600">
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <span class="text-xs font-bold text-blue-600">
                                                 {{ strtoupper(substr($client->name, 0, 2)) }}
                                             </span>
                                         </div>
-                                        <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                {{ $client->name }}
-                                            </div>
-                                            <div class="text-xs text-gray-500">ID: {{ $client->id }}</div>
+                                        <div>
+                                            <div class="font-medium text-gray-900">{{ $client->name }}</div>
+                                            <div class="text-[10px] text-gray-400">ID: {{ $client->id }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $client->phone ?: 'Sin teléfono' }}</div>
-                                    <div class="text-xs text-gray-500">
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <div class="text-gray-900">{{ $client->phone ?: '-' }}</div>
+                                    <div class="text-[10px] text-gray-400">
                                         @if ($client->birth_date)
-                                            Nacimiento: {{ $client->birth_date->format('d/m/Y') }}
-                                        @else
-                                            Sin fecha de nacimiento
+                                            Nac: {{ $client->birth_date->format('d/m/Y') }}
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">
-                                        <span class="font-medium">{{ $client->document_type ?: 'Sin tipo' }}</span>
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <div class="text-gray-900">
+                                        <span class="font-medium">{{ $client->document_type ?: '-' }}</span>
                                     </div>
-                                    <div class="text-xs text-gray-500">{{ $client->document_number ?: 'Sin número' }}
-                                    </div>
+                                    <div class="text-[10px] text-gray-400">{{ $client->document_number ?: '-' }}</div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="space-y-1">
-                                        <div class="text-sm text-gray-900">
-                                            <span class="font-medium">{{ $client->client_type_formatted }}</span>
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            Score: <span class="font-medium">{{ $client->score }}/100</span>
-                                        </div>
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <div>
+                                        <span class="font-medium">{{ $client->client_type_formatted }}</span>
+                                    </div>
+                                    <div class="text-[10px] text-gray-400">
+                                        {{ $client->score }}/100
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="space-y-1">
-                                        <div>
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                            {{ $client->status === 'nuevo'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : ($client->status === 'contacto_inicial'
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : ($client->status === 'en_seguimiento'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : ($client->status === 'cierre'
-                                                            ? 'bg-purple-100 text-purple-800'
-                                                            : 'bg-red-100 text-red-800'))) }}">
-                                                {{ ucfirst(str_replace('_', ' ', $client->status)) }}
-                                            </span>
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            <span class="font-medium">Fuente:</span>
-                                            {{ ucfirst(str_replace('_', ' ', $client->source)) }}
-                                        </div>
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
+                                        {{ $client->status === 'nuevo'
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : ($client->status === 'contacto_inicial'
+                                                ? 'bg-yellow-100 text-yellow-800'
+                                                : ($client->status === 'en_seguimiento'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : ($client->status === 'cierre'
+                                                        ? 'bg-purple-100 text-purple-800'
+                                                        : 'bg-red-100 text-red-800'))) }}">
+                                        {{ ucfirst(str_replace('_', ' ', $client->status)) }}
+                                    </span>
+                                    <div class="text-[10px] text-gray-400">
+                                        {{ ucfirst(str_replace('_', ' ', $client->source)) }}
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $client->last_interaction ? $client->last_interaction->diffForHumans() : 'Nunca' }}
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    <div class="text-gray-900">
+                                        Asesor: {{ $client->assignedAdvisor ? $client->assignedAdvisor->name : '-' }}
+                                    </div>
+                                    <div class="text-[10px] text-gray-400">
+                                        Created: {{ $client->createdBy ? $client->createdBy->name : '-' }}
+                                    </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex space-x-2">
+                                <td class="px-2 py-2 whitespace-nowrap text-gray-500">
+                                    {{ $client->interactions ? $client->interactions : '-' }}
+                                </td>
+                                <td class="px-2 py-2 whitespace-nowrap font-medium">
+                                    <div class="flex space-x-1">
                                         <flux:button size="xs" variant="outline"
                                             wire:click="openCreateModal({{ $client->id }})">
                                             <flux:icon name="pencil" class="w-3 h-3" />
@@ -190,7 +175,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="users" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron clientes</p>
@@ -205,10 +190,9 @@
                     </tbody>
                 </table>
             </div>
-
             <!-- Paginación -->
             @if ($clients->hasPages())
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="bg-white px-2 py-2 border-t border-gray-200">
                     {{ $clients->links() }}
                 </div>
             @endif
@@ -308,7 +292,6 @@
                     <!-- Asesor Asignado -->
                     <div>
                         <flux:select label="Asesor" wire:model="assigned_advisor_id" size="xs" class="w-full">
-                            <option value="">Asesor</option>
                             @foreach ($advisors as $advisor)
                                 <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
                             @endforeach
