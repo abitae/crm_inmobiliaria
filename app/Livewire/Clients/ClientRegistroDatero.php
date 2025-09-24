@@ -19,13 +19,13 @@ class ClientRegistroDatero extends Component
     #[Rule('required|string|max:255')]
     public $name = '';
 
-    #[Rule('nullable|string|max:20')]
+    #[Rule('string|max:9|min:9')]
     public $phone = '';
 
-    #[Rule('required|in:DNI,RUC,CE,PASAPORTE')]
+    #[Rule('required|in:DNI')]
     public $document_type = 'DNI';
 
-    #[Rule('required|string|max:20')]
+    #[Rule('required|string|max:8|min:8')]
     public $document_number = '';
 
     #[Rule('nullable|string|max:500')]

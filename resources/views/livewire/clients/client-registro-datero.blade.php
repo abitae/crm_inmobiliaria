@@ -8,9 +8,6 @@
                     <p class="text-green-100 mt-1 sm:mt-2 text-sm sm:text-base">Complete el formulario para registrar un
                         nuevo cliente
                     </p>
-                    <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}">
-                        Lista de Clientes
-                    </flux:button>
                     <flux:button size="xs" icon="qr-code" wire:click="verQR">
                         Ver mi QR
                     </flux:button>
