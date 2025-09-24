@@ -92,9 +92,8 @@ class ClientService
     {
         try {
             $this->validateClientData($data);
-
-            $data['created_by'] = Auth::id();
-            $data['updated_by'] = Auth::id();
+            $data['created_by'] = $data['created_by'] ?? Auth::id();
+            $data['updated_by'] = $data['updated_by'] ?? Auth::id();
 
             $client = Client::create($data);
 

@@ -6,7 +6,6 @@ use App\Traits\SearchDocument;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
-use Illuminate\Support\Facades\Auth;
 use App\Services\ClientService;
 use App\Models\Client;
 use App\Models\User;
@@ -52,7 +51,8 @@ class ClientRegistroDatero extends Component
 
     // El asesor asignado será automáticamente el usuario autenticado
     public $assigned_advisor_id = null;
-
+    public $created_by = null;
+    public $updated_by = null;
     // Propiedades para el estado del formulario
     public $showSuccessMessage = false;
     public $successMessage = '';
@@ -158,6 +158,8 @@ class ClientRegistroDatero extends Component
                 'score' => $this->score,
                 'notes' => $this->notes,
                 'assigned_advisor_id' => $this->assigned_advisor_id,
+                'created_by' => $this->assigned_advisor_id,
+                'updated_by' => $this->assigned_advisor_id,
             ];
 
             $client = $this->clientService->createClient($data);
@@ -187,7 +189,9 @@ class ClientRegistroDatero extends Component
             'status',
             'score',
             'notes',
-            'assigned_advisor_id'
+            'assigned_advisor_id',
+            'created_by',
+            'updated_by'
         ]);
 
         // Resetear a valores por defecto
@@ -196,6 +200,8 @@ class ClientRegistroDatero extends Component
         $this->source = 'formulario_web';
         $this->status = 'nuevo';
         $this->score = 50;
+        $this->created_by = $this->assigned_advisor_id;
+        $this->updated_by = $this->assigned_advisor_id;
         // Mantener el asesor asignado como el usuario autenticado
     }
 
