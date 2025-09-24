@@ -105,9 +105,10 @@ class ClientRegistroDatero extends Component
         $user->isDatero();
         if (!$user->isDatero()) {
             abort(404);
-        }
+        }else{
         // Asignar automáticamente el usuario autenticado como asesor
         $this->assigned_advisor_id = $user->id;
+        }
     }
 
     // Ya no necesitamos cargar asesores ya que se asigna automáticamente
@@ -196,7 +197,6 @@ class ClientRegistroDatero extends Component
         $this->status = 'nuevo';
         $this->score = 50;
         // Mantener el asesor asignado como el usuario autenticado
-        $this->assigned_advisor_id = Auth::id();
     }
 
     public function closeMessages()
@@ -259,7 +259,7 @@ class ClientRegistroDatero extends Component
     }
     public function render()
     {
-        $url = url('clients/registro-datero/'.Auth::id());
+        $url = url('clients/registro-datero/'.$this->assigned_advisor_id);
         $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)
                             ->color(0, 0, 255)
                             ->margin(2)
