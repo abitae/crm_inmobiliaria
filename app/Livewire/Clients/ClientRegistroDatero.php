@@ -18,7 +18,7 @@ class ClientRegistroDatero extends Component
     #[Rule('required|string|max:255')]
     public $name = '';
 
-    #[Rule('string|max:9|min:9')]
+    #[Rule('required|string|max:9|min:9')]
     public $phone = '';
 
     #[Rule('required|in:DNI')]
