@@ -1,12 +1,12 @@
 <div class="max-w-4xl mx-auto p-4 sm:p-6">
     <div class="bg-white rounded-lg shadow-lg">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 rounded-t-lg">
+        <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 sm:p-6 rounded-t-lg">
             <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold">Registro de Clientes</h1>
-                    <p class="text-blue-100 mt-1 sm:mt-2 text-sm sm:text-base">Complete el formulario para registrar un
-                        nuevo cliente en el sistema
+                    <h1 class="text-xl sm:text-2xl font-bold">REGISTRO DATERO</h1>
+                    <p class="text-green-100 mt-1 sm:mt-2 text-sm sm:text-base">Complete el formulario para registrar un
+                        nuevo cliente
                     </p>
                     <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}">
                         Lista de Clientes
@@ -15,7 +15,7 @@
                         Ver mi QR
                     </flux:button>
 
-                    
+
                 </div>
             </div>
         </div>
@@ -74,21 +74,17 @@
 
                     <div class="flex flex-col gap-4">
                         <flux:input.group>
-                            <flux:select class="w-full" wire:model.live="document_type">
-                                @foreach ($documentTypes as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </flux:select>
-                            <flux:input class="w-full" placeholder="Ingrese el número de documento"
+                            
+                            <flux:input class="w-full" placeholder="Ingrese el número de DNI"
                                 wire:model="document_number" />
                             @if ($document_type == 'DNI')
-                                <flux:button icon="plus" wire:click="buscarDocumento"></flux:button>
+                                <flux:button icon="magnifying-glass" wire:click="buscarDocumento"></flux:button>
                             @endif
                         </flux:input.group>
 
                         <!-- Nombre -->
                         <div>
-                            <flux:input label="Nombre Completo" wire:model="name"
+                            <flux:input label="Nombre Completo" wire:model="name" disabled
                                 placeholder="Ingrese el nombre completo" class="w-full" />
                         </div>
 
@@ -100,7 +96,7 @@
 
                         <!-- Fecha de Nacimiento -->
                         <div>
-                            <flux:input label="Fecha de Nacimiento" type="date" wire:model="birth_date"
+                            <flux:input label="Fecha de Nacimiento" type="date" wire:model="birth_date" disabled
                                 class="w-full" />
                         </div>
 
@@ -177,7 +173,7 @@
         </div>
         <flux:modal wire:model="showQRModal" class="w-full max-w-md">
             <div class="flex flex-col items-center justify-center p-6">
-                <h2 class="text-lg font-semibold mb-4 text-blue-700 flex items-center">
+                <h2 class="text-lg font-semibold mb-4 text-green-700 flex items-center">
                     <flux:icon name="qr-code" class="w-6 h-6 mr-2 text-blue-500" />
                     Mi Código QR Personal
                 </h2>

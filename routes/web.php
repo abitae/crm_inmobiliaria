@@ -7,6 +7,7 @@ use App\Livewire\Settings\UserList;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Dashboard\Dashboard;
 use App\Livewire\Clients\ClientList;
+use App\Livewire\Clients\ClientRegistroDatero;
 use App\Livewire\Projects\ProjectList;
 use App\Livewire\Opportunities\OpportunityList;
 use App\Livewire\Tasks\TaskList;
@@ -45,7 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Clientes
     Route::get('/clients', ClientList::class)->middleware('permission:view_clients')->name('clients.index');
-    Route::get('/clients/registro-masivo', ClientRegistroMasivo::class)->name('clients.registro-masivo');
+    Route::get('/clients/registro-masivo/{id?}', ClientRegistroMasivo::class)->name('clients.registro-masivo');
 
     // Gestión de Proyectos
     Route::get('/projects', ProjectList::class)->middleware('permission:view_projects')->name('projects.index');
@@ -93,5 +94,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/roles', RoleList::class)->name('roles.index');
     Route::get('/users', UserList::class)->name('users.index');
 });
+Route::get('/clients/registro-datero/{id}', ClientRegistroDatero::class)->name('clients.registro-datero');
 
 require __DIR__ . '/auth.php';

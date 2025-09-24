@@ -5,13 +5,14 @@ namespace App\Livewire\Clients;
 use App\Traits\SearchDocument;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use App\Models\Client;
-use App\Services\ClientService;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Rule;
+use Illuminate\Support\Facades\Auth;
+use App\Services\ClientService;
+use App\Models\Client;
+use App\Models\User;
 
 #[Layout('components.layouts.auth')]
-class ClientRegistroMasivo extends Component
+class ClientRegistroDatero extends Component
 {
     use SearchDocument;
     // Propiedades del formulario
@@ -64,9 +65,6 @@ class ClientRegistroMasivo extends Component
     // Opciones para los selects
     public $documentTypes = [
         'DNI' => 'DNI',
-        'RUC' => 'RUC',
-        'CE' => 'Carné de Extranjería',
-        'PASAPORTE' => 'Pasaporte'
     ];
 
     public $clientTypes = [
@@ -101,11 +99,15 @@ class ClientRegistroMasivo extends Component
         $this->clientService = $clientService;
     }
 
-    public function mount($id = null)
+    public function mount($id)
     {
-        
+        $user = User::find($id);
+        $user->isDatero();
+        if (!$user->isDatero()) {
+            abort(404);
+        }
         // Asignar automáticamente el usuario autenticado como asesor
-        $this->assigned_advisor_id = $id ? $id : Auth::id();
+        $this->assigned_advisor_id = $user->id;
     }
 
     // Ya no necesitamos cargar asesores ya que se asigna automáticamente
@@ -257,12 +259,12 @@ class ClientRegistroMasivo extends Component
     }
     public function render()
     {
-        $url = url('clients/registro-masivo/'.Auth::id());
+        $url = url('clients/registro-datero/'.Auth::id());
         $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)
                             ->color(0, 0, 255)
                             ->margin(2)
                             ->backgroundColor(0, 255, 0)
                             ->generate($url);
-        return view('livewire.clients.client-registro-masivo',compact('qrcode'));
+        return view('livewire.clients.client-registro-datero',compact('qrcode'));
     }
 }
