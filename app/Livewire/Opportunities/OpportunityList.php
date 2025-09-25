@@ -98,11 +98,40 @@ class OpportunityList extends Component
         'probability' => 'required|integer|min:0|max:100',
         'expected_value' => 'required|numeric|min:0',
         'expected_close_date' => 'required|date|after:today',
+        'close_value' => 'required|numeric|min:0',
+        'close_reason' => 'nullable|string|max:255',
+        'lost_reason' => 'nullable|string|max:255',
         'notes' => 'nullable|string',
         'source' => 'nullable|string|max:255',
         'campaign' => 'nullable|string|max:255'
     ];
 
+    protected $messages_opportunity = [
+        'client_id.required' => 'El cliente es obligatorio.',
+        'client_id.exists' => 'El cliente seleccionado no existe.',
+        'project_id.required' => 'El proyecto es obligatorio.',
+        'project_id.exists' => 'El proyecto seleccionado no existe.',
+        'unit_id.exists' => 'La unidad seleccionada no existe.',
+        'advisor_id.required' => 'El asesor es obligatorio.',
+        'advisor_id.exists' => 'El asesor seleccionado no existe.',
+        'stage.required' => 'La etapa es obligatoria.',
+        'stage.in' => 'La etapa seleccionada no es válida.',
+        'status.required' => 'El estado es obligatorio.',
+        'status.in' => 'El estado debe ser: registrado, reservado, cuotas, pagado, transferido o cancelado.',
+        'probability.required' => 'La probabilidad es obligatoria.',
+        'probability.integer' => 'La probabilidad debe ser un número entero.',
+        'probability.min' => 'La probabilidad debe ser al menos 0%.',
+        'probability.max' => 'La probabilidad no puede exceder 100%.',
+        'expected_value.required' => 'El valor esperado es obligatorio.',
+        'expected_value.numeric' => 'El valor esperado debe ser un número.',
+        'expected_value.min' => 'El valor esperado debe ser mayor a 0.',
+        'expected_close_date.required' => 'La fecha de cierre es obligatoria.',
+        'expected_close_date.date' => 'La fecha de cierre debe ser una fecha válida.',
+        'expected_close_date.after' => 'La fecha de cierre debe ser posterior a hoy.',
+        'notes.string' => 'Las notas deben ser texto.',
+        'source.max' => 'El origen no puede exceder 255 caracteres.',
+        'campaign.max' => 'La campaña no puede exceder 255 caracteres.'
+    ];
     protected $rules_activity = [
         'activity_title' => 'required|string|max:255',
         'activity_description' => 'nullable|string',
@@ -115,6 +144,24 @@ class OpportunityList extends Component
         'activity_notes' => 'nullable|string'
     ];
 
+    protected $messages_activity = [
+        'activity_title.required' => 'El título de la actividad es obligatorio.',
+        'activity_title.max' => 'El título no puede exceder 255 caracteres.',
+        'activity_type.required' => 'El tipo de actividad es obligatorio.',
+        'activity_type.in' => 'El tipo de actividad seleccionado no es válido.',
+        'activity_priority.required' => 'La prioridad es obligatoria.',
+        'activity_priority.in' => 'La prioridad seleccionada no es válida.',
+        'activity_start_date.required' => 'La fecha de inicio es obligatoria.',
+        'activity_start_date.date' => 'La fecha de inicio debe ser una fecha válida.',
+        'activity_start_date.after_or_equal' => 'La fecha de inicio debe ser hoy o posterior.',
+        'activity_end_date.date' => 'La fecha de fin debe ser una fecha válida.',
+        'activity_end_date.after' => 'La fecha de fin debe ser posterior a la fecha de inicio.',
+        'activity_duration.required' => 'La duración es obligatoria.',
+        'activity_duration.integer' => 'La duración debe ser un número entero.',
+        'activity_duration.min' => 'La duración debe ser al menos 1 minuto.',
+        'activity_duration.max' => 'La duración no puede exceder 1440 minutos (24 horas).',
+        'activity_location.max' => 'La ubicación no puede exceder 255 caracteres.'
+    ];
     protected $rules_task = [
         'task_title' => 'required|string|max:255',
         'task_description' => 'nullable|string',
@@ -123,60 +170,14 @@ class OpportunityList extends Component
         'task_notes' => 'nullable|string'
     ];
 
-    protected $messages_task = [
-            'client_id.required' => 'El cliente es obligatorio.',
-            'client_id.exists' => 'El cliente seleccionado no existe.',
-            'project_id.required' => 'El proyecto es obligatorio.',
-            'project_id.exists' => 'El proyecto seleccionado no existe.',
-            'unit_id.exists' => 'La unidad seleccionada no existe.',
-            'advisor_id.required' => 'El asesor es obligatorio.',
-            'advisor_id.exists' => 'El asesor seleccionado no existe.',
-            'stage.required' => 'La etapa es obligatoria.',
-            'stage.in' => 'La etapa seleccionada no es válida.',
-            'status.required' => 'El estado es obligatorio.',
-            'status.in' => 'El estado debe ser: registrado, reservado, cuotas, pagado, transferido o cancelado.',
-            'probability.required' => 'La probabilidad es obligatoria.',
-            'probability.integer' => 'La probabilidad debe ser un número entero.',
-            'probability.min' => 'La probabilidad debe ser al menos 0%.',
-            'probability.max' => 'La probabilidad no puede exceder 100%.',
-            'expected_value.required' => 'El valor esperado es obligatorio.',
-            'expected_value.numeric' => 'El valor esperado debe ser un número.',
-            'expected_value.min' => 'El valor esperado debe ser mayor a 0.',
-            'expected_close_date.required' => 'La fecha de cierre es obligatoria.',
-            'expected_close_date.date' => 'La fecha de cierre debe ser una fecha válida.',
-            'expected_close_date.after' => 'La fecha de cierre debe ser posterior a hoy.',
-            'notes.string' => 'Las notas deben ser texto.',
-            'source.max' => 'El origen no puede exceder 255 caracteres.',
-            'campaign.max' => 'La campaña no puede exceder 255 caracteres.'
-    ];
-
-    protected $messages_activity = [
-            'activity_title.required' => 'El título de la actividad es obligatorio.',
-            'activity_title.max' => 'El título no puede exceder 255 caracteres.',
-            'activity_type.required' => 'El tipo de actividad es obligatorio.',
-            'activity_type.in' => 'El tipo de actividad seleccionado no es válido.',
-            'activity_priority.required' => 'La prioridad es obligatoria.',
-            'activity_priority.in' => 'La prioridad seleccionada no es válida.',
-            'activity_start_date.required' => 'La fecha de inicio es obligatoria.',
-            'activity_start_date.date' => 'La fecha de inicio debe ser una fecha válida.',
-            'activity_start_date.after_or_equal' => 'La fecha de inicio debe ser hoy o posterior.',
-            'activity_end_date.date' => 'La fecha de fin debe ser una fecha válida.',
-            'activity_end_date.after' => 'La fecha de fin debe ser posterior a la fecha de inicio.',
-            'activity_duration.required' => 'La duración es obligatoria.',
-            'activity_duration.integer' => 'La duración debe ser un número entero.',
-            'activity_duration.min' => 'La duración debe ser al menos 1 minuto.',
-            'activity_duration.max' => 'La duración no puede exceder 1440 minutos (24 horas).',
-            'activity_location.max' => 'La ubicación no puede exceder 255 caracteres.'
-        ];
-
     protected $messages_task =  [
-            'task_title.required' => 'El título de la tarea es obligatorio.',
-            'task_title.max' => 'El título no puede exceder 255 caracteres.',
-            'task_priority.required' => 'La prioridad es obligatoria.',
-            'task_priority.in' => 'La prioridad seleccionada no es válida.',
-            'task_due_date.required' => 'La fecha de vencimiento es obligatoria.',
-            'task_due_date.date' => 'La fecha de vencimiento debe ser una fecha válida.',
-            'task_due_date.after_or_equal' => 'La fecha de vencimiento debe ser hoy o posterior.'
+        'task_title.required' => 'El título de la tarea es obligatorio.',
+        'task_title.max' => 'El título no puede exceder 255 caracteres.',
+        'task_priority.required' => 'La prioridad es obligatoria.',
+        'task_priority.in' => 'La prioridad seleccionada no es válida.',
+        'task_due_date.required' => 'La fecha de vencimiento es obligatoria.',
+        'task_due_date.date' => 'La fecha de vencimiento debe ser una fecha válida.',
+        'task_due_date.after_or_equal' => 'La fecha de vencimiento debe ser hoy o posterior.'
     ];
 
     // Validación en tiempo real
@@ -185,11 +186,11 @@ class OpportunityList extends Component
         try {
             // Determinar qué conjunto de reglas usar según el campo
             if (str_starts_with($propertyName, 'activity_')) {
-                $this->validateOnly($propertyName, $this->getActivityValidationRules(), $this->getActivityValidationMessages());
+                $this->validateOnly($propertyName, $this->rules_activity, $this->messages_activity);
             } elseif (str_starts_with($propertyName, 'task_')) {
-                $this->validateOnly($propertyName, $this->getTaskValidationRules(), $this->getTaskValidationMessages());
+                $this->validateOnly($propertyName, $this->rules_task, $this->messages_task);
             } else {
-                $this->validateOnly($propertyName, $this->getOpportunityValidationRules(), $this->getOpportunityValidationMessages());
+                $this->validateOnly($propertyName, $this->rules_opportunity, $this->messages_opportunity);
             }
 
             // Resetear página cuando cambian los filtros
@@ -406,7 +407,7 @@ class OpportunityList extends Component
     public function saveOpportunity()
     {
         try {
-            $this->validate($this->getOpportunityValidationRules(), $this->getOpportunityValidationMessages());
+            $this->validate($this->rules_opportunity, $this->messages_opportunity);
 
             $data = [
                 'client_id' => $this->client_id,
