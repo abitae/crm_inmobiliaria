@@ -63,18 +63,16 @@ window.showInfo = (message, title = 'Información') => {
 
 // Listeners para eventos de Livewire
 document.addEventListener('livewire:init', () => {
-    // Listener para alertas de éxito
+    // Listener para alertas de éxito (solo toasts)
     Livewire.on('show-success', (event) => {
         showSuccess(event.message, event.title);
     });
 
-    // Listener para alertas de error
-    Livewire.on('show-error', (event) => {
-        showError(event.message, event.title);
-    });
-
-    // Listener para alertas de información
+    // Listener para alertas de información (solo toasts)
     Livewire.on('show-info', (event) => {
         showInfo(event.message, event.title);
     });
+
+    // Los errores se manejan directamente en los campos del formulario
+    // No se muestran en toasts para evitar duplicación
 });

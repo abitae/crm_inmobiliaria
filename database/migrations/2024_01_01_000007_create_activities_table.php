@@ -19,7 +19,6 @@ return new class extends Migration
             $table->enum('status', ['programada', 'en_progreso', 'completada', 'cancelada'])->default('programada');
             $table->enum('priority', ['baja', 'media', 'alta', 'urgente'])->default('media');
             $table->timestamp('start_date');
-            $table->timestamp('end_date')->nullable();
             $table->integer('duration')->nullable(); // duración en minutos
             $table->string('location')->nullable();
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');

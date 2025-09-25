@@ -46,7 +46,6 @@ class ActivitySeeder extends Seeder
                 'status' => 'programada',
                 'priority' => 'alta',
                 'start_date' => now()->addDays(2)->setTime(15, 0),
-                'end_date' => now()->addDays(2)->setTime(16, 30),
                 'duration' => 90,
                 'location' => 'Residencial Miraflores Park - Av. Arequipa 1234',
                 'client_id' => $clients->where('name', 'Juan Carlos Vargas Mendoza')->first()->id,
@@ -66,7 +65,6 @@ class ActivitySeeder extends Seeder
                 'status' => 'completada',
                 'priority' => 'media',
                 'start_date' => now()->subDays(1)->setTime(10, 0),
-                'end_date' => now()->subDays(1)->setTime(10, 30),
                 'duration' => 30,
                 'location' => 'Oficina',
                 'client_id' => $clients->where('name', 'María Elena Torres Ríos')->first()->id,
@@ -87,7 +85,6 @@ class ActivitySeeder extends Seeder
                 'status' => 'programada',
                 'priority' => 'alta',
                 'start_date' => now()->addDays(5)->setTime(14, 0),
-                'end_date' => now()->addDays(5)->setTime(15, 30),
                 'duration' => 90,
                 'location' => 'Showroom Surco',
                 'client_id' => $clients->where('name', 'Carmen Flores Díaz')->first()->id,
@@ -107,7 +104,6 @@ class ActivitySeeder extends Seeder
                 'status' => 'en_progreso',
                 'priority' => 'media',
                 'start_date' => now()->setTime(11, 0),
-                'end_date' => now()->setTime(11, 30),
                 'duration' => 30,
                 'location' => 'Oficina',
                 'client_id' => $clients->where('name', 'Roberto Silva Castro')->first()->id,
@@ -127,7 +123,6 @@ class ActivitySeeder extends Seeder
                 'status' => 'programada',
                 'priority' => 'baja',
                 'start_date' => now()->addDays(1)->setTime(9, 0),
-                'end_date' => now()->addDays(1)->setTime(10, 0),
                 'duration' => 60,
                 'location' => 'Oficina',
                 'client_id' => null,
@@ -171,7 +166,6 @@ class ActivitySeeder extends Seeder
 
             $startDate = now()->addDays(rand(-30, 30))->setTime(rand(8, 18), rand(0, 59));
             $duration = rand(15, 180);
-            $endDate = $startDate->copy()->addMinutes($duration);
 
             $activityData = [
                 'title' => $this->generateActivityTitle($activityType),
@@ -180,7 +174,6 @@ class ActivitySeeder extends Seeder
                 'status' => $status,
                 'priority' => $priority,
                 'start_date' => $startDate,
-                'end_date' => $endDate,
                 'duration' => $duration,
                 'location' => $this->generateLocation($activityType),
                 'client_id' => rand(0, 1) ? $clients->random()->id : null,

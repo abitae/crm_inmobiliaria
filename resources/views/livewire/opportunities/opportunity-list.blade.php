@@ -1,11 +1,11 @@
 <div class="min-h-screen bg-gray-50">
     <!-- Header -->
-    <div class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-xs border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 xs:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div>
                     <h1 class="text-xl font-semibold text-gray-900">Oportunidades</h1>
-                    <p class="text-sm text-gray-600">Seguimiento de ventas y leads</p>
+                    <p class="text-xs text-gray-600">Seguimiento de ventas y leads</p>
                 </div>
                 <div class="flex space-x-2">
                     <flux:button icon="arrow-down-tray" size="xs" wire:click="exportOpportunities">
@@ -19,10 +19,10 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="max-w-7xl mx-auto px-4 xs:px-6 lg:px-8 py-6">
 
         <!-- Filtros y Búsqueda -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 mt-6">
+        <div class="bg-white rounded-lg shadow-xs border border-gray-200 p-4 mb-6 mt-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                     <flux:input size="xs" wire:model.live="search" placeholder="Buscar oportunidades..." />
@@ -72,7 +72,7 @@
 
 
         <!-- Tabla de Oportunidades -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-lg shadow-xs border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -109,18 +109,19 @@
                                             </span>
                                         </div>
                                         <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div class="text-xs font-medium text-gray-900">
                                                 {{ $opportunity->client->name ?? '' }}
                                             </div>
                                             <div class="text-xs text-gray-500">
                                                 {{ $opportunity->project->name ?? 'N/A' }}
                                                 <br>
-                                                {{ $opportunity->unit->unit_manzana ?? '' }} - {{ $opportunity->unit->unit_number ?? '' }}
+                                                {{ $opportunity->unit->unit_manzana ?? '' }} -
+                                                {{ $opportunity->unit->unit_number ?? '' }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                
+
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2 flex-col">
                                         <span
@@ -134,25 +135,25 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">S/
+                                    <div class="text-xs font-medium text-gray-900">S/
                                         {{ number_format($opportunity->expected_value) }}</div>
                                     <div class="text-xs text-gray-500">{{ $opportunity->probability }}% probabilidad
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">
+                                    <div class="text-xs text-gray-900">
                                         {{ $opportunity->advisor->name ?? 'Sin asignar' }}</div>
                                     <div class="text-xs text-gray-500">{{ $opportunity->source }}</div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500">
                                     {{ $opportunity->expected_close_date ? \Carbon\Carbon::parse($opportunity->expected_close_date)->format('M d, Y') : 'Sin fecha' }}
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">
                                     <div class="flex space-x-2">
-                                        <flux:button icon="arrow-up" size="xs" variant="outline"
-                                            color="success" wire:click="agregarActividad({{ $opportunity->id }})" />
-                                        <flux:button icon="plus" size="xs" variant="outline"
-                                            color="success" wire:click="agregarTarea({{ $opportunity->id }})" />
+                                        <flux:button icon="arrow-up" size="xs" variant="outline" color="success"
+                                            wire:click="agregarActividad({{ $opportunity->id }})" />
+                                        <flux:button icon="plus" size="xs" variant="outline" color="success"
+                                            wire:click="agregarTarea({{ $opportunity->id }})" />
                                         <flux:button icon="eye" size="xs" variant="outline"
                                             wire:click="openDetailModal({{ $opportunity->id }})" />
                                         <flux:button icon="pencil" size="xs" variant="outline"
@@ -182,7 +183,7 @@
 
             <!-- Paginación -->
             @if ($opportunities->hasPages())
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="bg-white px-4 py-3 border-t border-gray-200 xs:px-6">
                     {{ $opportunities->links() }}
                 </div>
             @endif
@@ -202,64 +203,73 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Cliente -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
-                        <flux:select size="sm" wire:model="client_id" required>
-                            <option value="">Seleccionar cliente</option>
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}
-                                </option>
-                            @endforeach
-                        </flux:select>
+                        <flux:field>
+                            <flux:select label="Cliente *" size="xs" wire:model="client_id">
+                                <option value="">Seleccionar cliente</option>
+                                @foreach ($clients as $client)
+                                    <option value="{{ $client->id }}">{{ $client->name }}
+                                    </option>
+                                @endforeach
+                            </flux:select>
+                            @error('client_id')
+                                {{ $message }}
+                            @enderror
+                        </flux:field>
+
                     </div>
 
                     <!-- Proyecto -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Proyecto *</label>
-                        <flux:select size="sm" wire:model.live="project_id" required>
+                        <flux:select label="Proyecto *" size="xs" wire:model.live="project_id">
                             <option value="">Seleccionar proyecto</option>
                             @foreach ($projects as $project)
                                 <option value="{{ $project->id }}">{{ $project->name }}</option>
                             @endforeach
                         </flux:select>
+                        <flux:error name="project_id" />
                     </div>
 
                     <!-- Unidad -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Unidad</label>
-                        <flux:select size="sm" wire:model.live="unit_id">
+                        <flux:select label="Unidad" size="xs" wire:model.live="unit_id">
                             <option value="">Seleccionar unidad</option>
                             @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->unit_manzana ? $unit->unit_manzana : '' }} -
+                                <option value="{{ $unit->id }}">
+                                    {{ $unit->unit_manzana ? $unit->unit_manzana : '' }} -
                                     {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
                             @endforeach
                         </flux:select>
+                        <flux:error name="unit_id" />
                     </div>
 
                     <!-- Asesor -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Asesor *</label>
-                        <flux:select size="sm" wire:model="advisor_id" required>
-                            <option value="">Seleccionar asesor</option>
-                            @foreach ($advisors as $advisor)
-                                <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
-                            @endforeach
-                        </flux:select>
+                        <flux:field>
+                            <flux:select label="Asesor *" size="xs" wire:model="advisor_id">
+                                <option value="">Seleccionar asesor</option>
+                                @foreach ($advisors as $advisor)
+                                    <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="advisor_id" />
+                        </flux:field>
                     </div>
 
                     <!-- Etapa -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Etapa *</label>
-                        <flux:select size="sm" wire:model="stage" required>
+
+                        <flux:select label="Etapa *" size="xs" wire:model="stage">
                             <option value="calificado">Calificado</option>
                             <option value="visita">Visita</option>
                             <option value="cierre">Cierre</option>
                         </flux:select>
+                        <flux:error name="stage" />
                     </div>
 
                     <!-- Estado -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
-                        <flux:select size="sm" wire:model="status" required>
+
+                        <flux:select label="Estado *" size="xs" wire:model="status">
                             <option value="registrado">Registrado</option>
                             <option value="reservado">Reservado</option>
                             <option value="cuotas">Cuotas</option>
@@ -267,61 +277,65 @@
                             <option value="transferido">Transferido</option>
                             <option value="cancelado">Cancelado</option>
                         </flux:select>
+                        <flux:error name="status" />
                     </div>
 
                     <!-- Probabilidad -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Probabilidad (%) *</label>
-                        <flux:input size="sm" type="number" wire:model="probability" min="0"
-                            max="100" required />
-                        
+                        <flux:field>
+                            <flux:input label="Probabilidad (%) *" size="xs" type="number"
+                                wire:model="probability" min="0" max="100" />
+                            <flux:error name="probability" />
+                        </flux:field>
                     </div>
 
                     <!-- Valor Esperado -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor Esperado (S/) *</label>
-                        <flux:input size="sm" type="number" wire:model="expected_value" step="0.01"
-                            min="0" required />
-                        
+
+                        <flux:input label="Valor Esperado (S/) *" size="xs" type="number"
+                            wire:model="expected_value" step="0.01" min="0" />
+                        <flux:error name="expected_value" />
                     </div>
 
                     <!-- Fecha de Cierre -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Cierre *</label>
-                        <flux:input size="sm" type="date" wire:model="expected_close_date" required />
-                        
+
+                        <flux:input label="Fecha de Cierre *" size="xs" type="date"
+                            wire:model="expected_close_date" />
+                        <flux:error name="expected_close_date" />
                     </div>
 
                     <!-- Origen -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Origen</label>
-                        <flux:input size="sm" wire:model="source" placeholder="Ej: Website, Referido, etc." />
-                        
+
+                        <flux:input label="Origen" size="xs" wire:model="source"
+                            placeholder="Ej: Website, Referido, etc." />
+                        <flux:error name="source" />
                     </div>
 
                     <!-- Campaña -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Campaña</label>
-                        <flux:input size="sm" wire:model="campaign"
+
+                        <flux:input label="Campaña" size="xs" wire:model="campaign"
                             placeholder="Ej: Facebook Ads, Google Ads, etc." />
-                        
+                        <flux:error name="campaign" />
                     </div>
                 </div>
 
                 <!-- Notas -->
                 <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas</label>
-                    <textarea wire:model="notes" rows="3"
+
+                    <textarea label="Notas" wire:model="notes" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Información adicional sobre la oportunidad..."></textarea>
-                    
+                    <flux:error name="notes" />
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
-                    <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
+                    <flux:button icon="x-mark" size="xs" variant="outline" wire:click="closeModals">
                         Cancelar
                     </flux:button>
-                    <flux:button icon="check" size="sm" color="primary" type="submit">
+                    <flux:button icon="check" size="xs" color="primary" type="submit">
                         {{ $isEditing ? 'Actualizar Oportunidad' : 'Crear Oportunidad' }}
                     </flux:button>
                 </div>
@@ -329,7 +343,7 @@
         </div>
     </flux:modal>
 
-    
+
 
     <!-- Modal de Detalle de Oportunidad -->
     <flux:modal variant="flyout" wire:model="showDetailModal" class="w-1/3">
@@ -353,7 +367,7 @@
                             <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
                             <span class="text-xs text-gray-500 uppercase tracking-wider">Información General</span>
                         </div>
-                        <ul class="text-sm text-gray-700 space-y-1">
+                        <ul class="text-xs text-gray-700 space-y-1">
                             <li><span class="font-semibold text-blue-800">Cliente:</span>
                                 {{ $selectedOpportunity->client->name ?? 'N/A' }}</li>
                             <li><span class="font-semibold text-blue-800">Proyecto:</span>
@@ -379,12 +393,13 @@
                             <span class="inline-block w-2 h-2 rounded-full bg-indigo-400"></span>
                             <span class="text-xs text-gray-500 uppercase tracking-wider">Detalles</span>
                         </div>
-                        <ul class="text-sm text-gray-700 space-y-1">
+                        <ul class="text-xs text-gray-700 space-y-1">
                             <li><span class="font-semibold text-indigo-800">Valor esperado:</span> <span
                                     class="text-green-700 font-bold">S/
                                     {{ number_format($selectedOpportunity->expected_value, 2) }}</span></li>
                             <li><span class="font-semibold text-indigo-800">Fecha de cierre:</span>
-                                {{ $selectedOpportunity->expected_close_date ? $selectedOpportunity->expected_close_date->format('d/m/Y') : 'N/A' }}</li>
+                                {{ $selectedOpportunity->expected_close_date ? $selectedOpportunity->expected_close_date->format('d/m/Y') : 'N/A' }}
+                            </li>
                             <li><span class="font-semibold text-indigo-800">Origen:</span>
                                 {{ $selectedOpportunity->source ?? 'N/A' }}</li>
                             <li><span class="font-semibold text-indigo-800">Campaña:</span>
@@ -398,7 +413,7 @@
                             <span class="inline-block w-2 h-2 rounded-full bg-teal-400"></span>
                             <span class="text-xs text-gray-500 uppercase tracking-wider">Adicional</span>
                         </div>
-                        <ul class="text-sm text-gray-700 space-y-1">
+                        <ul class="text-xs text-gray-700 space-y-1">
                             <li><span class="font-semibold text-teal-800">Asesor:</span>
                                 {{ $selectedOpportunity->advisor->name ?? 'N/A' }}</li>
                             <li><span class="font-semibold text-teal-800">Probabilidad:</span>
@@ -419,7 +434,7 @@
                             <span class="text-xs text-gray-500 uppercase tracking-wider">Notas</span>
                         </div>
                         <div
-                            class="bg-yellow-50 border border-yellow-100 rounded p-3 text-sm text-yellow-900 min-h-[48px]">
+                            class="bg-yellow-50 border border-yellow-100 rounded p-3 text-xs text-yellow-900 min-h-[48px]">
                             {{ $selectedOpportunity->notes ?? 'Sin notas adicionales.' }}
                         </div>
                     </div>
@@ -430,47 +445,44 @@
                     <span class="inline-block w-2 h-2 rounded-full bg-purple-400"></span>
                     <span class="text-xs text-gray-500 uppercase tracking-wider">Actividades recientes</span>
                 </div>
-                <div class="overflow-x-auto rounded-lg shadow border border-gray-100 bg-white">
-                    <table class="min-w-full divide-y divide-gray-200">
+                <div class="overflow-x-auto rounded shadow border border-gray-100 bg-white">
+                    <table class="min-w-full text-xs">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th
-                                    class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                    Actividad</th>
-                                <th
-                                    class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                    Fecha</th>
-                                <th
-                                    class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                    Estado</th>
-                                <th
-                                    class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                                    Acciones</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-600 uppercase">Actividad</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-600 uppercase">Fecha</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-600 uppercase">Estado</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-600 uppercase">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
                             @forelse ($selectedOpportunity->activities as $activity)
                                 <tr wire:key="activity-{{ $activity->id }}" class="hover:bg-blue-50 transition">
-                                    <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-800">
-                                        {{ $activity->title }}</td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-gray-600">
-                                        {{ $activity->start_date }}</td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <span
-                                            class="inline-block px-2 py-0.5 rounded 
-                                            text-xs font-semibold">
+                                    <td class="px-2 py-1 whitespace-nowrap font-medium text-gray-800">
+                                        {{ $activity->title }}
+                                    </td>
+                                    <td class="px-2 py-1 whitespace-nowrap text-gray-600">
+                                        {{ $activity->start_date->format('d/m/Y') }}
+
+                                    </td>
+                                    <td class="px-2 py-1 whitespace-nowrap">
+                                        <span class="inline-block px-1 py-0.5 rounded text-xs font-semibold">
                                             {{ ucfirst($activity->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
+                                    <td class="px-2 py-1 whitespace-nowrap">
                                         <flux:button icon="eye" size="xs" variant="outline"
                                             wire:click="viewActivity({{ $activity->id }})">
+                                        </flux:button>
+
+                                        <flux:button icon="trash" size="xs" variant="danger" color="danger"
+                                            wire:click="deleteActivity({{ $activity->id }})">
                                         </flux:button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-3 text-center text-gray-400">No hay actividades
+                                    <td colspan="4" class="px-2 py-2 text-center text-gray-400">No hay actividades
                                         registradas.</td>
                                 </tr>
                             @endforelse
@@ -496,7 +508,7 @@
 
             @if ($selectedOpportunity)
                 <div class="mb-4 p-4 bg-blue-50 rounded-lg">
-                    <p class="text-sm text-blue-800">
+                    <p class="text-xs text-blue-800">
                         <strong>Cliente:</strong> {{ $selectedOpportunity->client->name ?? 'N/A' }}<br>
                         <strong>Proyecto:</strong> {{ $selectedOpportunity->project->name ?? 'N/A' }}<br>
                         <strong>Oportunidad:</strong> {{ $selectedOpportunity->id }}
@@ -508,79 +520,84 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Título -->
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
-                        <flux:input size="sm" wire:model="activity_title" placeholder="Título de la actividad" required />
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Título *</label>
+                        <flux:input size="xs" wire:model="activity_title"
+                            placeholder="Título de la actividad" />
+                        <flux:error name="activity_title" />
                     </div>
 
                     <!-- Descripción -->
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Descripción</label>
                         <textarea wire:model="activity_description" rows="3"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Descripción de la actividad..."></textarea>
+                        <flux:error name="activity_description" />
                     </div>
 
                     <!-- Tipo de Actividad -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Actividad *</label>
-                        <flux:select size="sm" wire:model="activity_type" required>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Tipo de Actividad *</label>
+                        <flux:select size="xs" wire:model="activity_type">
                             <option value="llamada">Llamada</option>
                             <option value="reunion">Reunión</option>
                             <option value="visita">Visita</option>
                             <option value="seguimiento">Seguimiento</option>
                             <option value="tarea">Tarea</option>
                         </flux:select>
+                        <flux:error name="activity_type" />
                     </div>
 
                     <!-- Prioridad -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad *</label>
-                        <flux:select size="sm" wire:model="activity_priority" required>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Prioridad *</label>
+                        <flux:select size="xs" wire:model="activity_priority">
                             <option value="baja">Baja</option>
                             <option value="media">Media</option>
                             <option value="alta">Alta</option>
                             <option value="urgente">Urgente</option>
                         </flux:select>
+                        <flux:error name="activity_priority" />
                     </div>
 
                     <!-- Fecha de Inicio -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio *</label>
-                        <flux:input size="sm" type="datetime-local" wire:model="activity_start_date" required />
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Fecha de Inicio *</label>
+                        <flux:input size="xs" type="date" wire:model="activity_start_date" />
+                        <flux:error name="activity_start_date" />
                     </div>
 
                     <!-- Duración -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Duración (minutos) *</label>
-                        <flux:input size="sm" type="number" wire:model="activity_duration" min="1" max="1440" required />
-                    </div>
-
-                    <!-- Fecha de Fin -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
-                        <flux:input size="sm" type="datetime-local" wire:model="activity_end_date" />
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Duración (minutos) *</label>
+                        <flux:input size="xs" type="number" wire:model="activity_duration" min="1"
+                            max="1440" />
+                        <flux:error name="activity_duration" />
                     </div>
 
                     <!-- Ubicación -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Ubicación</label>
-                        <flux:input size="sm" wire:model="activity_location" placeholder="Ubicación de la actividad" />
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Ubicación</label>
+                        <flux:input size="xs" wire:model="activity_location"
+                            placeholder="Ubicación de la actividad" />
+                        <flux:error name="activity_location" />
                     </div>
                 </div>
 
                 <!-- Notas -->
                 <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas</label>
+                    <label class="block text-xs font-medium text-gray-700 mb-2">Notas</label>
                     <textarea wire:model="activity_notes" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Notas adicionales..."></textarea>
+                    <flux:error name="activity_notes" />
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
-                    <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
+                    <flux:button icon="x-mark" size="xs" variant="outline" wire:click="closeModals">
                         Cancelar
                     </flux:button>
-                    <flux:button icon="plus" size="sm" color="primary" type="submit">
+                    <flux:button icon="plus" size="xs" color="primary" type="submit">
                         Crear Actividad
                     </flux:button>
                 </div>
@@ -597,7 +614,7 @@
 
             @if ($selectedOpportunity)
                 <div class="mb-4 p-4 bg-green-50 rounded-lg">
-                    <p class="text-sm text-green-800">
+                    <p class="text-xs text-green-800">
                         <strong>Cliente:</strong> {{ $selectedOpportunity->client->name ?? 'N/A' }}<br>
                         <strong>Proyecto:</strong> {{ $selectedOpportunity->project->name ?? 'N/A' }}<br>
                         <strong>Oportunidad:</strong> {{ $selectedOpportunity->id }}
@@ -609,49 +626,54 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Título -->
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
-                        <flux:input size="sm" wire:model="task_title" placeholder="Título de la tarea" required />
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Título *</label>
+                        <flux:input size="xs" wire:model="task_title" placeholder="Título de la tarea" />
+                        <flux:error name="task_title" />
                     </div>
 
                     <!-- Descripción -->
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Descripción</label>
                         <textarea wire:model="task_description" rows="3"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Descripción de la tarea..."></textarea>
+                        <flux:error name="task_description" />
                     </div>
 
                     <!-- Prioridad -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad *</label>
-                        <flux:select size="sm" wire:model="task_priority" required>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Prioridad *</label>
+                        <flux:select size="xs" wire:model="task_priority">
                             <option value="baja">Baja</option>
                             <option value="media">Media</option>
                             <option value="alta">Alta</option>
                             <option value="urgente">Urgente</option>
                         </flux:select>
+                        <flux:error name="task_priority" />
                     </div>
 
                     <!-- Fecha de Vencimiento -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Vencimiento *</label>
-                        <flux:input size="sm" type="date" wire:model="task_due_date" required />
+                        <label class="block text-xs font-medium text-gray-700 mb-2">Fecha de Vencimiento *</label>
+                        <flux:input size="xs" type="date" wire:model="task_due_date" />
+                        <flux:error name="task_due_date" />
                     </div>
                 </div>
 
                 <!-- Notas -->
                 <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas</label>
+                    <label class="block text-xs font-medium text-gray-700 mb-2">Notas</label>
                     <textarea wire:model="task_notes" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Notas adicionales..."></textarea>
+                    <flux:error name="task_notes" />
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
-                    <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
+                    <flux:button icon="x-mark" size="xs" variant="outline" wire:click="closeModals">
                         Cancelar
                     </flux:button>
-                    <flux:button icon="plus" size="sm" color="success" type="submit">
+                    <flux:button icon="plus" size="xs" color="success" type="submit">
                         Crear Tarea
                     </flux:button>
                 </div>
@@ -667,15 +689,15 @@
             </div>
             <h3 class="text-lg font-medium text-gray-900 mt-4">Confirmar eliminación</h3>
             <div class="mt-2 px-7 py-3">
-                <p class="text-sm text-gray-500">
+                <p class="text-xs text-gray-500">
                     ¿Estás seguro de que quieres eliminar esta oportunidad? Esta acción no se puede deshacer.
                 </p>
             </div>
             <div class="flex justify-center space-x-3 mt-4">
-                <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
+                <flux:button icon="x-mark" size="xs" variant="outline" wire:click="closeModals">
                     Cancelar
                 </flux:button>
-                <flux:button icon="trash" size="sm" color="danger" wire:click="deleteOpportunity">
+                <flux:button icon="trash" size="xs" color="danger" wire:click="deleteOpportunity">
                     Eliminar
                 </flux:button>
             </div>

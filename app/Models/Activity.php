@@ -19,7 +19,6 @@ class Activity extends Model
         'status', // programada, en_progreso, completada, cancelada
         'priority', // baja, media, alta, urgente
         'start_date',
-        'end_date',
         'duration', // duración en minutos
         'location',
         'client_id', // ID del cliente
@@ -47,7 +46,6 @@ class Activity extends Model
         'reminder_before' => 'integer',
         'reminder_sent' => 'boolean',
         'start_date' => 'datetime',
-        'end_date' => 'datetime',
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'created_at' => 'datetime',
@@ -198,8 +196,7 @@ class Activity extends Model
         if (in_array($this->status, ['programada', 'en_progreso'])) {
             $this->update([
                 'status' => 'completada',
-                'result' => $result,
-                'end_date' => now()
+                'result' => $result
             ]);
             return true;
         }
@@ -218,12 +215,11 @@ class Activity extends Model
         return false;
     }
 
-    public function reschedule(\DateTime $newStartDate, \DateTime $newEndDate = null): bool
+    public function reschedule(\DateTime $newStartDate): bool
     {
         if ($this->status === 'programada') {
             $this->update([
-                'start_date' => $newStartDate,
-                'end_date' => $newEndDate ?? (clone $newStartDate)->add(new \DateInterval('PT' . $this->duration . 'M'))
+                'start_date' => $newStartDate
             ]);
             return true;
         }
