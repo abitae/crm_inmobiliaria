@@ -200,7 +200,7 @@ class DashboardService
             $monthStart = $date->startOfMonth();
             $monthEnd = $date->endOfMonth();
 
-            $monthlySales = Opportunity::where('status', 'ganada')
+            $monthlySales = Opportunity::where('status', 'pagado')
                 ->whereBetween('actual_close_date', [$monthStart, $monthEnd])
                 ->sum('close_value');
 
@@ -291,9 +291,9 @@ class DashboardService
                 'users.id',
                 'users.name',
                 DB::raw('COUNT(DISTINCT opportunities.id) as total_opportunities'),
-                DB::raw('COUNT(DISTINCT CASE WHEN opportunities.status = "ganada" THEN opportunities.id END) as won_opportunities'),
+                DB::raw('COUNT(DISTINCT CASE WHEN opportunities.status = "pagado" THEN opportunities.id END) as won_opportunities'),
                 DB::raw('COUNT(DISTINCT clients.id) as assigned_clients'),
-                DB::raw('SUM(CASE WHEN opportunities.status = "ganada" THEN opportunities.close_value ELSE 0 END) as total_sales')
+                DB::raw('SUM(CASE WHEN opportunities.status = "pagado" THEN opportunities.close_value ELSE 0 END) as total_sales')
             )
             ->groupBy('users.id', 'users.name')
             ->orderBy('total_sales', 'desc')
@@ -312,8 +312,8 @@ class DashboardService
                 'clients.source',
                 DB::raw('COUNT(DISTINCT clients.id) as total_clients'),
                 DB::raw('COUNT(DISTINCT opportunities.id) as total_opportunities'),
-                DB::raw('COUNT(DISTINCT CASE WHEN opportunities.status = "ganada" THEN opportunities.id END) as won_opportunities'),
-                DB::raw('ROUND((COUNT(DISTINCT CASE WHEN opportunities.status = "ganada" THEN opportunities.id END) / COUNT(DISTINCT clients.id)) * 100, 2) as conversion_rate')
+                DB::raw('COUNT(DISTINCT CASE WHEN opportunities.status = "pagado" THEN opportunities.id END) as won_opportunities'),
+                DB::raw('ROUND((COUNT(DISTINCT CASE WHEN opportunities.status = "pagado" THEN opportunities.id END) / COUNT(DISTINCT clients.id)) * 100, 2) as conversion_rate')
             )
             ->groupBy('clients.source')
             ->orderBy('conversion_rate', 'desc')
@@ -331,11 +331,11 @@ class DashboardService
             ->select(
                 'users.id',
                 'users.name',
-                DB::raw('COUNT(CASE WHEN opportunities.status = "ganada" THEN opportunities.id END) as closed_opportunities'),
-                DB::raw('SUM(CASE WHEN opportunities.status = "ganada" THEN opportunities.close_value ELSE 0 END) as total_sales'),
-                DB::raw('AVG(CASE WHEN opportunities.status = "ganada" THEN opportunities.close_value ELSE NULL END) as average_sale')
+                DB::raw('COUNT(CASE WHEN opportunities.status = "pagado" THEN opportunities.id END) as closed_opportunities'),
+                DB::raw('SUM(CASE WHEN opportunities.status = "pagado" THEN opportunities.close_value ELSE 0 END) as total_sales'),
+                DB::raw('AVG(CASE WHEN opportunities.status = "pagado" THEN opportunities.close_value ELSE NULL END) as average_sale')
             )
-            ->where('opportunities.status', 'ganada')
+            ->where('opportunities.status', 'pagado')
             ->groupBy('users.id', 'users.name')
             ->orderBy('total_sales', 'desc');
 

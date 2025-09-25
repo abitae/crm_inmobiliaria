@@ -11,7 +11,7 @@
                     <flux:button icon="arrow-down-tray" size="xs" wire:click="exportOpportunities">
                         Exportar
                     </flux:button>
-                    <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal">
+                    <flux:button icon="plus" size="xs" color="primary" wire:click="openFormModal">
                         Nueva Oportunidad
                     </flux:button>
                 </div>
@@ -21,11 +21,6 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-
-        <flux:breadcrumbs>
-            <flux:breadcrumbs.item href="/dashboard">Dashboard</flux:breadcrumbs.item>
-            <flux:breadcrumbs.item href="/opportunities">Oportunidades</flux:breadcrumbs.item>
-        </flux:breadcrumbs>
         <!-- Filtros y Búsqueda -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 mt-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -35,22 +30,20 @@
                 <div>
                     <flux:select size="xs" wire:model.live="stageFilter">
                         <option value="">Todas las etapas</option>
-                        <option value="captado">Captado</option>
                         <option value="calificado">Calificado</option>
-                        <option value="contacto">Contacto</option>
-                        <option value="propuesta">Propuesta</option>
                         <option value="visita">Visita</option>
-                        <option value="negociacion">Negociación</option>
                         <option value="cierre">Cierre</option>
                     </flux:select>
                 </div>
                 <div>
                     <flux:select size="xs" wire:model.live="statusFilter">
                         <option value="">Todos los estados</option>
-                        <option value="activa">Activa</option>
-                        <option value="ganada">Ganada</option>
-                        <option value="perdida">Perdida</option>
-                        <option value="cancelada">Cancelada</option>
+                        <option value="registrado">Registrado</option>
+                        <option value="reservado">Reservado</option>
+                        <option value="cuotas">Cuotas</option>
+                        <option value="pagado">Pagado</option>
+                        <option value="transferido">Transferido</option>
+                        <option value="cancelado">Cancelado</option>
                     </flux:select>
                 </div>
                 <div>
@@ -77,54 +70,6 @@
             </div>
         </div>
 
-        <!-- Estadísticas Rápidas -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 mt-6">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <flux:icon name="funnel" class="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500">Total</p>
-                        <p class="text-lg font-semibold text-gray-900">{{ $stats['total'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <flux:icon name="check-circle" class="w-4 h-4 text-green-600" />
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500">Ganadas</p>
-                        <p class="text-lg font-semibold text-gray-900">{{ $stats['won'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <flux:icon name="clock" class="w-4 h-4 text-yellow-600" />
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500">En Proceso</p>
-                        <p class="text-lg font-semibold text-gray-900">{{ $stats['in_progress'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <flux:icon name="currency-dollar" class="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500">Valor Total</p>
-                        <p class="text-lg font-semibold text-gray-900">S/
-                            {{ number_format($stats['total_value'] ?? 0) }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Tabla de Oportunidades -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -133,10 +78,8 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Cliente
+                                Cliente / Proyecto
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Proyecto
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Etapa/Estado
@@ -169,16 +112,15 @@
                                             <div class="text-sm font-medium text-gray-900">
                                                 {{ $opportunity->client->name ?? '' }}
                                             </div>
-                                            <div class="text-xs text-gray-500">{{ $opportunity->client->email ?? '' }}
+                                            <div class="text-xs text-gray-500">
+                                                {{ $opportunity->project->name ?? 'N/A' }}
+                                                <br>
+                                                {{ $opportunity->unit->unit_manzana ?? '' }} - {{ $opportunity->unit->unit_number ?? '' }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $opportunity->project->name ?? 'N/A' }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">{{ $opportunity->project->type ?? '' }}</div>
-                                </td>
+                                
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2 flex-col">
                                         <span
@@ -207,16 +149,14 @@
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
+                                        <flux:button icon="arrow-up" size="xs" variant="outline"
+                                            color="success" wire:click="agregarActividad({{ $opportunity->id }})" />
+                                        <flux:button icon="plus" size="xs" variant="outline"
+                                            color="success" wire:click="agregarTarea({{ $opportunity->id }})" />
                                         <flux:button icon="eye" size="xs" variant="outline"
                                             wire:click="openDetailModal({{ $opportunity->id }})" />
                                         <flux:button icon="pencil" size="xs" variant="outline"
-                                            wire:click="openEditModal({{ $opportunity->id }})" />
-                                        <flux:button icon="arrow-up" size="xs" variant="outline"
-                                            color="success" wire:click="openStageModal({{ $opportunity->id }})" />
-                                        <flux:button icon="check-circle" size="xs" variant="outline"
-                                            color="success" wire:click="openWinModal({{ $opportunity->id }})" />
-                                        <flux:button icon="x-circle" size="xs" variant="outline" color="danger"
-                                            wire:click="openLoseModal({{ $opportunity->id }})" />
+                                            wire:click="openFormModal({{ $opportunity->id }})" />
                                         <flux:button icon="trash" size="xs" variant="danger" color="danger"
                                             wire:click="openDeleteModal({{ $opportunity->id }})" />
                                     </div>
@@ -229,7 +169,7 @@
                                         <flux:icon name="funnel" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron oportunidades</p>
                                         <flux:button icon="plus" size="xs" color="primary" class="mt-2"
-                                            wire:click="openCreateModal">
+                                            wire:click="openFormModal">
                                             Crear primera oportunidad
                                         </flux:button>
                                     </div>
@@ -249,14 +189,16 @@
         </div>
     </div>
 
-    <!-- Modal de Crear Oportunidad -->
-    <flux:modal variant="flyout" wire:model="showCreateModal" max-width="4xl">
+    <!-- Modal de Formulario de Oportunidad -->
+    <flux:modal variant="flyout" wire:model="showFormModal" max-width="4xl">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-medium text-gray-900">Nueva Oportunidad</h3>
+                <h3 class="text-lg font-medium text-gray-900">
+                    {{ $isEditing ? 'Editar Oportunidad' : 'Nueva Oportunidad' }}
+                </h3>
             </div>
 
-            <form wire:submit.prevent="createOpportunity">
+            <form wire:submit.prevent="saveOpportunity">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Cliente -->
                     <div>
@@ -264,13 +206,10 @@
                         <flux:select size="sm" wire:model="client_id" required>
                             <option value="">Seleccionar cliente</option>
                             @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }} - {{ $client->email }}
+                                <option value="{{ $client->id }}">{{ $client->name }}
                                 </option>
                             @endforeach
                         </flux:select>
-                        @error('client_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <!-- Proyecto -->
@@ -282,9 +221,6 @@
                                 <option value="{{ $project->id }}">{{ $project->name }}</option>
                             @endforeach
                         </flux:select>
-                        @error('project_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <!-- Unidad -->
@@ -293,13 +229,10 @@
                         <flux:select size="sm" wire:model.live="unit_id">
                             <option value="">Seleccionar unidad</option>
                             @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->unit_manzana ?? '' }} -
+                                <option value="{{ $unit->id }}">{{ $unit->unit_manzana ? $unit->unit_manzana : '' }} -
                                     {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
                             @endforeach
                         </flux:select>
-                        @error('unit_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <!-- Asesor -->
@@ -311,40 +244,29 @@
                                 <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
                             @endforeach
                         </flux:select>
-                        @error('advisor_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <!-- Etapa -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Etapa *</label>
                         <flux:select size="sm" wire:model="stage" required>
-                            <option value="captado">Captado</option>
                             <option value="calificado">Calificado</option>
-                            <option value="contacto">Contacto</option>
-                            <option value="propuesta">Propuesta</option>
                             <option value="visita">Visita</option>
-                            <option value="negociacion">Negociación</option>
                             <option value="cierre">Cierre</option>
                         </flux:select>
-                        @error('stage')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <!-- Estado -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
                         <flux:select size="sm" wire:model="status" required>
-                            <option value="activa">Activa</option>
-                            <option value="ganada">Ganada</option>
-                            <option value="perdida">Perdida</option>
-                            <option value="cancelada">Cancelada</option>
+                            <option value="registrado">Registrado</option>
+                            <option value="reservado">Reservado</option>
+                            <option value="cuotas">Cuotas</option>
+                            <option value="pagado">Pagado</option>
+                            <option value="transferido">Transferido</option>
+                            <option value="cancelado">Cancelado</option>
                         </flux:select>
-                        @error('status')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
                     </div>
 
                     <!-- Probabilidad -->
@@ -352,9 +274,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Probabilidad (%) *</label>
                         <flux:input size="sm" type="number" wire:model="probability" min="0"
                             max="100" required />
-                        @error('probability')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
+                        
                     </div>
 
                     <!-- Valor Esperado -->
@@ -362,27 +282,21 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Valor Esperado (S/) *</label>
                         <flux:input size="sm" type="number" wire:model="expected_value" step="0.01"
                             min="0" required />
-                        @error('expected_value')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
+                        
                     </div>
 
                     <!-- Fecha de Cierre -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Cierre *</label>
                         <flux:input size="sm" type="date" wire:model="expected_close_date" required />
-                        @error('expected_close_date')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
+                        
                     </div>
 
                     <!-- Origen -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Origen</label>
                         <flux:input size="sm" wire:model="source" placeholder="Ej: Website, Referido, etc." />
-                        @error('source')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
+                        
                     </div>
 
                     <!-- Campaña -->
@@ -390,9 +304,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Campaña</label>
                         <flux:input size="sm" wire:model="campaign"
                             placeholder="Ej: Facebook Ads, Google Ads, etc." />
-                        @error('campaign')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
+                        
                     </div>
                 </div>
 
@@ -402,9 +314,7 @@
                     <textarea wire:model="notes" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Información adicional sobre la oportunidad..."></textarea>
-                    @error('notes')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
-                    @enderror
+                    
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
@@ -412,182 +322,14 @@
                         Cancelar
                     </flux:button>
                     <flux:button icon="check" size="sm" color="primary" type="submit">
-                        Crear Oportunidad
+                        {{ $isEditing ? 'Actualizar Oportunidad' : 'Crear Oportunidad' }}
                     </flux:button>
                 </div>
             </form>
         </div>
     </flux:modal>
 
-    <!-- Modal de Editar Oportunidad -->
-    <flux:modal variant="flyout" wire:model="showEditModal" max-width="4xl">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-medium text-gray-900">Editar Oportunidad</h3>
-            </div>
-
-            <form wire:submit.prevent="updateOpportunity">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Cliente -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
-                        <flux:select size="sm" wire:model="client_id" required>
-                            <option value="">Seleccionar cliente</option>
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }} - {{ $client->email }}
-                                </option>
-                            @endforeach
-                        </flux:select>
-                        @error('client_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Proyecto -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Proyecto *</label>
-                        <flux:select size="sm" wire:model.live="project_id" required>
-                            <option value="">Seleccionar proyecto</option>
-                            @foreach ($projects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                            @endforeach
-                        </flux:select>
-                        @error('project_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Unidad -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Unidad</label>
-                        <flux:select size="sm" wire:model.live="unit_id">
-                            <option value="">Seleccionar unidad</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->unit_manzana ?? '' }} -
-                                    {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
-                            @endforeach
-                        </flux:select>
-                        @error('unit_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Asesor -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Asesor *</label>
-                        <flux:select size="sm" wire:model="advisor_id" required>
-                            <option value="">Seleccionar asesor</option>
-                            @foreach ($advisors as $advisor)
-                                <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
-                            @endforeach
-                        </flux:select>
-                        @error('advisor_id')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Etapa -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Etapa *</label>
-                        <flux:select size="sm" wire:model="stage" required>
-                            <option value="captado">Captado</option>
-                            <option value="calificado">Calificado</option>
-                            <option value="contacto">Contacto</option>
-                            <option value="propuesta">Propuesta</option>
-                            <option value="visita">Visita</option>
-                            <option value="negociacion">Negociación</option>
-                            <option value="cierre">Cierre</option>
-                        </flux:select>
-                        @error('stage')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Estado -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
-                        <flux:select size="sm" wire:model="status" required>
-                            <option value="activa">Activa</option>
-                            <option value="ganada">Ganada</option>
-                            <option value="perdida">Perdida</option>
-                            <option value="cancelada">Cancelada</option>
-                        </flux:select>
-                        @error('status')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Probabilidad -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Probabilidad (%) *</label>
-                        <flux:input size="sm" type="number" wire:model="probability" min="0"
-                            max="100" required />
-                        @error('probability')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Valor Esperado -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor Esperado (S/) *</label>
-                        <flux:input size="sm" type="number" wire:model="expected_value" step="0.01"
-                            min="0" required />
-                        @error('expected_value')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Fecha de Cierre -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Cierre *</label>
-                        <flux:input size="sm" type="date" wire:model="expected_close_date" required />
-                        @error('expected_close_date')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Origen -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Origen</label>
-                        <flux:input size="sm" wire:model="source" placeholder="Ej: Website, Referido, etc." />
-                        @error('source')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <!-- Campaña -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Campaña</label>
-                        <flux:input size="sm" wire:model="campaign"
-                            placeholder="Ej: Facebook Ads, Google Ads, etc." />
-                        @error('campaign')
-                            <span class="text-red-500 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Notas -->
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas</label>
-                    <textarea wire:model="notes" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Información adicional sobre la oportunidad..."></textarea>
-                    @error('notes')
-                        <span class="text-red-500 text-xs">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="flex justify-end space-x-3 mt-6">
-                    <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
-                        Cancelar
-                    </flux:button>
-                    <flux:button icon="check" size="sm" color="primary" type="submit">
-                        Actualizar Oportunidad
-                    </flux:button>
-                </div>
-            </form>
-        </div>
-    </flux:modal>
+    
 
     <!-- Modal de Detalle de Oportunidad -->
     <flux:modal variant="flyout" wire:model="showDetailModal" class="w-1/3">
@@ -744,63 +486,113 @@
             </div>
         @endif
     </flux:modal>
-    <!-- Modal de Cambiar Etapa -->
-    <flux:modal variant="flyout" wire:model="showStageModal" class="w-1/3">
+
+    <!-- Modal de Agregar Actividad -->
+    <flux:modal variant="flyout" wire:model="showActivityModal" max-width="2xl">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-medium text-gray-900">Cambiar Etapa de Oportunidad</h3>
+                <h3 class="text-lg font-medium text-gray-900">Agregar Actividad</h3>
             </div>
 
             @if ($selectedOpportunity)
-                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600">
+                <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800">
                         <strong>Cliente:</strong> {{ $selectedOpportunity->client->name ?? 'N/A' }}<br>
                         <strong>Proyecto:</strong> {{ $selectedOpportunity->project->name ?? 'N/A' }}<br>
-                        <strong>Etapa actual:</strong> <span
-                            class="font-medium">{{ ucfirst($selectedOpportunity->stage) }}</span>
+                        <strong>Oportunidad:</strong> {{ $selectedOpportunity->id }}
                     </p>
                 </div>
             @endif
 
-            <form wire:submit.prevent="advanceStage">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Etapa *</label>
-                    <flux:select size="sm" wire:model="newStage" required>
-                        <option value="">Seleccionar nueva etapa</option>
-                        <option value="captado">Captado</option>
-                        <option value="calificado">Calificado</option>
-                        <option value="contacto">Contacto</option>
-                        <option value="propuesta">Propuesta</option>
-                        <option value="visita">Visita</option>
-                        <option value="negociacion">Negociación</option>
-                        <option value="cierre">Cierre</option>
-                    </flux:select>
+            <form wire:submit.prevent="saveActivity">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Título -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
+                        <flux:input size="sm" wire:model="activity_title" placeholder="Título de la actividad" required />
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                        <textarea wire:model="activity_description" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Descripción de la actividad..."></textarea>
+                    </div>
+
+                    <!-- Tipo de Actividad -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Actividad *</label>
+                        <flux:select size="sm" wire:model="activity_type" required>
+                            <option value="llamada">Llamada</option>
+                            <option value="reunion">Reunión</option>
+                            <option value="visita">Visita</option>
+                            <option value="seguimiento">Seguimiento</option>
+                            <option value="tarea">Tarea</option>
+                        </flux:select>
+                    </div>
+
+                    <!-- Prioridad -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad *</label>
+                        <flux:select size="sm" wire:model="activity_priority" required>
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </flux:select>
+                    </div>
+
+                    <!-- Fecha de Inicio -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Inicio *</label>
+                        <flux:input size="sm" type="datetime-local" wire:model="activity_start_date" required />
+                    </div>
+
+                    <!-- Duración -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Duración (minutos) *</label>
+                        <flux:input size="sm" type="number" wire:model="activity_duration" min="1" max="1440" required />
+                    </div>
+
+                    <!-- Fecha de Fin -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Fin</label>
+                        <flux:input size="sm" type="datetime-local" wire:model="activity_end_date" />
+                    </div>
+
+                    <!-- Ubicación -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ubicación</label>
+                        <flux:input size="sm" wire:model="activity_location" placeholder="Ubicación de la actividad" />
+                    </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas del Cambio</label>
-                    <textarea wire:model="stageNotes" rows="3"
+                <!-- Notas -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas</label>
+                    <textarea wire:model="activity_notes" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Razón del cambio de etapa..."></textarea>
+                        placeholder="Notas adicionales..."></textarea>
                 </div>
 
-                <div class="flex justify-end space-x-3">
+                <div class="flex justify-end space-x-3 mt-6">
                     <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
                         Cancelar
                     </flux:button>
-                    <flux:button icon="arrow-up" size="sm" color="primary" type="submit">
-                        Cambiar Etapa
+                    <flux:button icon="plus" size="sm" color="primary" type="submit">
+                        Crear Actividad
                     </flux:button>
                 </div>
             </form>
         </div>
     </flux:modal>
 
-    <!-- Modal de Marcar como Ganada -->
-    <flux:modal wire:model="showWinModal" class="w-96">
+    <!-- Modal de Agregar Tarea -->
+    <flux:modal variant="flyout" wire:model="showTaskModal" max-width="2xl">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-medium text-gray-900">Marcar Oportunidad como Ganada</h3>
+                <h3 class="text-lg font-medium text-gray-900">Agregar Tarea</h3>
             </div>
 
             @if ($selectedOpportunity)
@@ -808,68 +600,59 @@
                     <p class="text-sm text-green-800">
                         <strong>Cliente:</strong> {{ $selectedOpportunity->client->name ?? 'N/A' }}<br>
                         <strong>Proyecto:</strong> {{ $selectedOpportunity->project->name ?? 'N/A' }}<br>
-                        <strong>Valor esperado:</strong> S/ {{ number_format($selectedOpportunity->expected_value) }}
+                        <strong>Oportunidad:</strong> {{ $selectedOpportunity->id }}
                     </p>
                 </div>
             @endif
 
-            <form wire:submit.prevent="markAsWon">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor de Cierre (S/) *</label>
-                    <flux:input size="sm" type="number" wire:model="winValue" step="0.01" min="0"
-                        required />
+            <form wire:submit.prevent="saveTask">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Título -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Título *</label>
+                        <flux:input size="sm" wire:model="task_title" placeholder="Título de la tarea" required />
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+                        <textarea wire:model="task_description" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Descripción de la tarea..."></textarea>
+                    </div>
+
+                    <!-- Prioridad -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad *</label>
+                        <flux:select size="sm" wire:model="task_priority" required>
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </flux:select>
+                    </div>
+
+                    <!-- Fecha de Vencimiento -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Vencimiento *</label>
+                        <flux:input size="sm" type="date" wire:model="task_due_date" required />
+                    </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Razón del Éxito</label>
-                    <textarea wire:model="winReason" rows="3"
+                <!-- Notas -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notas</label>
+                    <textarea wire:model="task_notes" rows="3"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="¿Por qué se ganó esta oportunidad?"></textarea>
+                        placeholder="Notas adicionales..."></textarea>
                 </div>
 
-                <div class="flex justify-end space-x-3">
+                <div class="flex justify-end space-x-3 mt-6">
                     <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
                         Cancelar
                     </flux:button>
-                    <flux:button icon="check-circle" size="sm" color="success" type="submit">
-                        Marcar como Ganada
-                    </flux:button>
-                </div>
-            </form>
-        </div>
-    </flux:modal>
-
-    <!-- Modal de Marcar como Perdida -->
-    <flux:modal wire:model="showLoseModal" class="w-96">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-medium text-gray-900">Marcar Oportunidad como Perdida</h3>
-            </div>
-
-            @if ($selectedOpportunity)
-                <div class="mb-4 p-4 bg-red-50 rounded-lg">
-                    <p class="text-sm text-red-800">
-                        <strong>Cliente:</strong> {{ $selectedOpportunity->client->name ?? 'N/A' }}<br>
-                        <strong>Proyecto:</strong> {{ $selectedOpportunity->project->name ?? 'N/A' }}<br>
-                        <strong>Valor esperado:</strong> S/ {{ number_format($selectedOpportunity->expected_value) }}
-                    </p>
-                </div>
-            @endif
-
-            <form wire:submit.prevent="markAsLost">
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Razón de la Pérdida *</label>
-                    <textarea wire:model="loseReason" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="¿Por qué se perdió esta oportunidad?" required></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3">
-                    <flux:button icon="x-mark" size="sm" variant="outline" wire:click="closeModals">
-                        Cancelar
-                    </flux:button>
-                    <flux:button icon="x-circle" size="sm" color="danger" type="submit">
-                        Marcar como Perdida
+                    <flux:button icon="plus" size="sm" color="success" type="submit">
+                        Crear Tarea
                     </flux:button>
                 </div>
             </form>

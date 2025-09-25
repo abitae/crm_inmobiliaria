@@ -31,8 +31,8 @@ class OpportunitySeeder extends Seeder
         $projects = Project::all();
         $units = Unit::where('status', 'disponible')->get();
 
-        $stages = ['captado', 'calificado', 'contacto', 'propuesta', 'visita', 'negociacion', 'cierre'];
-        $statuses = ['activa', 'ganada', 'perdida', 'cancelada'];
+        $stages = ['calificado', 'visita', 'cierre'];
+        $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $campaigns = ['Campaña Q1 2024', 'Campaña Q2 2024', 'Campaña Q3 2024', 'Campaña Q4 2024'];
 
@@ -43,8 +43,8 @@ class OpportunitySeeder extends Seeder
                 'project_id' => $projects->where('name', 'Residencial Miraflores Park')->first()->id,
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Residencial Miraflores Park')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
-                'stage' => 'negociacion',
-                'status' => 'activa',
+                'stage' => 'visita',
+                'status' => 'registrado',
                 'probability' => 85,
                 'expected_value' => 450000,
                 'expected_close_date' => now()->addDays(30),
@@ -57,8 +57,8 @@ class OpportunitySeeder extends Seeder
                 'project_id' => $projects->where('name', 'Torres San Isidro Business')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
-                'stage' => 'propuesta',
-                'status' => 'activa',
+                'stage' => 'calificado',
+                'status' => 'registrado',
                 'probability' => 70,
                 'expected_value' => 800000,
                 'expected_close_date' => now()->addDays(45),
@@ -72,7 +72,7 @@ class OpportunitySeeder extends Seeder
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Casas Surco Family')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'visita',
-                'status' => 'activa',
+                'status' => 'reservado',
                 'probability' => 60,
                 'expected_value' => 650000,
                 'expected_close_date' => now()->addDays(60),
@@ -85,8 +85,8 @@ class OpportunitySeeder extends Seeder
                 'project_id' => $projects->where('name', 'Oficinas San Borja Center')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
-                'stage' => 'contacto',
-                'status' => 'activa',
+                'stage' => 'calificado',
+                'status' => 'registrado',
                 'probability' => 40,
                 'expected_value' => 1200000,
                 'expected_close_date' => now()->addDays(90),
@@ -100,7 +100,7 @@ class OpportunitySeeder extends Seeder
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'calificado',
-                'status' => 'activa',
+                'status' => 'registrado',
                 'probability' => 50,
                 'expected_value' => 300000,
                 'expected_close_date' => now()->addDays(120),
@@ -114,7 +114,7 @@ class OpportunitySeeder extends Seeder
                 'unit_id' => $units->where('project_id', $projects->where('name', 'Residencial Miraflores Park')->first()->id)->first()->id,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'cierre',
-                'status' => 'ganada',
+                'status' => 'pagado',
                 'probability' => 100,
                 'expected_value' => 480000,
                 'close_value' => 475000,
@@ -129,8 +129,8 @@ class OpportunitySeeder extends Seeder
                 'project_id' => $projects->where('name', 'Mixto Chorrillos Plaza')->first()->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
-                'stage' => 'captado',
-                'status' => 'activa',
+                'stage' => 'calificado',
+                'status' => 'registrado',
                 'probability' => 30,
                 'expected_value' => 350000,
                 'expected_close_date' => now()->addDays(180),
@@ -156,8 +156,8 @@ class OpportunitySeeder extends Seeder
 
     private function createRandomOpportunities($clients, $projects, $units, $advisors, $admin): void
     {
-        $stages = ['captado', 'calificado', 'contacto', 'propuesta', 'visita', 'negociacion', 'cierre'];
-        $statuses = ['activa', 'ganada', 'perdida', 'cancelada'];
+        $stages = ['calificado', 'visita', 'cierre'];
+        $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
 
         for ($i = 0; $i < 25; $i++) {
@@ -188,16 +188,16 @@ class OpportunitySeeder extends Seeder
                 'updated_by' => $admin->id,
             ];
 
-            // Si la oportunidad está ganada, agregar datos de cierre
-            if ($status === 'ganada') {
+            // Si la oportunidad está pagada, agregar datos de cierre
+            if ($status === 'pagado') {
                 $opportunityData['close_value'] = $expectedValue * (rand(90, 110) / 100);
                 $opportunityData['actual_close_date'] = now()->subDays(rand(1, 60));
                 $opportunityData['close_reason'] = 'Venta exitosa';
                 $opportunityData['probability'] = 100;
             }
 
-            // Si la oportunidad está perdida, agregar razón
-            if ($status === 'perdida') {
+            // Si la oportunidad está cancelada, agregar razón
+            if ($status === 'cancelado') {
                 $opportunityData['lost_reason'] = 'Cliente no interesado';
                 $opportunityData['actual_close_date'] = now()->subDays(rand(1, 30));
                 $opportunityData['probability'] = 0;

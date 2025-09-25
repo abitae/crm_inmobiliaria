@@ -1,18 +1,26 @@
 <div class="max-w-4xl mx-auto p-4 sm:p-6">
     <div class="bg-white rounded-lg shadow-lg">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 sm:p-6 rounded-t-lg">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+        <!-- Encabezado Mejorado -->
+        <div class="bg-gradient-to-r from-green-700 via-green-600 to-green-500 text-white p-6 rounded-t-lg shadow-md">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold">REGISTRO DATERO</h1>
-                    <p class="text-green-100 mt-1 sm:mt-2 text-sm sm:text-base">Complete el formulario para registrar un
-                        nuevo cliente
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
+                        <flux:icon name="user-plus" class="w-7 h-7 text-white" />
+                        Registro Datero
+                    </h1>
+                    <p class="text-green-100 mt-2 text-base sm:text-lg">
+                        Completa el formulario para registrar un nuevo cliente y aumentar tus oportunidades.
                     </p>
-                    <flux:button size="xs" icon="qr-code" wire:click="verQR">
+                </div>
+                <div class="flex flex-row gap-2 mt-4 sm:mt-0">
+                    <flux:button size="sm" icon="list-bullet" href="{{ route('clients.index') }}"
+                        class="bg-white text-green-700 border border-green-200 hover:bg-green-50 transition">
+                        Mis Clientes
+                    </flux:button>
+                    <flux:button size="sm" icon="qr-code" wire:click="verQR"
+                        class="bg-white text-green-700 border border-green-200 hover:bg-green-50 transition">
                         Ver mi QR
                     </flux:button>
-
-
                 </div>
             </div>
         </div>
@@ -50,14 +58,6 @@
                             <p class="text-sm text-red-600 mt-1">{{ $errorMessage }}</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeMessages"
-                        class="text-green-500 hover:text-green-700 mt-2 sm:mt-0">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
                 </div>
             </div>
         @endif
@@ -71,7 +71,7 @@
 
                     <div class="flex flex-col gap-4">
                         <flux:input.group>
-                            
+
                             <flux:input class="w-full" placeholder="Ingrese el número de DNI"
                                 wire:model="document_number" />
                             @if ($document_type == 'DNI')
@@ -167,7 +167,9 @@
                     </flux:button>
                 </div>
             </form>
+
         </div>
+
         <flux:modal wire:model="showQRModal" class="w-full max-w-md">
             <div class="flex flex-col items-center justify-center p-6">
                 <h2 class="text-lg font-semibold mb-4 text-green-700 flex items-center">
@@ -180,7 +182,8 @@
                         Escanea este código QR para acceder rápidamente a tu perfil o compartir tu información.
                     </p>
                 </div>
-                <flux:button icon="x-mark" type="button" variant="outline" class="mt-6 w-full" wire:click="closeQRModal">
+                <flux:button icon="x-mark" type="button" variant="outline" class="mt-6 w-full"
+                    wire:click="closeQRModal">
                     Cerrar
                 </flux:button>
             </div>

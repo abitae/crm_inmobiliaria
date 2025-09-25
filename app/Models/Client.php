@@ -57,10 +57,6 @@ class Client extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function interactions(): HasMany
-    {
-        return $this->hasMany(Interaction::class);
-    }
 
     public function tasks(): HasMany
     {
@@ -138,9 +134,9 @@ class Client extends Model
         return $this->address ?? '';
     }
 
-    public function getLastInteractionAttribute()
+    public function getLastActivityAttribute()
     {
-        return $this->interactions()->latest()->first();
+        return $this->activities()->latest()->first();
     }
 
     public function getFullDocumentAttribute(): string
@@ -186,6 +182,6 @@ class Client extends Model
 
     public function hasActiveOpportunities(): bool
     {
-        return $this->opportunities()->where('status', '!=', 'perdida')->exists();
+        return $this->opportunities()->where('status', '!=', 'cancelado')->exists();
     }
 }

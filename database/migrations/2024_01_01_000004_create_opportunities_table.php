@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('advisor_id')->constrained('users')->onDelete('cascade');
-            $table->enum('stage', ['captado', 'calificado', 'contacto', 'propuesta', 'visita', 'negociacion', 'cierre']);
-            $table->enum('status', ['activa', 'ganada', 'perdida', 'cancelada'])->default('activa');
+            $table->enum('stage', ['calificado', 'visita', 'cierre']);
+            $table->enum('status', ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'])->default('registrado');
             $table->integer('probability'); // porcentaje de probabilidad de cierre
             $table->decimal('expected_value', 12, 2); // valor esperado de la venta
             $table->date('expected_close_date')->nullable(); // fecha esperada de cierre

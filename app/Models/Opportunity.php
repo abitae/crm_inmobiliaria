@@ -17,8 +17,8 @@ class Opportunity extends Model
         'project_id',// id del proyecto
         'unit_id',// id de la unidad
         'advisor_id',// id del asesor
-        'stage', // captado, calificado, contacto, propuesta, visita, negociacion, cierre, cancelada
-        'status', // activa, ganada, perdida, cancelada
+        'stage', // calificado, visita, cierre
+        'status', // registrado, reservado, cuotas, pagado, transferido, cancelado
         'probability', // porcentaje de probabilidad de cierre, 0-100
         'expected_value', // valor esperado de la venta, 0-1000000,
         'expected_close_date', // fecha esperada de cierre, YYYY-MM-DD
@@ -65,46 +65,47 @@ class Opportunity extends Model
     {
         return $this->belongsTo(Unit::class);
     }
-
+    // Asesor
     public function advisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'advisor_id');
     }
 
+    // Usuario creador
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    // Usuario actualizador
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    // Actividades
     public function activities(): HasMany
     {
         return $this->hasMany(Activity::class);
     }
 
+    // Documentos
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
 
+    // Tareas
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
 
-    public function interactions(): HasMany
-    {
-        return $this->hasMany(Interaction::class);
-    }
 
     // Scopes
     public function scopeActive($query)
     {
-        return $query->where('status', 'activa');
+        return $query->where('status', 'registrado');
     }
 
     public function scopeByStage($query, $stage)
@@ -151,7 +152,7 @@ class Opportunity extends Model
     public function scopeOverdue($query)
     {
         return $query->where('expected_close_date', '<', now())
-            ->where('status', 'activa');
+            ->where('status', 'registrado');
     }
 
     // Nuevos scopes optimizados
@@ -198,7 +199,7 @@ class Opportunity extends Model
     public function scopeClosingSoon($query, $days = 30)
     {
         return $query->where('expected_close_date', '<=', now()->addDays($days))
-                    ->where('status', 'activa');
+                    ->where('status', 'registrado');
     }
 
     public function scopeRecentlyCreated($query, $days = 7)
@@ -214,22 +215,22 @@ class Opportunity extends Model
     // Accessors
     public function getIsActiveAttribute(): bool
     {
-        return $this->status === 'activa';
+        return $this->status === 'registrado';
     }
 
     public function getIsWonAttribute(): bool
     {
-        return $this->status === 'ganada';
+        return $this->status === 'pagado';
     }
 
     public function getIsLostAttribute(): bool
     {
-        return $this->status === 'perdida';
+        return $this->status === 'cancelado';
     }
 
     public function getIsOverdueAttribute(): bool
     {
-        return $this->expected_close_date && $this->expected_close_date->isPast() && $this->is_active;
+        return $this->expected_close_date && \Carbon\Carbon::parse($this->expected_close_date)->isPast() && $this->status === 'registrado';
     }
 
     public function getDaysUntilCloseAttribute(): int
@@ -259,9 +260,9 @@ class Opportunity extends Model
 
     public function markAsWon(float $closeValue, string $closeReason = null): bool
     {
-        if ($this->status === 'activa') {
+        if ($this->status === 'registrado') {
             $this->update([
-                'status' => 'ganada',
+                'status' => 'pagado',
                 'close_value' => $closeValue,
                 'close_reason' => $closeReason,
                 'actual_close_date' => now(),
@@ -274,9 +275,9 @@ class Opportunity extends Model
 
     public function markAsLost(string $lostReason): bool
     {
-        if ($this->status === 'activa') {
+        if ($this->status === 'registrado') {
             $this->update([
-                'status' => 'perdida',
+                'status' => 'cancelado',
                 'lost_reason' => $lostReason,
                 'actual_close_date' => now(),
                 'probability' => 0
@@ -288,9 +289,9 @@ class Opportunity extends Model
 
     public function cancel(string $reason = null): bool
     {
-        if ($this->status === 'activa') {
+        if ($this->status === 'registrado') {
             $this->update([
-                'status' => 'cancelada',
+                'status' => 'cancelado',
                 'lost_reason' => $reason,
                 'actual_close_date' => now()
             ]);

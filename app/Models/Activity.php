@@ -22,16 +22,16 @@ class Activity extends Model
         'end_date',
         'duration', // duración en minutos
         'location',
-        'client_id',
+        'client_id', // ID del cliente
         'project_id',
         'unit_id',
-        'opportunity_id',
+        'opportunity_id', // ID de la oportunidad
         'advisor_id',
         'assigned_to', // ID del usuario asignado
         'reminder_before', // minutos antes para recordatorio
-        'reminder_sent',
+        'reminder_sent', // si el recordatorio se ha enviado
         'notes',
-        'result',
+        'result', // resultado de la actividad
         'created_by',
         'updated_by',
     ];
@@ -96,11 +96,6 @@ class Activity extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function reminders(): HasMany
-    {
-        return $this->hasMany(Reminder::class);
-    }
-
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
@@ -130,21 +125,6 @@ class Activity extends Model
     public function scopeByType($query, $type)
     {
         return $query->where('activity_type', $type);
-    }
-
-    public function scopeByPriority($query, $priority)
-    {
-        return $query->where('priority', $priority);
-    }
-
-    public function scopeByAdvisor($query, $advisorId)
-    {
-        return $query->where('advisor_id', $advisorId);
-    }
-
-    public function scopeByAssignedTo($query, $userId)
-    {
-        return $query->where('assigned_to', $userId);
     }
 
     public function scopeToday($query)
@@ -180,27 +160,6 @@ class Activity extends Model
             ->where('reminder_sent', false);
     }
 
-    // Accessors
-    public function getIsScheduledAttribute(): bool
-    {
-        return $this->status === 'programada';
-    }
-
-    public function getIsInProgressAttribute(): bool
-    {
-        return $this->status === 'en_progreso';
-    }
-
-    public function getIsCompletedAttribute(): bool
-    {
-        return $this->status === 'completada';
-    }
-
-    public function getIsCancelledAttribute(): bool
-    {
-        return $this->status === 'cancelada';
-    }
-
     public function getIsOverdueAttribute(): bool
     {
         return $this->start_date && $this->start_date->isPast() &&
@@ -223,13 +182,6 @@ class Activity extends Model
         return $this->start_date->copy()->subMinutes($this->reminder_before);
     }
 
-    public function getShouldSendReminderAttribute(): bool
-    {
-        if (!$this->reminder_before || $this->reminder_sent) return false;
-
-        $reminderTime = $this->getReminderTimeAttribute();
-        return $reminderTime && $reminderTime->isPast();
-    }
 
     // Métodos
     public function start(): bool
@@ -271,16 +223,11 @@ class Activity extends Model
         if ($this->status === 'programada') {
             $this->update([
                 'start_date' => $newStartDate,
-                'end_date' => $newEndDate ?? $newStartDate->copy()->addMinutes($this->duration)
+                'end_date' => $newEndDate ?? (clone $newStartDate)->add(new \DateInterval('PT' . $this->duration . 'M'))
             ]);
             return true;
         }
         return false;
-    }
-
-    public function assignTo(int $userId): void
-    {
-        $this->update(['assigned_to' => $userId]);
     }
 
     public function setReminder(int $minutesBefore): void
@@ -301,18 +248,4 @@ class Activity extends Model
         return $this->assigned_to === $userId || $this->advisor_id === $userId;
     }
 
-    public function canBeStarted(): bool
-    {
-        return $this->status === 'programada' && $this->start_date && $this->start_date->isPast();
-    }
-
-    public function canBeCompleted(): bool
-    {
-        return in_array($this->status, ['programada', 'en_progreso']);
-    }
-
-    public function canBeCancelled(): bool
-    {
-        return in_array($this->status, ['programada', 'en_progreso']);
-    }
 }

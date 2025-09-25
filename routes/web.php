@@ -84,10 +84,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('crm.activities.index');
         })->middleware('permission:view_activities')->name('activities.index');
 
-        // Interacciones
-        Route::get('/interactions', function () {
-            return view('crm.interactions.index');
-        })->middleware('permission:view_interactions')->name('interactions.index');
     });
 
     // Gestión de Roles y Usuarios

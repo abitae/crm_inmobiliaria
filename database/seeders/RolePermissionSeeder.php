@@ -70,11 +70,6 @@ class RolePermissionSeeder extends Seeder
             'edit_activities',
             'delete_activities',
 
-            // Interacciones
-            'view_interactions',
-            'create_interactions',
-            'edit_interactions',
-            'delete_interactions',
 
             // Documentos
             'view_documents',
@@ -137,9 +132,6 @@ class RolePermissionSeeder extends Seeder
             'view_activities',
             'create_activities',
             'edit_activities',
-            'view_interactions',
-            'create_interactions',
-            'edit_interactions',
             'view_documents',
             'create_documents',
             'edit_documents',
@@ -177,9 +169,6 @@ class RolePermissionSeeder extends Seeder
             'view_activities',
             'create_activities',
             'edit_activities',
-            'view_interactions',
-            'create_interactions',
-            'edit_interactions',
             'view_documents',
             'create_documents',
             'edit_documents',
@@ -201,8 +190,6 @@ class RolePermissionSeeder extends Seeder
             'create_opportunities',
             'view_activities',
             'create_activities',
-            'view_interactions',
-            'create_interactions',
             'view_documents',
             'create_documents',
             'view_tasks',
@@ -220,7 +207,6 @@ class RolePermissionSeeder extends Seeder
             'view_commissions',
             'view_tasks',
             'view_activities',
-            'view_interactions',
             'view_documents',
             'manage_roles',
             'manage_users',

@@ -71,11 +71,6 @@
                     </flux:navlist.item>
                 @endcan
 
-                @can('view_interactions')
-                    <flux:navlist.item icon="chat-bubble-left-right" :href="route('crm.interactions.index')"
-                        :current="request()->routeIs('crm.interactions.index')" wire:navigate>{{ __('Interacciones') }}
-                    </flux:navlist.item>
-                @endcan
             </flux:navlist.group> --}}
             
             <flux:navlist.group :heading="__('Administración')" class="grid">

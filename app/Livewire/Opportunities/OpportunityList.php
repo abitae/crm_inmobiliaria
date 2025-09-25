@@ -7,11 +7,14 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Activity;
+use App\Models\Task;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Validation\ValidationException;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 class OpportunityList extends Component
 {
     use WithPagination;
@@ -22,19 +25,17 @@ class OpportunityList extends Component
     public $advisorFilter = '';
     public $projectFilter = '';
     public $clientFilter = '';
-    public $showCreateModal = false;
-    public $showEditModal = false;
+    public $showFormModal = false;
     public $showDeleteModal = false;
-    public $showStageModal = false;
-    public $showWinModal = false;
-    public $showLoseModal = false;
     public $showDetailModal = false;
+    public $showActivityModal = false;
+    public $showTaskModal = false;
     public $selectedOpportunity = null;
-    public $editingOpportunity = null;
+    public $isEditing = false;
 
     // Listeners para eventos de otros componentes
     protected $listeners = [
-        'edit-opportunity' => 'openEditModal',
+        'edit-opportunity' => 'openFormModal',
         'opportunity-created' => 'refreshOpportunities',
         'opportunity-updated' => 'refreshOpportunities',
         'opportunity-deleted' => 'refreshOpportunities',
@@ -45,8 +46,8 @@ class OpportunityList extends Component
     public $project_id = '';
     public $unit_id = '';
     public $advisor_id = '';
-    public $stage = 'captado';
-    public $status = 'activa';
+    public $stage = 'calificado';
+    public $status = 'registrado';
     public $probability = 10;
     public $expected_value = 0;
     public $expected_close_date = '';
@@ -57,14 +58,23 @@ class OpportunityList extends Component
     public $source = '';
     public $campaign = '';
 
-    // Stage advancement
-    public $newStage = '';
-    public $stageNotes = '';
+    // Activity form fields
+    public $activity_title = '';
+    public $activity_description = '';
+    public $activity_type = 'llamada';
+    public $activity_priority = 'media';
+    public $activity_start_date = '';
+    public $activity_end_date = '';
+    public $activity_duration = 30;
+    public $activity_location = '';
+    public $activity_notes = '';
 
-    // Win/Lose
-    public $winValue = 0;
-    public $winReason = '';
-    public $loseReason = '';
+    // Task form fields
+    public $task_title = '';
+    public $task_description = '';
+    public $task_priority = 'media';
+    public $task_due_date = '';
+    public $task_notes = '';
 
     protected $opportunityService;
     public $clients = [];
@@ -72,61 +82,181 @@ class OpportunityList extends Component
     public $units = [];
     public $advisors = [];
 
-    protected $rules = [
-        'client_id' => 'required|exists:clients,id',
-        'project_id' => 'required|exists:projects,id',
-        'unit_id' => 'nullable|exists:units,id',
-        'advisor_id' => 'required|exists:users,id',
-        'stage' => 'required|in:captado,calificado,contacto,propuesta,visita,negociacion,cierre',
-        'status' => 'required|in:activa,ganada,perdida,cancelada',
-        'probability' => 'required|integer|min:0|max:100',
-        'expected_value' => 'required|numeric|min:0',
-        'expected_close_date' => 'required|date|after:today',
-        'notes' => 'nullable|string',
-        'source' => 'nullable|string|max:255',
-        'campaign' => 'nullable|string|max:255'
-    ];
+    // Las reglas de validación ahora están en métodos específicos
 
-    protected $messages = [
-        'client_id.required' => 'El cliente es obligatorio.',
-        'client_id.exists' => 'El cliente seleccionado no existe.',
-        'project_id.required' => 'El proyecto es obligatorio.',
-        'project_id.exists' => 'El proyecto seleccionado no existe.',
-        'unit_id.exists' => 'La unidad seleccionada no existe.',
-        'advisor_id.required' => 'El asesor es obligatorio.',
-        'advisor_id.exists' => 'El asesor seleccionado no existe.',
-        'stage.required' => 'La etapa es obligatoria.',
-        'stage.in' => 'La etapa seleccionada no es válida.',
-        'status.required' => 'El estado es obligatorio.',
-        'status.in' => 'El estado seleccionado no es válido.',
-        'probability.required' => 'La probabilidad es obligatoria.',
-        'probability.integer' => 'La probabilidad debe ser un número entero.',
-        'probability.min' => 'La probabilidad debe ser al menos 0%.',
-        'probability.max' => 'La probabilidad no puede exceder 100%.',
-        'expected_value.required' => 'El valor esperado es obligatorio.',
-        'expected_value.numeric' => 'El valor esperado debe ser un número.',
-        'expected_value.min' => 'El valor esperado debe ser mayor a 0.',
-        'expected_close_date.required' => 'La fecha de cierre es obligatoria.',
-        'expected_close_date.date' => 'La fecha de cierre debe ser una fecha válida.',
-        'expected_close_date.after' => 'La fecha de cierre debe ser posterior a hoy.',
-        'notes.string' => 'Las notas deben ser texto.',
-        'source.max' => 'El origen no puede exceder 255 caracteres.',
-        'campaign.max' => 'La campaña no puede exceder 255 caracteres.'
-    ];
+    // Los mensajes de validación ahora están en métodos específicos
+
+    // Métodos de validación específicos
+    protected function getOpportunityValidationRules()
+    {
+        return [
+            'client_id' => 'required|exists:clients,id',
+            'project_id' => 'required|exists:projects,id',
+            'unit_id' => 'nullable|exists:units,id',
+            'advisor_id' => 'required|exists:users,id',
+            'stage' => 'required|in:calificado,visita,cierre',
+            'status' => 'required|in:registrado,reservado,cuotas,pagado,transferido,cancelado',
+            'probability' => 'required|integer|min:0|max:100',
+            'expected_value' => 'required|numeric|min:0',
+            'expected_close_date' => 'required|date|after:today',
+            'notes' => 'nullable|string',
+            'source' => 'nullable|string|max:255',
+            'campaign' => 'nullable|string|max:255'
+        ];
+    }
+
+    protected function getActivityValidationRules()
+    {
+        return [
+            'activity_title' => 'required|string|max:255',
+            'activity_description' => 'nullable|string',
+            'activity_type' => 'required|in:llamada,reunion,visita,seguimiento,tarea',
+            'activity_priority' => 'required|in:baja,media,alta,urgente',
+            'activity_start_date' => 'required|date|after_or_equal:today',
+            'activity_end_date' => 'nullable|date|after:activity_start_date',
+            'activity_duration' => 'required|integer|min:1|max:1440',
+            'activity_location' => 'nullable|string|max:255',
+            'activity_notes' => 'nullable|string'
+        ];
+    }
+
+    protected function getTaskValidationRules()
+    {
+        return [
+            'task_title' => 'required|string|max:255',
+            'task_description' => 'nullable|string',
+            'task_priority' => 'required|in:baja,media,alta,urgente',
+            'task_due_date' => 'required|date|after_or_equal:today',
+            'task_notes' => 'nullable|string'
+        ];
+    }
+
+    protected function getOpportunityValidationMessages()
+    {
+        return [
+            'client_id.required' => 'El cliente es obligatorio.',
+            'client_id.exists' => 'El cliente seleccionado no existe.',
+            'project_id.required' => 'El proyecto es obligatorio.',
+            'project_id.exists' => 'El proyecto seleccionado no existe.',
+            'unit_id.exists' => 'La unidad seleccionada no existe.',
+            'advisor_id.required' => 'El asesor es obligatorio.',
+            'advisor_id.exists' => 'El asesor seleccionado no existe.',
+            'stage.required' => 'La etapa es obligatoria.',
+            'stage.in' => 'La etapa seleccionada no es válida.',
+            'status.required' => 'El estado es obligatorio.',
+            'status.in' => 'El estado debe ser: registrado, reservado, cuotas, pagado, transferido o cancelado.',
+            'probability.required' => 'La probabilidad es obligatoria.',
+            'probability.integer' => 'La probabilidad debe ser un número entero.',
+            'probability.min' => 'La probabilidad debe ser al menos 0%.',
+            'probability.max' => 'La probabilidad no puede exceder 100%.',
+            'expected_value.required' => 'El valor esperado es obligatorio.',
+            'expected_value.numeric' => 'El valor esperado debe ser un número.',
+            'expected_value.min' => 'El valor esperado debe ser mayor a 0.',
+            'expected_close_date.required' => 'La fecha de cierre es obligatoria.',
+            'expected_close_date.date' => 'La fecha de cierre debe ser una fecha válida.',
+            'expected_close_date.after' => 'La fecha de cierre debe ser posterior a hoy.',
+            'notes.string' => 'Las notas deben ser texto.',
+            'source.max' => 'El origen no puede exceder 255 caracteres.',
+            'campaign.max' => 'La campaña no puede exceder 255 caracteres.'
+        ];
+    }
+
+    protected function getActivityValidationMessages()
+    {
+        return [
+            'activity_title.required' => 'El título de la actividad es obligatorio.',
+            'activity_title.max' => 'El título no puede exceder 255 caracteres.',
+            'activity_type.required' => 'El tipo de actividad es obligatorio.',
+            'activity_type.in' => 'El tipo de actividad seleccionado no es válido.',
+            'activity_priority.required' => 'La prioridad es obligatoria.',
+            'activity_priority.in' => 'La prioridad seleccionada no es válida.',
+            'activity_start_date.required' => 'La fecha de inicio es obligatoria.',
+            'activity_start_date.date' => 'La fecha de inicio debe ser una fecha válida.',
+            'activity_start_date.after_or_equal' => 'La fecha de inicio debe ser hoy o posterior.',
+            'activity_end_date.date' => 'La fecha de fin debe ser una fecha válida.',
+            'activity_end_date.after' => 'La fecha de fin debe ser posterior a la fecha de inicio.',
+            'activity_duration.required' => 'La duración es obligatoria.',
+            'activity_duration.integer' => 'La duración debe ser un número entero.',
+            'activity_duration.min' => 'La duración debe ser al menos 1 minuto.',
+            'activity_duration.max' => 'La duración no puede exceder 1440 minutos (24 horas).',
+            'activity_location.max' => 'La ubicación no puede exceder 255 caracteres.'
+        ];
+    }
+
+    protected function getTaskValidationMessages()
+    {
+        return [
+            'task_title.required' => 'El título de la tarea es obligatorio.',
+            'task_title.max' => 'El título no puede exceder 255 caracteres.',
+            'task_priority.required' => 'La prioridad es obligatoria.',
+            'task_priority.in' => 'La prioridad seleccionada no es válida.',
+            'task_due_date.required' => 'La fecha de vencimiento es obligatoria.',
+            'task_due_date.date' => 'La fecha de vencimiento debe ser una fecha válida.',
+            'task_due_date.after_or_equal' => 'La fecha de vencimiento debe ser hoy o posterior.'
+        ];
+    }
 
     // Validación en tiempo real
     public function updated($propertyName)
     {
-        $this->validateOnly($propertyName);
+        try {
+            // Determinar qué conjunto de reglas usar según el campo
+            if (str_starts_with($propertyName, 'activity_')) {
+                $this->validateOnly($propertyName, $this->getActivityValidationRules(), $this->getActivityValidationMessages());
+            } elseif (str_starts_with($propertyName, 'task_')) {
+                $this->validateOnly($propertyName, $this->getTaskValidationRules(), $this->getTaskValidationMessages());
+            } else {
+                $this->validateOnly($propertyName, $this->getOpportunityValidationRules(), $this->getOpportunityValidationMessages());
+            }
 
-        // Resetear página cuando cambian los filtros
-        if (in_array($propertyName, ['search', 'statusFilter', 'stageFilter', 'advisorFilter', 'projectFilter', 'clientFilter'])) {
-            $this->resetPage();
-        }
+            // Resetear página cuando cambian los filtros
+            if (in_array($propertyName, ['search', 'statusFilter', 'stageFilter', 'advisorFilter', 'projectFilter', 'clientFilter'])) {
+                $this->resetPage();
+            }
 
-        // Cargar unidades cuando cambia el proyecto
-        if ($propertyName === 'project_id') {
-            $this->loadUnitsForProject();
+            // Cargar unidades cuando cambia el proyecto
+            if ($propertyName === 'project_id') {
+                $this->loadUnitsForProject();
+            }
+
+            // Validar fecha de cierre cuando cambia
+            if ($propertyName === 'expected_close_date' && $this->expected_close_date) {
+                $closeDate = \Carbon\Carbon::parse($this->expected_close_date);
+                if ($closeDate->isPast()) {
+                    $this->addError('expected_close_date', 'La fecha de cierre debe ser posterior a hoy.');
+                }
+            }
+
+            // Validar probabilidad cuando cambia
+            if ($propertyName === 'probability' && $this->probability) {
+                if ($this->probability < 0 || $this->probability > 100) {
+                    $this->addError('probability', 'La probabilidad debe estar entre 0% y 100%.');
+                }
+            }
+
+            // Validar valor esperado cuando cambia
+            if ($propertyName === 'expected_value' && $this->expected_value) {
+                if ($this->expected_value < 0) {
+                    $this->addError('expected_value', 'El valor esperado debe ser mayor a 0.');
+                }
+            }
+
+        } catch (ValidationException $e) {
+            Log::warning('Error de validación en OpportunityList', [
+                'property' => $propertyName,
+                'value' => $this->$propertyName ?? null,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors()
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error inesperado en validación de OpportunityList', [
+                'property' => $propertyName,
+                'value' => $this->$propertyName ?? null,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('show-error', message: "Error en la validación del campo '{$propertyName}': " . $e->getMessage());
         }
     }
 
@@ -137,9 +267,7 @@ class OpportunityList extends Component
 
     public function mount()
     {
-        $this->clients = Client::all();
-        $this->projects = Project::all();
-        $this->advisors = User::getAvailableAdvisors(Auth::user());
+        $this->loadInitialData();
         $this->expected_close_date = now()->addDays(30)->format('Y-m-d');
     }
 
@@ -157,36 +285,43 @@ class OpportunityList extends Component
 
     public function loadUnitsForProject()
     {
-        if ($this->project_id) {
-            $this->units = Unit::where('project_id', $this->project_id)
-                ->whereIn('status', ['disponible', 'reservado'])
-                ->get();
-
-            if (count($this->units) > 0) {
-                $this->dispatch('show-info', message: 'Se cargaron ' . count($this->units) . ' unidades disponibles para este proyecto.');
+        try {
+            if ($this->project_id) {
+                $this->units = Unit::where('project_id', $this->project_id)
+                    ->whereIn('status', ['disponible', 'reservado'])
+                    ->orderBy('unit_number')
+                    ->get();
             } else {
-                $this->dispatch('show-info', message: 'No hay unidades disponibles para este proyecto en este momento.');
+                $this->units = collect();
             }
-        } else {
-            $this->units = [];
+            $this->unit_id = '';
+        } catch (Exception $e) {
+            Log::error('Error al cargar unidades para proyecto', [
+                'project_id' => $this->project_id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->units = collect();
+            $this->dispatch('show-error', message: "Error al cargar las unidades para el proyecto ID {$this->project_id}: " . $e->getMessage());
         }
-        $this->unit_id = '';
     }
 
-    public function openCreateModal()
+    public function openFormModal($opportunityId = null)
     {
         $this->resetForm();
-        $this->showCreateModal = true;
-    }
-
-    public function openEditModal($opportunityId)
-    {
-        $this->editingOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
-        if ($this->editingOpportunity) {
-            $this->fillFormFromOpportunity($this->editingOpportunity);
-            $this->showEditModal = true;
-            $this->dispatch('show-info', message: 'Editando oportunidad para ' . $this->editingOpportunity->client->name . '.');
+        
+        if ($opportunityId) {
+            $this->selectedOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
+            if ($this->selectedOpportunity) {
+                $this->fillFormFromOpportunity($this->selectedOpportunity);
+                $this->isEditing = true;
+            }
+        } else {
+            $this->isEditing = false;
         }
+        
+        $this->showFormModal = true;
     }
 
     public function openDeleteModal($opportunityId)
@@ -201,42 +336,30 @@ class OpportunityList extends Component
         $this->showDetailModal = true;
     }
 
-    public function openStageModal($opportunityId)
+    public function agregarActividad($opportunityId)
     {
         $this->selectedOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
-        $this->newStage = $this->selectedOpportunity->stage;
-        $this->showStageModal = true;
+        $this->resetForm();
+        $this->showActivityModal = true;
     }
 
-    public function openWinModal($opportunityId)
+    public function agregarTarea($opportunityId)
     {
         $this->selectedOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
-        $this->winValue = $this->selectedOpportunity->expected_value;
-        $this->showWinModal = true;
-    }
-
-    public function openLoseModal($opportunityId)
-    {
-        $this->selectedOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
-        $this->showLoseModal = true;
+        $this->resetForm();
+        $this->showTaskModal = true;
     }
 
     public function closeModals()
     {
-        $this->showCreateModal = false;
-        $this->showEditModal = false;
+        $this->showFormModal = false;
         $this->showDeleteModal = false;
-        $this->showStageModal = false;
-        $this->showWinModal = false;
-        $this->showLoseModal = false;
+        $this->showDetailModal = false;
+        $this->showActivityModal = false;
+        $this->showTaskModal = false;
         $this->resetForm();
-        $this->editingOpportunity = null;
         $this->selectedOpportunity = null;
-        $this->newStage = '';
-        $this->stageNotes = '';
-        $this->winValue = 0;
-        $this->winReason = '';
-        $this->loseReason = '';
+        $this->isEditing = false;
     }
 
     public function resetForm()
@@ -245,8 +368,8 @@ class OpportunityList extends Component
         $this->project_id = '';
         $this->unit_id = '';
         $this->advisor_id = '';
-        $this->stage = 'captado';
-        $this->status = 'activa';
+        $this->stage = 'calificado';
+        $this->status = 'registrado';
         $this->probability = 10;
         $this->expected_value = 0;
         $this->expected_close_date = now()->addDays(30)->format('Y-m-d');
@@ -257,6 +380,24 @@ class OpportunityList extends Component
         $this->source = '';
         $this->campaign = '';
         $this->units = [];
+        
+        // Reset activity form
+        $this->activity_title = '';
+        $this->activity_description = '';
+        $this->activity_type = 'llamada';
+        $this->activity_priority = 'media';
+        $this->activity_start_date = now()->format('Y-m-d\TH:i');
+        $this->activity_end_date = '';
+        $this->activity_duration = 30;
+        $this->activity_location = '';
+        $this->activity_notes = '';
+        
+        // Reset task form
+        $this->task_title = '';
+        $this->task_description = '';
+        $this->task_priority = 'media';
+        $this->task_due_date = now()->addDays(1)->format('Y-m-d');
+        $this->task_notes = '';
     }
 
     public function fillFormFromOpportunity($opportunity)
@@ -280,10 +421,10 @@ class OpportunityList extends Component
         $this->loadUnitsForProject();
     }
 
-    public function createOpportunity()
+    public function saveOpportunity()
     {
         try {
-            $this->validate();
+            $this->validate($this->getOpportunityValidationRules(), $this->getOpportunityValidationMessages());
 
             $data = [
                 'client_id' => $this->client_id,
@@ -300,51 +441,50 @@ class OpportunityList extends Component
                 'campaign' => $this->campaign,
             ];
 
-            $this->opportunityService->createOpportunity($data);
-
-            $this->closeModals();
-            $this->dispatch('opportunity-created');
-            $this->dispatch('show-success', message: 'Oportunidad creada exitosamente.');
-        } catch (ValidationException $e) {
-            $this->dispatch('show-error', message: 'Por favor, corrige los errores en el formulario.');
-        } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al crear la oportunidad: ' . $e->getMessage());
-        }
-    }
-
-    public function updateOpportunity()
-    {
-        try {
-            $this->validate();
-
-            if (!$this->editingOpportunity) {
-                return;
+            if ($this->isEditing && $this->selectedOpportunity) {
+                $this->opportunityService->updateOpportunity($this->selectedOpportunity->id, $data);
+                Log::info('Oportunidad actualizada exitosamente', [
+                    'opportunity_id' => $this->selectedOpportunity->id,
+                    'user_id' => Auth::id(),
+                    'form_data' => $data
+                ]);
+                $this->dispatch('opportunity-updated');
+                $message = 'Oportunidad actualizada exitosamente.';
+            } else {
+                $opportunity = $this->opportunityService->createOpportunity($data);
+                Log::info('Oportunidad creada exitosamente', [
+                    'opportunity_id' => $opportunity->id ?? 'unknown',
+                    'user_id' => Auth::id(),
+                    'form_data' => $data
+                ]);
+                $this->dispatch('opportunity-created');
+                $message = 'Oportunidad creada exitosamente.';
             }
 
-            $data = [
-                'client_id' => $this->client_id,
-                'project_id' => $this->project_id,
-                'unit_id' => $this->unit_id ?: null,
-                'advisor_id' => $this->advisor_id,
-                'stage' => $this->stage,
-                'status' => $this->status,
-                'probability' => $this->probability,
-                'expected_value' => $this->expected_value,
-                'expected_close_date' => $this->expected_close_date,
-                'notes' => $this->notes,
-                'source' => $this->source,
-                'campaign' => $this->campaign,
-            ];
-
-            $this->opportunityService->updateOpportunity($this->editingOpportunity->id, $data);
-
             $this->closeModals();
-            $this->dispatch('opportunity-updated');
-            $this->dispatch('show-success', message: 'Oportunidad actualizada exitosamente.');
+            $this->dispatch('show-success', message: $message);
         } catch (ValidationException $e) {
-            $this->dispatch('show-error', message: 'Por favor, corrige los errores en el formulario.');
+            Log::warning('Error de validación al guardar oportunidad', [
+                'is_editing' => $this->isEditing,
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+                'form_data' => $this->getFormData()
+            ]);
+            $errorCount = count($e->errors());
+            $action = $this->isEditing ? 'actualizar' : 'crear';
+            $this->dispatch('show-error', message: "Error al {$action} la oportunidad: Se encontraron {$errorCount} error(es) de validación. Revisa los campos marcados.");
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al actualizar la oportunidad: ' . $e->getMessage());
+            $action = $this->isEditing ? 'actualizar' : 'crear';
+            Log::error("Error al {$action} oportunidad", [
+                'is_editing' => $this->isEditing,
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'form_data' => $this->getFormData()
+            ]);
+            $this->dispatch('show-error', message: "Error al {$action} la oportunidad: " . $e->getMessage() . " (ID: " . ($this->selectedOpportunity->id ?? 'N/A') . ")");
         }
     }
 
@@ -357,70 +497,157 @@ class OpportunityList extends Component
 
             $this->opportunityService->deleteOpportunity($this->selectedOpportunity->id);
 
+            Log::info('Oportunidad eliminada exitosamente', [
+                'opportunity_id' => $this->selectedOpportunity->id,
+                'user_id' => Auth::id(),
+                'opportunity_data' => [
+                    'client_name' => $this->selectedOpportunity->client->name ?? 'N/A',
+                    'project_name' => $this->selectedOpportunity->project->name ?? 'N/A',
+                    'stage' => $this->selectedOpportunity->stage,
+                    'status' => $this->selectedOpportunity->status
+                ]
+            ]);
+
             $this->closeModals();
             $this->dispatch('opportunity-deleted');
             $this->dispatch('show-success', message: 'Oportunidad eliminada exitosamente.');
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al eliminar la oportunidad: ' . $e->getMessage());
+            Log::error('Error al eliminar oportunidad', [
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $opportunityId = $this->selectedOpportunity->id ?? 'N/A';
+            $clientName = $this->selectedOpportunity->client->name ?? 'N/A';
+            $this->dispatch('show-error', message: "Error al eliminar la oportunidad ID {$opportunityId} del cliente '{$clientName}': " . $e->getMessage());
         }
     }
 
-    public function advanceStage()
+    public function saveActivity()
     {
         try {
-            if (!$this->selectedOpportunity || !$this->newStage) {
+            $this->validate($this->getActivityValidationRules(), $this->getActivityValidationMessages());
+
+            if (!$this->selectedOpportunity) {
+                $this->dispatch('show-error', message: 'No se ha seleccionado una oportunidad.');
                 return;
             }
 
-            $result = $this->opportunityService->advanceStage($this->selectedOpportunity->id, $this->newStage);
+            // Calcular fecha de fin si no se proporciona
+            $startDate = \Carbon\Carbon::parse($this->activity_start_date);
+            $endDate = $this->activity_end_date ? 
+                \Carbon\Carbon::parse($this->activity_end_date) : 
+                $startDate->copy()->addMinutes($this->activity_duration);
 
-            if ($result) {
-                $this->dispatch('show-success', message: 'Etapa de la oportunidad avanzada exitosamente.');
-            } else {
-                $this->dispatch('show-error', message: 'Error al cambiar la etapa: No se pudo avanzar a la etapa seleccionada.');
-            }
+            $activity = Activity::create([
+                'title' => $this->activity_title,
+                'description' => $this->activity_description,
+                'activity_type' => $this->activity_type,
+                'status' => 'programada',
+                'priority' => $this->activity_priority,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'duration' => $this->activity_duration,
+                'location' => $this->activity_location,
+                'client_id' => $this->selectedOpportunity->client_id,
+                'project_id' => $this->selectedOpportunity->project_id,
+                'unit_id' => $this->selectedOpportunity->unit_id,
+                'opportunity_id' => $this->selectedOpportunity->id,
+                'advisor_id' => $this->selectedOpportunity->advisor_id,
+                'assigned_to' => Auth::id(),
+                'notes' => $this->activity_notes,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id()
+            ]);
+
+            Log::info('Actividad creada exitosamente', [
+                'activity_id' => $activity->id,
+                'opportunity_id' => $this->selectedOpportunity->id,
+                'user_id' => Auth::id(),
+                'activity_data' => $this->getActivityData()
+            ]);
 
             $this->closeModals();
+            $this->dispatch('show-success', message: 'Actividad creada exitosamente.');
+        } catch (ValidationException $e) {
+            Log::warning('Error de validación al crear actividad', [
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+                'activity_data' => $this->getActivityData()
+            ]);
+            $errorCount = count($e->errors());
+            $this->dispatch('show-error', message: "Error al crear la actividad: Se encontraron {$errorCount} error(es) de validación. Revisa los campos marcados.");
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al cambiar la etapa: ' . $e->getMessage());
+            Log::error('Error al crear actividad', [
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'activity_data' => $this->getActivityData()
+            ]);
+            $opportunityId = $this->selectedOpportunity->id ?? 'N/A';
+            $activityTitle = $this->activity_title ?: 'Sin título';
+            $this->dispatch('show-error', message: "Error al crear la actividad '{$activityTitle}' para la oportunidad ID {$opportunityId}: " . $e->getMessage());
         }
     }
 
-    public function markAsWon()
+    public function saveTask()
     {
         try {
-            if (!$this->selectedOpportunity || !$this->winValue) {
+            $this->validate($this->getTaskValidationRules(), $this->getTaskValidationMessages());
+
+            if (!$this->selectedOpportunity) {
+                $this->dispatch('show-error', message: 'No se ha seleccionado una oportunidad.');
                 return;
             }
 
-            $result = $this->opportunityService->markAsWon($this->selectedOpportunity->id, $this->winValue, $this->winReason);
-            if ($result) {
-                $this->dispatch('show-success', message: 'Oportunidad marcada como ganada.');
-            } else {
-                $this->dispatch('show-error', message: 'Error al marcar como ganada: No se pudo marcar como ganada.');
-            }
+            $task = Task::create([
+                'title' => $this->task_title,
+                'description' => $this->task_description,
+                'priority' => $this->task_priority,
+                'status' => 'pendiente',
+                'due_date' => \Carbon\Carbon::parse($this->task_due_date),
+                'client_id' => $this->selectedOpportunity->client_id,
+                'project_id' => $this->selectedOpportunity->project_id,
+                'unit_id' => $this->selectedOpportunity->unit_id,
+                'opportunity_id' => $this->selectedOpportunity->id,
+                'assigned_to' => Auth::id(),
+                'notes' => $this->task_notes,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id()
+            ]);
+
+            Log::info('Tarea creada exitosamente', [
+                'task_id' => $task->id,
+                'opportunity_id' => $this->selectedOpportunity->id,
+                'user_id' => Auth::id(),
+                'task_data' => $this->getTaskData()
+            ]);
 
             $this->closeModals();
+            $this->dispatch('show-success', message: 'Tarea creada exitosamente.');
+        } catch (ValidationException $e) {
+            Log::warning('Error de validación al crear tarea', [
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors(),
+                'task_data' => $this->getTaskData()
+            ]);
+            $errorCount = count($e->errors());
+            $this->dispatch('show-error', message: "Error al crear la tarea: Se encontraron {$errorCount} error(es) de validación. Revisa los campos marcados.");
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al marcar como ganada: ' . $e->getMessage());
-        }
-    }
-
-    public function markAsLost()
-    {
-        try {
-            if (!$this->selectedOpportunity || !$this->loseReason) {
-                return;
-            }
-            $result = $this->opportunityService->markAsLost($this->selectedOpportunity->id, $this->loseReason);
-            if ($result) {
-                $this->dispatch('show-success', message: 'Oportunidad marcada como perdida.');
-            } else {
-                $this->dispatch('show-error', message: 'Error al marcar como perdida: No se pudo marcar como perdida.');
-            }
-            $this->closeModals();
-        } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al marcar como perdida: ' . $e->getMessage());
+            Log::error('Error al crear tarea', [
+                'opportunity_id' => $this->selectedOpportunity->id ?? null,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'task_data' => $this->getTaskData()
+            ]);
+            $opportunityId = $this->selectedOpportunity->id ?? 'N/A';
+            $taskTitle = $this->task_title ?: 'Sin título';
+            $this->dispatch('show-error', message: "Error al crear la tarea '{$taskTitle}' para la oportunidad ID {$opportunityId}: " . $e->getMessage());
         }
     }
 
@@ -431,7 +658,14 @@ class OpportunityList extends Component
             $this->dispatch('opportunity-probability-updated');
             $this->dispatch('show-success', message: 'Probabilidad actualizada a ' . $newProbability . '%.');
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al actualizar la probabilidad: ' . $e->getMessage());
+            Log::error('Error al actualizar probabilidad de oportunidad', [
+                'opportunity_id' => $opportunityId,
+                'new_probability' => $newProbability,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('show-error', message: "Error al actualizar la probabilidad de la oportunidad ID {$opportunityId} a {$newProbability}%: " . $e->getMessage());
         }
     }
 
@@ -442,14 +676,74 @@ class OpportunityList extends Component
             $this->dispatch('opportunity-value-updated');
             $this->dispatch('show-success', message: 'Valor esperado actualizado a S/ ' . number_format($newValue, 2) . '.');
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al actualizar el valor esperado: ' . $e->getMessage());
+            Log::error('Error al actualizar valor esperado de oportunidad', [
+                'opportunity_id' => $opportunityId,
+                'new_value' => $newValue,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('show-error', message: "Error al actualizar el valor esperado de la oportunidad ID {$opportunityId} a S/ " . number_format($newValue, 2) . ": " . $e->getMessage());
         }
     }
 
-    public function refreshOpportunities()
+
+    public function refreshData()
     {
-        // Este método se llama cuando se actualiza la lista
-        // No es necesario hacer nada especial ya que Livewire se actualiza automáticamente
+        $this->loadInitialData();
+        $this->dispatch('show-success', message: 'Datos actualizados correctamente.');
+    }
+
+    private function loadInitialData()
+    {
+        $this->clients = Client::select('id', 'name', 'phone', 'document_number', 'client_type')
+            ->whereIn('status', ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre'])
+            ->orderBy('name')
+            ->get();
+        
+        $this->projects = Project::select('id', 'name', 'status', 'project_type')
+            ->where('status', 'activo')
+            ->orderBy('name')
+            ->get();
+        
+        $this->advisors = User::getAvailableAdvisors(Auth::user());
+    }
+
+    public function duplicateOpportunity($opportunityId)
+    {
+        try {
+            $originalOpportunity = $this->opportunityService->getOpportunityById($opportunityId);
+            
+            if (!$originalOpportunity) {
+                $this->dispatch('show-error', message: 'Oportunidad no encontrada.');
+                return;
+            }
+
+            // Llenar el formulario con los datos de la oportunidad original
+            $this->fillFormFromOpportunity($originalOpportunity);
+            
+            // Cambiar algunos campos para la duplicación
+            $this->stage = 'calificado';
+            $this->status = 'registrado';
+            $this->probability = 10;
+            $this->expected_close_date = now()->addDays(30)->format('Y-m-d');
+            $this->close_value = 0;
+            $this->close_reason = '';
+            $this->lost_reason = '';
+            
+            $this->isEditing = false;
+            $this->showFormModal = true;
+            $this->dispatch('show-info', message: 'Formulario preparado para duplicar oportunidad de ' . $originalOpportunity->client->name . '.');
+            
+        } catch (Exception $e) {
+            Log::error('Error al duplicar oportunidad', [
+                'opportunity_id' => $opportunityId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('show-error', message: "Error al duplicar la oportunidad ID {$opportunityId}: " . $e->getMessage());
+        }
     }
 
     public function exportOpportunities()
@@ -464,55 +758,77 @@ class OpportunityList extends Component
                 'client_id' => $this->clientFilter,
             ];
 
-            $opportunities = $this->opportunityService->getAllOpportunities(1000, $filters);
+            // Obtener todas las oportunidades sin paginación para la exportación
+            $opportunities = $this->opportunityService->getAllOpportunities(10000, $filters);
 
             $filename = 'oportunidades_' . now()->format('Y-m-d_H-i-s') . '.csv';
 
             $headers = [
-                'Content-Type' => 'text/csv',
+                'Content-Type' => 'text/csv; charset=UTF-8',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
             ];
 
             $callback = function () use ($opportunities) {
                 $file = fopen('php://output', 'w');
+                
+                // Agregar BOM para UTF-8
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
                 fputcsv($file, [
                     'ID',
                     'Cliente',
-                    'Email Cliente',
+                    'Teléfono Cliente',
+                    'Documento Cliente',
+                    'Tipo Cliente',
                     'Proyecto',
                     'Unidad',
+                    'Tipo Unidad',
                     'Etapa',
                     'Estado',
                     'Probabilidad (%)',
                     'Valor Esperado (S/)',
                     'Valor Cierre (S/)',
                     'Asesor',
-                    'Fecha Cierre',
+                    'Email Asesor',
+                    'Fecha Cierre Esperada',
+                    'Fecha Cierre Real',
                     'Origen',
                     'Campaña',
+                    'Razón Cierre',
+                    'Razón Pérdida',
                     'Notas',
-                    'Fecha Creación'
+                    'Fecha Creación',
+                    'Última Actualización'
                 ]);
 
                 foreach ($opportunities as $opportunity) {
                     fputcsv($file, [
                         $opportunity->id,
                         $opportunity->client->name ?? '',
-                        $opportunity->client->email ?? '',
+                        $opportunity->client->phone ?? '',
+                        $opportunity->client->document_number ?? '',
+                        $opportunity->client->client_type ?? '',
                         $opportunity->project->name ?? '',
                         $opportunity->unit->unit_number ?? '',
+                        $opportunity->unit->unit_type ?? '',
                         ucfirst($opportunity->stage),
                         ucfirst($opportunity->status),
                         $opportunity->probability,
-                        $opportunity->expected_value,
-                        $opportunity->close_value,
+                        number_format($opportunity->expected_value, 2),
+                        number_format($opportunity->close_value, 2),
                         $opportunity->advisor->name ?? '',
                         $opportunity->expected_close_date ? $opportunity->expected_close_date->format('Y-m-d') : '',
-                        $opportunity->source,
-                        $opportunity->campaign,
-                        $opportunity->notes,
-                        $opportunity->created_at->format('Y-m-d H:i:s')
+                        $opportunity->actual_close_date ? $opportunity->actual_close_date->format('Y-m-d') : '',
+                        $opportunity->source ?? '',
+                        $opportunity->campaign ?? '',
+                        $opportunity->close_reason ?? '',
+                        $opportunity->lost_reason ?? '',
+                        $opportunity->notes ?? '',
+                        $opportunity->created_at->format('Y-m-d H:i:s'),
+                        $opportunity->updated_at->format('Y-m-d H:i:s')
                     ]);
                 }
 
@@ -522,19 +838,22 @@ class OpportunityList extends Component
             $this->dispatch('show-success', message: 'Exportación iniciada. El archivo se descargará automáticamente.');
             return response()->stream($callback, 200, $headers);
         } catch (Exception $e) {
-            $this->dispatch('show-error', message: 'Error al exportar las oportunidades: ' . $e->getMessage());
+            Log::error('Error al exportar oportunidades', [
+                'filters' => $filters,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $filterCount = count(array_filter($filters));
+            $this->dispatch('show-error', message: "Error al exportar las oportunidades (con {$filterCount} filtro(s) aplicado(s)): " . $e->getMessage());
         }
     }
 
     public function getStageColor($stage)
     {
         return match ($stage) {
-            'captado' => 'bg-gray-100 text-gray-800',
             'calificado' => 'bg-blue-100 text-blue-800',
-            'contacto' => 'bg-yellow-100 text-yellow-800',
-            'propuesta' => 'bg-orange-100 text-orange-800',
             'visita' => 'bg-purple-100 text-purple-800',
-            'negociacion' => 'bg-indigo-100 text-indigo-800',
             'cierre' => 'bg-green-100 text-green-800',
             default => 'bg-gray-100 text-gray-800'
         };
@@ -543,17 +862,118 @@ class OpportunityList extends Component
     public function getStatusColor($status)
     {
         return match ($status) {
-            'activa' => 'bg-blue-100 text-blue-800',
-            'ganada' => 'bg-green-100 text-green-800',
-            'perdida' => 'bg-red-100 text-red-800',
-            'cancelada' => 'bg-gray-100 text-gray-800',
+            'registrado' => 'bg-blue-100 text-blue-800',
+            'reservado' => 'bg-yellow-100 text-yellow-800',
+            'cuotas' => 'bg-orange-100 text-orange-800',
+            'pagado' => 'bg-green-100 text-green-800',
+            'transferido' => 'bg-purple-100 text-purple-800',
+            'cancelado' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800'
         };
     }
 
+    public function getStageIcon($stage)
+    {
+        return match ($stage) {
+            'calificado' => 'user-check',
+            'visita' => 'home',
+            'cierre' => 'check-circle',
+            default => 'question-mark-circle'
+        };
+    }
+
+    public function getStatusIcon($status)
+    {
+        return match ($status) {
+            'registrado' => 'document-plus',
+            'reservado' => 'bookmark',
+            'cuotas' => 'credit-card',
+            'pagado' => 'check-circle',
+            'transferido' => 'arrow-right-circle',
+            'cancelado' => 'x-circle',
+            default => 'question-mark-circle'
+        };
+    }
+
+    public function getProbabilityColor($probability)
+    {
+        if ($probability >= 80) {
+            return 'text-green-600 font-semibold';
+        } elseif ($probability >= 60) {
+            return 'text-yellow-600 font-medium';
+        } elseif ($probability >= 40) {
+            return 'text-orange-600 font-medium';
+        } else {
+            return 'text-red-600 font-medium';
+        }
+    }
+
+    public function getValueColor($value)
+    {
+        if ($value >= 100000) {
+            return 'text-green-600 font-semibold';
+        } elseif ($value >= 50000) {
+            return 'text-blue-600 font-medium';
+        } elseif ($value >= 20000) {
+            return 'text-yellow-600 font-medium';
+        } else {
+            return 'text-gray-600 font-medium';
+        }
+    }
+
+    public function isOverdue($expectedCloseDate)
+    {
+        if (!$expectedCloseDate) {
+            return false;
+        }
+        
+        return \Carbon\Carbon::parse($expectedCloseDate)->isPast();
+    }
+
+    public function getDaysUntilClose($expectedCloseDate)
+    {
+        if (!$expectedCloseDate) {
+            return null;
+        }
+        
+        $closeDate = \Carbon\Carbon::parse($expectedCloseDate);
+        $now = \Carbon\Carbon::now();
+        
+        return $now->diffInDays($closeDate, false);
+    }
+
     public function render()
     {
-        $filters = [
+        $filters = $this->getFilters();
+
+        try {
+            $opportunities = $this->opportunityService->getAllOpportunities(15, $filters);
+            $projects = $this->projects; // Ya cargados en mount()
+
+            return view('livewire.opportunities.opportunity-list', [
+                'opportunities' => $opportunities,
+                'projects' => $projects
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error al cargar oportunidades en render', [
+                'filters' => $filters,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $filterCount = count(array_filter($filters));
+            $this->dispatch('show-error', message: "Error al cargar las oportunidades (con {$filterCount} filtro(s) aplicado(s)): " . $e->getMessage());
+            
+            return view('livewire.opportunities.opportunity-list', [
+                'opportunities' => $this->getEmptyPaginator(),
+                'projects' => collect()
+            ]);
+        }
+    }
+
+    private function getFilters()
+    {
+        return [
             'search' => $this->search,
             'status' => $this->statusFilter,
             'stage' => $this->stageFilter,
@@ -561,15 +981,61 @@ class OpportunityList extends Component
             'project_id' => $this->projectFilter,
             'client_id' => $this->clientFilter,
         ];
-
-        $opportunities = $this->opportunityService->getAllOpportunities(15, $filters);
-        $stats = $this->opportunityService->getOpportunityStats();
-        $projects = Project::active()->orderBy('name')->get();
-
-        return view('livewire.opportunities.opportunity-list', [
-            'opportunities' => $opportunities,
-            'stats' => $stats,
-            'projects' => $projects
-        ]);
     }
+
+    private function getEmptyPaginator()
+    {
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            collect(),
+            0,
+            15,
+            1,
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
+    }
+
+    private function getFormData()
+    {
+        return [
+            'client_id' => $this->client_id,
+            'project_id' => $this->project_id,
+            'unit_id' => $this->unit_id,
+            'advisor_id' => $this->advisor_id,
+            'stage' => $this->stage,
+            'status' => $this->status,
+            'probability' => $this->probability,
+            'expected_value' => $this->expected_value,
+            'expected_close_date' => $this->expected_close_date,
+            'notes' => $this->notes,
+            'source' => $this->source,
+            'campaign' => $this->campaign
+        ];
+    }
+
+    private function getActivityData()
+    {
+        return [
+            'title' => $this->activity_title,
+            'description' => $this->activity_description,
+            'activity_type' => $this->activity_type,
+            'priority' => $this->activity_priority,
+            'start_date' => $this->activity_start_date,
+            'end_date' => $this->activity_end_date,
+            'duration' => $this->activity_duration,
+            'location' => $this->activity_location,
+            'notes' => $this->activity_notes
+        ];
+    }
+
+    private function getTaskData()
+    {
+        return [
+            'title' => $this->task_title,
+            'description' => $this->task_description,
+            'priority' => $this->task_priority,
+            'due_date' => $this->task_due_date,
+            'notes' => $this->task_notes
+        ];
+    }
+
 }

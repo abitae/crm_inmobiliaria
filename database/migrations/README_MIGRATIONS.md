@@ -26,7 +26,6 @@ Las migraciones deben ejecutarse en el siguiente orden debido a las dependencias
 ### 6. Entidades de Seguimiento (Dependen de múltiples entidades)
 - `2024_01_01_000007_create_activities_table.php` - Actividades y eventos
 - `2024_01_01_000008_create_tasks_table.php` - Tareas
-- `2024_01_01_000009_create_interactions_table.php` - Interacciones con clientes
 
 ### 7. Entidades de Documentos (Dependen de múltiples entidades)
 - `2024_01_01_000010_create_documents_table.php` - Documentos del sistema
@@ -47,7 +46,7 @@ Las migraciones deben ejecutarse en el siguiente orden debido a las dependencias
 
 ### Clients
 - **Depende de:** Users (assigned_advisor_id, created_by, updated_by)
-- **Referenciada por:** Opportunities, Reservations, Activities, Tasks, Interactions, Documents
+- **Referenciada por:** Opportunities, Reservations, Activities, Tasks, Documents
 
 ### Projects
 - **Depende de:** Users (created_by, updated_by)
@@ -61,7 +60,7 @@ Las migraciones deben ejecutarse en el siguiente orden debido a las dependencias
 
 ### Opportunities
 - **Depende de:** Clients, Projects, Units (opcional), Users (advisor_id, created_by, updated_by)
-- **Referenciada por:** Activities, Tasks, Interactions, Documents, Commissions
+- **Referenciada por:** Activities, Tasks, Documents, Commissions
 
 ### Reservations
 - **Depende de:** Clients, Projects, Units, Users (advisor_id, created_by, updated_by)
@@ -76,8 +75,6 @@ Las migraciones deben ejecutarse en el siguiente orden debido a las dependencias
 ### Tasks
 - **Depende de:** Users (assigned_to, created_by, updated_by), Clients (opcional), Projects (opcional), Units (opcional), Opportunities (opcional)
 
-### Interactions
-- **Depende de:** Clients, Opportunities (opcional), Users (created_by, updated_by)
 
 ### Documents
 - **Depende de:** Users (created_by, updated_by, reviewed_by, approved_by, signed_by), Clients (opcional), Projects (opcional), Units (opcional), Opportunities (opcional), Activities (opcional)

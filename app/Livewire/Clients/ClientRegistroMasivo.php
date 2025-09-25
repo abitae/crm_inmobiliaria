@@ -18,13 +18,13 @@ class ClientRegistroMasivo extends Component
     #[Rule('required|string|max:255')]
     public $name = '';
 
-    #[Rule('nullable|string|max:20')]
+    #[Rule('required|string|max:9|min:9')]
     public $phone = '';
 
-    #[Rule('required|in:DNI,RUC,CE,PASAPORTE')]
+    #[Rule('required|in:DNI')]
     public $document_type = 'DNI';
 
-    #[Rule('required|string|max:20')]
+    #[Rule('required|string|max:8|min:8')]
     public $document_number = '';
 
     #[Rule('nullable|string|max:500')]
@@ -64,9 +64,6 @@ class ClientRegistroMasivo extends Component
     // Opciones para los selects
     public $documentTypes = [
         'DNI' => 'DNI',
-        'RUC' => 'RUC',
-        'CE' => 'Carné de Extranjería',
-        'PASAPORTE' => 'Pasaporte'
     ];
 
     public $clientTypes = [
@@ -92,8 +89,6 @@ class ClientRegistroMasivo extends Component
         'perdido' => 'Perdido'
     ];
 
-    // Ya no necesitamos la propiedad advisors
-
     protected $clientService;
 
     public function boot(ClientService $clientService)
@@ -104,11 +99,8 @@ class ClientRegistroMasivo extends Component
     public function mount($id = null)
     {
         
-        // Asignar automáticamente el usuario autenticado como asesor
         $this->assigned_advisor_id = $id ? $id : Auth::id();
     }
-
-    // Ya no necesitamos cargar asesores ya que se asigna automáticamente
 
     public function save()
     {

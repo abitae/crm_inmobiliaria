@@ -21,7 +21,7 @@ class ClientService
     {
         try {
             $query = Client::with(['assignedAdvisor', 'createdBy'])
-                ->withCount(['opportunities', 'interactions', 'tasks']);
+                ->withCount(['opportunities', 'activities', 'tasks']);
             $this->applyFilters($query, $filters);
 
             return $query->orderBy('created_at', 'desc')->paginate($perPage);
@@ -76,7 +76,7 @@ class ClientService
                 'assignedAdvisor',
                 'createdBy',
                 'opportunities.project',
-                'interactions',
+                'activities',
                 'tasks'
             ])->find($id);
         } catch (\Exception $e) {
@@ -137,39 +137,6 @@ class ClientService
         }
     }
 
-    /**
-     * Eliminar cliente (soft delete)
-     */
-    public function deleteClient(int $id): bool
-    {
-        try {
-            if ($id <= 0) {
-                throw new \Exception('ID de cliente inválido');
-            }
-
-            $client = Client::find($id);
-            if (!$client) {
-                throw new \Exception('Cliente no encontrado');
-            }
-
-            // Verificar si el cliente tiene oportunidades activas
-            if ($client->opportunities()->where('status', 'activa')->exists()) {
-                throw new \Exception('No se puede eliminar un cliente con oportunidades activas');
-            }
-
-            $deleted = $client->delete();
-
-            if ($deleted) {
-                Log::info("Cliente eliminado exitosamente ID: {$id}");
-                return true;
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            Log::error("Error al eliminar cliente ID {$id}: " . $e->getMessage());
-            throw new \Exception('Error al eliminar el cliente: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Cambiar estado del cliente

@@ -232,9 +232,9 @@ class SalesReport extends Component
         }
 
         $totalOpportunities = $query->count();
-        $wonOpportunities = $query->where('status', 'ganada')->count();
-        $lostOpportunities = $query->where('status', 'perdida')->count();
-        $activeOpportunities = $query->where('status', 'activa')->count();
+        $wonOpportunities = $query->where('status', 'pagado')->count();
+        $lostOpportunities = $query->where('status', 'cancelado')->count();
+        $activeOpportunities = $query->where('status', 'registrado')->count();
 
         $this->conversionMetrics = [
             'total_opportunities' => $totalOpportunities,

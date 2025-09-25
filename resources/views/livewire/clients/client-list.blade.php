@@ -11,9 +11,6 @@
                     <flux:button icon="user-group" size="xs" color="primary" href="{{ route('clients.registro-masivo') }}">
                         Registro masivo
                     </flux:button>
-                    <flux:button icon="arrow-down-tray" size="xs" wire:click="exportClients">
-                        Exportar
-                    </flux:button>
                     <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal">
                         Nuevo Cliente
                     </flux:button>
@@ -158,17 +155,13 @@
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
-                                    {{ $client->interactions ? $client->interactions : '-' }}
+                                    {{ $client->activities_count ?? '-' }}
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap font-medium">
                                     <div class="flex space-x-1">
                                         <flux:button size="xs" variant="outline"
                                             wire:click="openCreateModal({{ $client->id }})">
                                             <flux:icon name="pencil" class="w-3 h-3" />
-                                        </flux:button>
-                                        <flux:button size="xs" variant="outline" color="danger"
-                                            wire:click="confirmDelete({{ $client->id }})">
-                                            <flux:icon name="trash" class="w-3 h-3" />
                                         </flux:button>
                                     </div>
                                 </td>
@@ -335,35 +328,6 @@
         </div>
     </flux:modal>
 
-    <!-- Modal de Confirmación de Eliminación -->
-    <flux:modal wire:model="showDeleteModal" size="sm">
-        <div class="mt-3 text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <flux:icon name="exclamation-triangle" class="h-6 w-6 text-red-600" />
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mt-4">Confirmar eliminación</h3>
-            <div class="mt-2 px-7 py-3">
-                <p class="text-sm text-gray-500">
-                    ¿Estás seguro de que quieres eliminar este cliente? Esta acción no se puede deshacer.
-                </p>
-            </div>
-            <div class="flex justify-center space-x-3 mt-4">
-                <flux:button size="xs" variant="outline" wire:click="closeModals">
-                    Cancelar
-                </flux:button>
-                <flux:button size="xs" color="danger" wire:click="deleteClient" wire:loading.attr="disabled"
-                    wire:loading.class="opacity-50 cursor-not-allowed">
-                    <span wire:loading.remove>
-                        Eliminar
-                    </span>
-                    <span wire:loading>
-                        <flux:icon name="arrow-path" class="w-4 h-4 animate-spin" />
-                        Eliminando...
-                    </span>
-                </flux:button>
-            </div>
-        </div>
-    </flux:modal>
 
     <!-- Script para SweetAlert2 -->
     <script>
@@ -373,17 +337,6 @@
                 window.showSuccess(event.message);
             });
 
-            // Escuchar eventos de confirmación
-            Livewire.on('show-confirm', (event) => {
-                window.showConfirm(event.message, event.title).then((result) => {
-                    if (result.isConfirmed) {
-                        // Ejecutar la acción confirmada
-                        if (event.action === 'deleteClient') {
-                            @this.deleteClient();
-                        }
-                    }
-                });
-            });
 
             // Escuchar eventos de error
             Livewire.on('show-error', (event) => {

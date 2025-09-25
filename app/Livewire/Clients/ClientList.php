@@ -21,8 +21,6 @@ class ClientList extends Component
 
     // Modales
     public $showFormModal = false;
-    public $showDeleteModal = false;
-    public $selectedClient = null;
     public $editingClient = null;
 
     // Campos del formulario
@@ -83,7 +81,6 @@ class ClientList extends Component
         'name.max' => 'El nombre no puede exceder 255 caracteres.',
         'phone.string' => 'El teléfono debe ser una cadena de texto.',
         'phone.max' => 'El teléfono no puede exceder 20 caracteres.',
-        'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
         'assigned_advisor_id.required' => 'El asesor es obligatorio.',
     ];
 
@@ -142,25 +139,10 @@ class ClientList extends Component
         $this->showFormModal = true;
     }
 
-    public function openDeleteModal($clientId)
-    {
-        $this->selectedClient = $this->clientService->getClientById($clientId);
-        $this->showDeleteModal = true;
-    }
-
-    public function confirmDelete($clientId)
-    {
-        $this->selectedClient = $this->clientService->getClientById($clientId);
-        $this->dispatch('show-confirm', 
-            message: '¿Estás seguro de que quieres eliminar este cliente? Esta acción no se puede deshacer.',
-            title: 'Confirmar eliminación',
-            action: 'deleteClient'
-        );
-    }
 
     public function closeModals()
     {
-        $this->reset(['showFormModal', 'showDeleteModal', 'editingClient', 'selectedClient']);
+        $this->reset(['showFormModal', 'editingClient']);
         $this->resetForm();
     }
 
@@ -226,17 +208,6 @@ class ClientList extends Component
         $this->dispatch('show-success', message: 'Cliente actualizado exitosamente.');
     }
 
-    public function deleteClient()
-    {
-        if (!$this->selectedClient) {
-            return;
-        }
-
-        $this->clientService->deleteClient($this->selectedClient->id);
-
-        $this->closeModals();
-        $this->dispatch('show-success', message: 'Cliente eliminado exitosamente.');
-    }
 
     public function changeStatus($clientId, $newStatus)
     {
