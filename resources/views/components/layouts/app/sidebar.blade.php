@@ -39,11 +39,17 @@
                         :current="request()->routeIs('opportunities.index')" wire:navigate>{{ __('Oportunidades') }}
                     </flux:navlist.item>
                 @endcan
+                @can('view_activities')
+                    <flux:navlist.item icon="clock" :href="route('activities.index')"
+                        :current="request()->routeIs('activities.index')" wire:navigate>{{ __('Actividades') }}
+                    </flux:navlist.item>
+                @endcan
 
-                {{-- @can('view_tasks')
+                @can('view_tasks')
                     <flux:navlist.item icon="check-circle" :href="route('tasks.index')"
-                        :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}</flux:navlist.item>
-                @endcan --}}
+                        :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}
+                    </flux:navlist.item>
+                @endcan
             </flux:navlist.group>
 
             {{-- <flux:navlist.group :heading="__('CRM')" class="grid">

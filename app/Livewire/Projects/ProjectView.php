@@ -34,6 +34,11 @@ class ProjectView extends Component
     public $mediaType = 'images'; // images, videos, documents
     public $currentMediaIndex = 0;
     
+    // Modal específico para documentos PDF
+    public $showPdfModal = false;
+    public $selectedPdfDocument = null;
+    public $currentPdfIndex = 0;
+    
     // Modales para agregar medios
     public $showAddImagesModal = false;
     public $showAddVideosModal = false;
@@ -188,6 +193,43 @@ class ProjectView extends Component
         $this->showMediaModal = false;
         $this->selectedMedia = null;
         $this->currentMediaIndex = 0;
+    }
+    
+    // Métodos para el modal de PDFs
+    public function openPdfModal($index = 0)
+    {
+        $this->currentPdfIndex = $index;
+        $this->showPdfModal = true;
+        
+        // Dispatch event para mostrar indicador de carga
+        $this->dispatch('openPdfModal');
+    }
+    
+    public function closePdfModal()
+    {
+        $this->showPdfModal = false;
+        $this->selectedPdfDocument = null;
+        $this->currentPdfIndex = 0;
+    }
+    
+    public function nextPdf()
+    {
+        $pdfArray = $this->getPdfDocuments();
+        if ($this->currentPdfIndex < count($pdfArray) - 1) {
+            $this->currentPdfIndex++;
+        }
+    }
+    
+    public function previousPdf()
+    {
+        if ($this->currentPdfIndex > 0) {
+            $this->currentPdfIndex--;
+        }
+    }
+    
+    public function selectPdf($index)
+    {
+        $this->currentPdfIndex = $index;
     }
 
     public function nextMedia()
@@ -421,6 +463,59 @@ class ProjectView extends Component
     public function deleteMedia($index)
     {
         try {
+            // Si estamos en el modal de PDFs, usar la lógica específica para PDFs
+            if ($this->showPdfModal) {
+                $pdfArray = $this->getPdfDocuments();
+                
+                if (!isset($pdfArray[$index])) {
+                    $this->dispatch('show-error', message: 'PDF no encontrado');
+                    return;
+                }
+
+                $pdfToDelete = $pdfArray[$index];
+                $filePath = $pdfToDelete['path'];
+                
+                // Eliminar archivo físico del storage
+                if (Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
+                
+                // Encontrar el índice real en el array de documentos
+                $existingDocuments = $this->project->path_documents ?: [];
+                $realIndex = null;
+                
+                foreach ($existingDocuments as $docIndex => $doc) {
+                    $docPath = is_array($doc) ? $doc['path'] : $doc;
+                    if ($docPath === $filePath) {
+                        $realIndex = $docIndex;
+                        break;
+                    }
+                }
+                
+                if ($realIndex !== null) {
+                    unset($existingDocuments[$realIndex]);
+                    $this->project->update([
+                        'path_documents' => array_values($existingDocuments)
+                    ]);
+                }
+                
+                // Ajustar el índice actual si es necesario
+                $newPdfArray = $this->getPdfDocuments();
+                if (count($newPdfArray) === 0) {
+                    // Si no quedan PDFs, cerrar el modal
+                    $this->closePdfModal();
+                } else {
+                    // Ajustar el índice actual
+                    if ($this->currentPdfIndex >= count($newPdfArray)) {
+                        $this->currentPdfIndex = count($newPdfArray) - 1;
+                    }
+                }
+                
+                $this->dispatch('show-success', message: 'PDF eliminado exitosamente');
+                return;
+            }
+            
+            // Lógica original para otros tipos de medios
             $mediaArray = $this->getMediaArray();
             
             if (!isset($mediaArray[$index])) {
@@ -541,6 +636,86 @@ class ProjectView extends Component
                 return [];
         }
     }
+    
+    private function getPdfDocuments()
+    {
+        // Cache para evitar procesamiento repetido
+        static $pdfCache = null;
+        static $lastProjectId = null;
+        
+        if ($pdfCache !== null && $lastProjectId === $this->project->id) {
+            return $pdfCache;
+        }
+        
+        $pdfDocuments = [];
+        
+        if (is_array($this->project->path_documents)) {
+            foreach ($this->project->path_documents as $doc) {
+                $path = is_array($doc) ? $doc['path'] : $doc;
+                $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                
+                if ($extension === 'pdf') {
+                    $pdfDocuments[] = [
+                        'title' => is_array($doc) ? ($doc['title'] ?? basename($path)) : basename($path),
+                        'path' => $path,
+                        'descripcion' => is_array($doc) ? ($doc['descripcion'] ?? 'Sin descripción') : 'Sin descripción',
+                        'type' => 'pdf',
+                        'size' => $this->getFileSize($path),
+                        'modified' => $this->getFileModifiedTime($path)
+                    ];
+                }
+            }
+        }
+        
+        // Ordenar por título para mejor UX
+        usort($pdfDocuments, function($a, $b) {
+            return strcasecmp($a['title'], $b['title']);
+        });
+        
+        $pdfCache = $pdfDocuments;
+        $lastProjectId = $this->project->id;
+        
+        return $pdfDocuments;
+    }
+    
+    private function getFileSize($path)
+    {
+        try {
+            $fullPath = storage_path('app/public/' . $path);
+            if (file_exists($fullPath)) {
+                $bytes = filesize($fullPath);
+                return $this->formatFileSize($bytes);
+            }
+        } catch (\Exception $e) {
+            // Ignorar errores de archivo
+        }
+        return 'N/A';
+    }
+    
+    private function getFileModifiedTime($path)
+    {
+        try {
+            $fullPath = storage_path('app/public/' . $path);
+            if (file_exists($fullPath)) {
+                return date('d/m/Y H:i', filemtime($fullPath));
+            }
+        } catch (\Exception $e) {
+            // Ignorar errores de archivo
+        }
+        return 'N/A';
+    }
+    
+    private function formatFileSize($bytes)
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        
+        $bytes /= (1 << (10 * $pow));
+        
+        return round($bytes, 2) . ' ' . $units[$pow];
+    }
 
     public function getCurrentMediaProperty()
     {
@@ -549,6 +724,25 @@ class ProjectView extends Component
             return $mediaArray[$this->currentMediaIndex];
         }
         return null;
+    }
+    
+    public function getCurrentPdfProperty()
+    {
+        $pdfArray = $this->getPdfDocuments();
+        if (isset($pdfArray[$this->currentPdfIndex])) {
+            return $pdfArray[$this->currentPdfIndex];
+        }
+        return null;
+    }
+    
+    public function getPdfDocumentsCountProperty()
+    {
+        return count($this->getPdfDocuments());
+    }
+    
+    public function getPdfDocumentsProperty()
+    {
+        return $this->getPdfDocuments();
     }
 
     public function getFilteredUnitsProperty()

@@ -26,6 +26,8 @@ class Dashboard extends Component
     // Filtros del dashboard
     public $dateRange = 'this_month';
     public $advisorFilter = '';
+    public $startDate = '';
+    public $endDate = '';
 
     protected $dashboardService;
 
@@ -36,14 +38,20 @@ class Dashboard extends Component
 
     public function mount()
     {
+        $this->startDate = now()->startOfMonth()->toDateString();
+        $this->endDate = now()->toDateString();
         $this->loadDashboardData();
     }
 
     public function loadDashboardData()
     {
+        // indicar carga
+        $this->dispatch('dashboard-loading', true);
         $filters = [
             'date_range' => $this->dateRange,
             'advisor_id' => $this->advisorFilter,
+            'start_date' => $this->startDate,
+            'end_date' => $this->endDate,
         ];
 
         $this->stats = $this->dashboardService->getDashboardStats($filters);
@@ -57,10 +65,47 @@ class Dashboard extends Component
         $this->advisorPerformance = $this->dashboardService->getAdvisorPerformance($filters);
         $this->conversionBySource = $this->dashboardService->getConversionBySource($filters);
         $this->closedOpportunitiesBySeller = $this->dashboardService->getClosedOpportunitiesBySeller($filters);
+        // Top 10 vendedores por monto (total_sales) descendente
+        if (is_array($this->closedOpportunitiesBySeller)) {
+            usort($this->closedOpportunitiesBySeller, function ($a, $b) {
+                $aTotal = (float)($a->total_sales ?? 0);
+                $bTotal = (float)($b->total_sales ?? 0);
+                if ($aTotal === $bTotal) {
+                    return 0;
+                }
+                return $aTotal < $bTotal ? 1 : -1; // descendente
+            });
+            $this->closedOpportunitiesBySeller = array_slice($this->closedOpportunitiesBySeller, 0, 10);
+        }
+
+        // Notificar al frontend que los datos han cambiado para actualizar gráficos sin recargar
+        $this->dispatch('dashboard-data-updated', [
+            'opportunitiesByStage' => $this->opportunitiesByStage,
+            'clientsByStatus' => $this->clientsByStatus,
+            'closedOpportunitiesBySeller' => $this->closedOpportunitiesBySeller,
+            'advisorPerformance' => $this->advisorPerformance,
+        ]);
+
+        // fin de carga
+        $this->dispatch('dashboard-loading', false);
     }
 
     public function updatedDateRange()
     {
+        // Sincronizar fechas con el rango seleccionado; fin siempre es hoy
+        switch ($this->dateRange) {
+            case 'this_week':
+                $this->startDate = now()->startOfWeek()->toDateString();
+                break;
+            case 'this_year':
+                $this->startDate = now()->startOfYear()->toDateString();
+                break;
+            case 'this_month':
+            default:
+                $this->startDate = now()->startOfMonth()->toDateString();
+                break;
+        }
+        $this->endDate = now()->toDateString();
         $this->loadDashboardData();
     }
 
@@ -69,10 +114,49 @@ class Dashboard extends Component
         $this->loadDashboardData();
     }
 
+    public function updatedStartDate()
+    {
+        $this->syncDateRangeFromDates();
+        // debounce básico: re-disparar tras pequeña espera en frontend
+        $this->dispatch('dashboard-schedule-refresh');
+    }
+
+    public function updatedEndDate()
+    {
+        $this->syncDateRangeFromDates();
+        $this->dispatch('dashboard-schedule-refresh');
+    }
+
+    private function syncDateRangeFromDates(): void
+    {
+        $today = now()->toDateString();
+        $startOfWeek = now()->startOfWeek()->toDateString();
+        $startOfMonth = now()->startOfMonth()->toDateString();
+        $startOfYear = now()->startOfYear()->toDateString();
+
+        if ($this->endDate === $today && $this->startDate === $startOfWeek) {
+            $this->dateRange = 'this_week';
+            return;
+        }
+
+        if ($this->endDate === $today && $this->startDate === $startOfMonth) {
+            $this->dateRange = 'this_month';
+            return;
+        }
+
+        if ($this->endDate === $today && $this->startDate === $startOfYear) {
+            $this->dateRange = 'this_year';
+            return;
+        }
+        // Si no coincide con ninguno, no se cambia el rango actual
+    }
+
     public function clearFilters()
     {
         $this->reset(['dateRange', 'advisorFilter']);
         $this->dateRange = 'this_month';
+        $this->startDate = now()->startOfMonth()->toDateString();
+        $this->endDate = now()->toDateString();
         $this->loadDashboardData();
     }
 
@@ -88,6 +172,8 @@ class Dashboard extends Component
         $filters = [
             'date_range' => $this->dateRange,
             'advisor_id' => $this->advisorFilter,
+            'start_date' => $this->startDate,
+            'end_date' => $this->endDate,
         ];
 
         $exportData = $this->dashboardService->exportDashboardData($filters);

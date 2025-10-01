@@ -17,7 +17,7 @@ class Task extends Model
         'task_type', // seguimiento, visita, llamada, documento, otros
         'priority', // baja, media, alta, urgente
         'status', // pendiente, en_progreso, completada, cancelada
-        'due_date',
+        'due_date',// fecha de vencimiento
         'completed_at',
         'estimated_hours',
         'actual_hours',
@@ -25,7 +25,7 @@ class Task extends Model
         'project_id',
         'unit_id',
         'opportunity_id',
-        'assigned_to',
+        'assigned_to',// id del usuario asignado
         'created_by',
         'updated_by',
         'notes',

@@ -67,7 +67,8 @@
                 </div>
                 <div class="flex-1 bg-orange-50 p-4 rounded-lg flex flex-col items-center min-w-[120px]">
                     <h3 class="text-sm font-semibold text-orange-900">Progreso</h3>
-                    <p class="text-2xl md:text-3xl font-bold text-orange-600">{{ $project->progress_percentage }}%</p>
+                    <p class="text-2xl md:text-3xl font-bold text-orange-600">{{ $project->progress_percentage }}%
+                    </p>
                 </div>
             </div>
             <!-- Tercera fila: Información Resumida del Proyecto -->
@@ -285,11 +286,14 @@
                                 </div>
                             </div>
                             <div class="flex space-x-2">
-                                <flux:button size="xs" icon="eye" wire:click="openMediaModal('documents')"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Ver galería de documentos">
-                                    Ver
-                                </flux:button>
+
+                                @if ($this->getPdfDocuments() && count($this->getPdfDocuments()) > 0)
+                                    <flux:button size="xs" icon="document-text" wire:click="openPdfModal(0)"
+                                        class="bg-red-600 hover:bg-red-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
+                                        title="Ver documentos PDF">
+                                        PDFs
+                                    </flux:button>
+                                @endif
                                 <flux:button size="xs" icon="plus" wire:click="addDocuments()"
                                     class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
                                     title="Agregar documentos">
@@ -315,9 +319,6 @@
             </div>
         </div>
 
-
-
-
         <!-- Lista de Unidades -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-200">
             <div class="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -328,7 +329,8 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold text-gray-900">Unidades del Proyecto</h2>
-                            <p class="text-sm text-gray-600">Total: {{ $filteredUnits->total() }} unidades disponibles
+                            <p class="text-sm text-gray-600">Total: {{ $filteredUnits->total() }} unidades
+                                disponibles
                             </p>
                         </div>
                     </div>
@@ -516,7 +518,8 @@
                                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                                             </path>
                                         </svg>
-                                        <h3 class="mt-2 text-sm font-medium text-gray-900">No se encontraron unidades
+                                        <h3 class="mt-2 text-sm font-medium text-gray-900">No se encontraron
+                                            unidades
                                         </h3>
                                         <p class="mt-1 text-sm text-gray-500">
                                             @if ($search || $statusFilter || $typeFilter || $priceMin || $priceMax)
@@ -556,7 +559,7 @@
     </div>
 
     <!-- Modal de Detalles de Unidad usando flux:modal -->
-    <flux:modal wire:model="showUnitDetails" size="2xl" @close="closeUnitDetails">
+    <flux:modal wire:model="showUnitDetails" size="2xl">
         @if ($showUnitDetails && $selectedUnit)
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -591,7 +594,8 @@
                     <div>
                         <h4 class="font-medium text-gray-900 mb-3">Características</h4>
                         <div class="space-y-2 text-sm text-gray-600">
-                            <p><span class="font-medium">Área:</span> {{ number_format($selectedUnit->area, 2) }} m²
+                            <p><span class="font-medium">Área:</span> {{ number_format($selectedUnit->area, 2) }}
+                                m²
                             </p>
                             @if ($selectedUnit->bedrooms)
                                 <p><span class="font-medium">Dormitorios:</span> {{ $selectedUnit->bedrooms }}</p>
@@ -604,7 +608,8 @@
                                     {{ $selectedUnit->parking_spaces }}</p>
                             @endif
                             @if ($selectedUnit->storage_rooms)
-                                <p><span class="font-medium">Bodegas:</span> {{ $selectedUnit->storage_rooms }}</p>
+                                <p><span class="font-medium">Bodegas:</span> {{ $selectedUnit->storage_rooms }}
+                                </p>
                             @endif
                         </div>
                     </div>
@@ -685,7 +690,7 @@
     </flux:modal>
 
     <!-- Modal de Medios del Proyecto -->
-    <flux:modal wire:model="showMediaModal" class="w-full max-w-5xl" @close="closeMediaModal">
+    <flux:modal wire:model="showMediaModal" class="w-full max-w-5xl">
         @if ($showMediaModal)
             <div class="p-6">
                 <!-- Mensajes de éxito y error -->
@@ -918,7 +923,8 @@
                         <div class="border-t border-gray-200 pt-6">
                             <div class="text-center py-4">
                                 <p class="text-sm text-gray-600">
-                                    Solo hay un archivo disponible. Puedes eliminarlo usando el botón "Eliminar" en la
+                                    Solo hay un archivo disponible. Puedes eliminarlo usando el botón "Eliminar" en
+                                    la
                                     parte superior.
                                 </p>
                             </div>
@@ -948,7 +954,7 @@
     </flux:modal>
 
     <!-- Modal para Agregar Imágenes -->
-    <flux:modal wire:model="showAddImagesModal" size="2xl" @close="closeAddImagesModal">
+    <flux:modal wire:model="showAddImagesModal" size="2xl">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
@@ -1023,7 +1029,8 @@
                                             </div>
 
                                             <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $image->getClientOriginalName() }}</p>
+                                                <p><strong>Archivo:</strong> {{ $image->getClientOriginalName() }}
+                                                </p>
                                                 <p><strong>Tamaño:</strong>
                                                     {{ number_format($image->getSize() / 1024, 2) }} KB</p>
                                                 <p><strong>Tipo:</strong> {{ $image->getMimeType() }}</p>
@@ -1056,7 +1063,7 @@
     </flux:modal>
 
     <!-- Modal para Agregar Videos -->
-    <flux:modal wire:model="showAddVideosModal" size="2xl" @close="closeAddVideosModal">
+    <flux:modal wire:model="showAddVideosModal" size="2xl">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
@@ -1131,7 +1138,8 @@
                                             </div>
 
                                             <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $video->getClientOriginalName() }}</p>
+                                                <p><strong>Archivo:</strong> {{ $video->getClientOriginalName() }}
+                                                </p>
                                                 <p><strong>Tamaño:</strong>
                                                     {{ number_format($video->getSize() / 1024 / 1024, 2) }} MB</p>
                                                 <p><strong>Tipo:</strong> {{ $video->getMimeType() }}</p>
@@ -1164,7 +1172,7 @@
     </flux:modal>
 
     <!-- Modal para Agregar Documentos -->
-    <flux:modal wire:model="showAddDocumentsModal" size="2xl" @close="closeAddDocumentsModal">
+    <flux:modal wire:model="showAddDocumentsModal" size="2xl">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
@@ -1195,7 +1203,8 @@
                             <span class="text-red-500 text-sm">{{ $message }}</span>
                         @enderror
                         <p class="mt-1 text-xs text-gray-500">
-                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF. Tamaño máximo: 50MB por
+                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF. Tamaño máximo: 50MB
+                            por
                             archivo.
                         </p>
                     </div>
@@ -1243,7 +1252,8 @@
                                             </div>
 
                                             <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $document->getClientOriginalName() }}
+                                                <p><strong>Archivo:</strong>
+                                                    {{ $document->getClientOriginalName() }}
                                                 </p>
                                                 <p><strong>Tamaño:</strong>
                                                     {{ number_format($document->getSize() / 1024, 2) }} KB</p>
@@ -1277,20 +1287,25 @@
     </flux:modal>
 
     <!-- Modal para Agregar Unidades -->
-    <flux:modal variant='flyout' wire:model="showAddUnitModal" size="xl" @close="closeAddUnitModal">
+    <flux:modal variant='flyout' wire:model="showAddUnitModal" size="xl">
         <div class="p-0 md:p-0">
             <!-- Encabezado mejorado -->
-            <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white rounded-t-xl">
+            <div
+                class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white rounded-t-xl">
                 <div class="flex items-center space-x-3">
                     <div class="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center shadow">
                         <flux:icon name="{{ $isEditing ? 'pencil' : 'plus' }}" class="w-6 h-6 text-blue-700" />
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-blue-900">{{ $isEditing ? 'Editar Unidad' : 'Agregar Nueva Unidad' }}</h3>
-                        <p class="text-sm text-gray-500">{{ $isEditing ? 'Modifica los datos de la unidad seleccionada.' : 'Completa los datos para registrar una nueva unidad en el proyecto.' }}</p>
+                        <h3 class="text-2xl font-bold text-blue-900">
+                            {{ $isEditing ? 'Editar Unidad' : 'Agregar Nueva Unidad' }}</h3>
+                        <p class="text-sm text-gray-500">
+                            {{ $isEditing ? 'Modifica los datos de la unidad seleccionada.' : 'Completa los datos para registrar una nueva unidad en el proyecto.' }}
+                        </p>
                     </div>
                 </div>
-                <button type="button" class="text-gray-400 hover:text-gray-600 transition" @click="closeAddUnitModal">
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition"
+                    @click="closeAddUnitModal">
                     <flux:icon name="x-mark" class="w-6 h-6" />
                 </button>
             </div>
@@ -1300,12 +1315,13 @@
                     <!-- Información básica -->
                     <div class="space-y-6 bg-white rounded-lg shadow-sm p-5 border border-gray-100">
                         <h4 class="text-lg font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-400" /> Información Básica
+                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-400" /> Información
+                            Básica
                         </h4>
 
                         <div class="space-y-3">
-                            <flux:input label="Número de Unidad *" size="sm" type="text" wire:model="unit_number"
-                                placeholder="Ej: A-101">
+                            <flux:input label="Número de Unidad *" size="sm" type="text"
+                                wire:model="unit_number" placeholder="Ej: A-101">
                             </flux:input>
 
                             <flux:input label="Manzana" size="sm" type="text" wire:model="unit_manzana"
@@ -1330,13 +1346,12 @@
                                 </flux:input>
                             </div>
 
-                            <flux:input label="Piso" size="sm" type="number" wire:model="floor" min="0"
-                                placeholder="Ej: 5">
+                            <flux:input label="Piso" size="sm" type="number" wire:model="floor"
+                                min="0" placeholder="Ej: 5">
                             </flux:input>
 
-                            <flux:input label="Área (m²) *" size="sm" type="number" wire:model="area" step="0.01"
-                                min="0.01"
-                                placeholder="Ej: 120.50">
+                            <flux:input label="Área (m²) *" size="sm" type="number" wire:model="area"
+                                step="0.01" min="0.01" placeholder="Ej: 120.50">
                             </flux:input>
 
                             <flux:select label="Estado *" size="sm" wire:model="status">
@@ -1352,71 +1367,68 @@
                         <!-- Características -->
                         <div class="space-y-3 pt-4">
                             <h4 class="text-base font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-                                <flux:icon name="adjustments-horizontal" class="w-5 h-5 text-blue-400" /> Características
+                                <flux:icon name="adjustments-horizontal" class="w-5 h-5 text-blue-400" />
+                                Características
                             </h4>
 
                             <div class="grid grid-cols-2 gap-3">
-                                <flux:input label="Dormitorios" size="sm" type="number" wire:model="bedrooms" min="0"
-                                    placeholder="Ej: 3">
+                                <flux:input label="Dormitorios" size="sm" type="number" wire:model="bedrooms"
+                                    min="0" placeholder="Ej: 3">
                                 </flux:input>
-                                <flux:input label="Baños" size="sm" type="number" wire:model="bathrooms" min="0"
-                                    placeholder="Ej: 2">
+                                <flux:input label="Baños" size="sm" type="number" wire:model="bathrooms"
+                                    min="0" placeholder="Ej: 2">
                                 </flux:input>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
-                                <flux:input label="Estacionamientos" size="sm" type="number" wire:model="parking_spaces"
-                                    min="0"
-                                    placeholder="Ej: 1">
+                                <flux:input label="Estacionamientos" size="sm" type="number"
+                                    wire:model="parking_spaces" min="0" placeholder="Ej: 1">
                                 </flux:input>
-                                <flux:input label="Depósitos" size="sm" type="number" wire:model="storage_rooms"
-                                    min="0"
-                                    placeholder="Ej: 1">
+                                <flux:input label="Depósitos" size="sm" type="number"
+                                    wire:model="storage_rooms" min="0" placeholder="Ej: 1">
                                 </flux:input>
                             </div>
 
                             <div class="grid grid-cols-3 gap-3">
-                                <flux:input label="Balcón (m²)" size="sm" type="number" wire:model="balcony_area"
-                                    step="0.01" min="0"
-                                    placeholder="Ej: 8.5">
+                                <flux:input label="Balcón (m²)" size="sm" type="number"
+                                    wire:model="balcony_area" step="0.01" min="0" placeholder="Ej: 8.5">
                                 </flux:input>
-                                <flux:input label="Terraza (m²)" size="sm" type="number" wire:model="terrace_area"
-                                    step="0.01" min="0"
-                                    placeholder="Ej: 15.0">
+                                <flux:input label="Terraza (m²)" size="sm" type="number"
+                                    wire:model="terrace_area" step="0.01" min="0" placeholder="Ej: 15.0">
                                 </flux:input>
-                                <flux:input label="Jardín (m²)" size="sm" type="number" wire:model="garden_area"
-                                    step="0.01" min="0"
-                                    placeholder="Ej: 25.0">
+                                <flux:input label="Jardín (m²)" size="sm" type="number"
+                                    wire:model="garden_area" step="0.01" min="0" placeholder="Ej: 25.0">
                                 </flux:input>
                             </div>
                         </div>
                     </div>
 
                     <!-- Precios y Comisiones -->
-                    <div class="space-y-6 bg-white rounded-lg shadow-sm p-5 border border-gray-100 flex flex-col justify-between">
+                    <div
+                        class="space-y-6 bg-white rounded-lg shadow-sm p-5 border border-gray-100 flex flex-col justify-between">
                         <div>
                             <h4 class="text-lg font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-                                <flux:icon name="currency-dollar" class="w-5 h-5 text-blue-400" /> Precios y Comisiones
+                                <flux:icon name="currency-dollar" class="w-5 h-5 text-blue-400" /> Precios y
+                                Comisiones
                             </h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                                <flux:input label="Precio Base por m² *" size="sm" type="number" wire:model="base_price" step="0.01"
-                                    min="0.01"
-                                    placeholder="Ej: 2500.00">
+                                <flux:input label="Precio Base por m² *" size="sm" type="number"
+                                    wire:model="base_price" step="0.01" min="0.01" placeholder="Ej: 2500.00">
                                 </flux:input>
-                                <flux:input label="Precio Total *" size="sm" type="number" wire:model="total_price" step="0.01"
-                                    min="0.01"
+                                <flux:input label="Precio Total *" size="sm" type="number"
+                                    wire:model="total_price" step="0.01" min="0.01"
                                     placeholder="Ej: 300000.00">
                                 </flux:input>
-                                <flux:input label="Descuento (%)" size="sm" type="number" wire:model="discount_percentage"
-                                    step="0.01" min="0" max="100"
+                                <flux:input label="Descuento (%)" size="sm" type="number"
+                                    wire:model="discount_percentage" step="0.01" min="0" max="100"
                                     placeholder="Ej: 5.00">
                                 </flux:input>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                                <flux:input label="Comisión (%)" size="sm" type="number" wire:model="commission_percentage"
-                                    step="0.01" min="0" max="100"
+                                <flux:input label="Comisión (%)" size="sm" type="number"
+                                    wire:model="commission_percentage" step="0.01" min="0" max="100"
                                     placeholder="Ej: 3.00">
                                 </flux:input>
                                 <flux:textarea label="Notas" wire:model="notes" rows="3"
@@ -1426,10 +1438,12 @@
                         </div>
                         <!-- Botones de acción -->
                         <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
-                            <flux:button icon="x-mark" variant="outline" size="sm" wire:click="closeAddUnitModal">
+                            <flux:button icon="x-mark" variant="outline" size="sm"
+                                wire:click="closeAddUnitModal">
                                 Cancelar
                             </flux:button>
-                            <flux:button type="submit" color="primary" size="sm" icon="{{ $isEditing ? 'check' : 'plus' }}">
+                            <flux:button type="submit" color="primary" size="sm"
+                                icon="{{ $isEditing ? 'check' : 'plus' }}">
                                 {{ $isEditing ? 'Actualizar Unidad' : 'Crear Unidad' }}
                             </flux:button>
                         </div>
@@ -1438,19 +1452,290 @@
             </form>
         </div>
     </flux:modal>
+
+    <!-- Modal específico para visualización de documentos PDF -->
+    <flux:modal wire:model="showPdfModal" class="w-full max-w-6xl">
+        @if ($showPdfModal)
+            <div class="p-6">
+                @php
+                    $pdfArray = $this->getPdfDocuments();
+                    $currentPdf = $pdfArray[$currentPdfIndex] ?? null;
+                @endphp
+
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <flux:icon name="document-text" class="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">
+                                Documentos PDF del Proyecto
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                {{ count($pdfArray) }} documento{{ count($pdfArray) == 1 ? '' : 's' }} PDF
+                                disponible{{ count($pdfArray) == 1 ? '' : 's' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Botón de eliminar PDF actual -->
+                    @if ($currentPdf)
+                        <button wire:click="deleteMedia({{ $currentPdfIndex }})"
+                            class="inline-flex items-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Eliminar este PDF" wire:loading.attr="disabled" wire:target="deleteMedia">
+                            <flux:icon name="trash" class="w-4 h-4 mr-2" wire:loading.remove
+                                wire:target="deleteMedia" />
+                            <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" wire:loading
+                                wire:target="deleteMedia" />
+                            <span wire:loading.remove wire:target="deleteMedia">Eliminar</span>
+                            <span wire:loading wire:target="deleteMedia">Eliminando...</span>
+                        </button>
+                    @endif
+                </div>
+
+                @if ($currentPdf && count($pdfArray) > 0)
+                    <!-- Contenido Principal del PDF -->
+                    <div class="mb-6">
+                        <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                            <!-- Header del PDF -->
+                            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900">
+                                            {{ $currentPdf['title'] }}
+                                        </h4>
+                                        @if ($currentPdf['descripcion'])
+                                            <p class="text-sm text-gray-600 mt-1">
+                                                {{ $currentPdf['descripcion'] }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <a href="{{ asset('storage/' . $currentPdf['path']) }}" target="_blank"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            <flux:icon name="arrow-top-right-on-square" class="w-4 h-4 mr-2" />
+                                            Abrir en nueva pestaña
+                                        </a>
+                                        <a href="{{ asset('storage/' . $currentPdf['path']) }}" download
+                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            <flux:icon name="arrow-down-tray" class="w-4 h-4 mr-2" />
+                                            Descargar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Visor de PDF -->
+                            <div class="relative bg-slate-50" style="height: 75vh;">
+                                
+                                <!-- Contenedor del PDF con scroll personalizado -->
+                                <div class="relative overflow-hidden bg-gray-50" style="height: calc(100% - 48px);">
+                                    <iframe id="pdf-viewer"
+                                        src="{{ asset('storage/' . $currentPdf['path']) }}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=100"
+                                        class="w-full h-full border-0 transition-all duration-300 rounded-b-lg"
+                                        title="Visor de PDF - {{ $currentPdf['title'] }}" loading="lazy">
+                                        <div class="flex items-center justify-center h-full bg-gray-50">
+                                            <div class="text-center">
+                                                <flux:icon name="exclamation-triangle"
+                                                    class="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                                                <p class="text-gray-600 mb-4">Tu navegador no soporta la
+                                                    visualización
+                                                    de PDFs</p>
+                                                <a href="{{ asset('storage/' . $currentPdf['path']) }}"
+                                                    target="_blank"
+                                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                                                    <flux:icon name="arrow-down-tray" class="w-4 h-4 mr-2" />
+                                                    Descargar documento
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </iframe>
+                                </div>
+
+                                <!-- Indicador de carga -->
+                                <div id="pdf-loading"
+                                    class="absolute inset-0 bg-white bg-opacity-95 flex items-center justify-center hidden backdrop-blur-sm">
+                                    <div class="text-center bg-white rounded-lg p-6 shadow-lg">
+                                        <flux:icon name="arrow-path"
+                                            class="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
+                                        <p class="text-gray-700 font-medium">Cargando PDF...</p>
+                                        <div class="mt-2 w-32 bg-gray-200 rounded-full h-1">
+                                            <div class="bg-indigo-600 h-1 rounded-full animate-pulse"
+                                                style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controles de Navegación Mejorados -->
+                        @if (count($pdfArray) > 1)
+                            <div class="bg-gray-50 rounded-lg p-4 mt-4">
+                                <div class="flex items-center justify-between">
+                                    <!-- Navegación principal -->
+                                    <div class="flex items-center space-x-3">
+                                        <button wire:click="previousPdf"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            {{ $currentPdfIndex === 0 ? 'disabled' : '' }}>
+                                            <flux:icon name="chevron-left" class="w-4 h-4 mr-1" />
+                                            Anterior
+                                        </button>
+
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-sm font-medium text-gray-700">
+                                                {{ $currentPdfIndex + 1 }} de {{ count($pdfArray) }}
+                                            </span>
+                                            <div class="w-24 bg-gray-200 rounded-full h-1">
+                                                <div class="bg-indigo-600 h-1 rounded-full transition-all duration-300"
+                                                    style="width: {{ (($currentPdfIndex + 1) / count($pdfArray)) * 100 }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button wire:click="nextPdf"
+                                            class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            {{ $currentPdfIndex === count($pdfArray) - 1 ? 'disabled' : '' }}>
+                                            Siguiente
+                                            <flux:icon name="chevron-right" class="w-4 h-4 ml-1" />
+                                        </button>
+                                    </div>
+
+                                   
+                                </div>
+
+                                <!-- Información del documento actual -->
+                                <div class="mt-3 pt-3 border-t border-gray-200">
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span>{{ $currentPdf['title'] }}</span>
+                                        <span>{{ $currentPdf['descripcion'] ? Str::limit($currentPdf['descripcion'], 50) : 'Sin descripción' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Miniaturas de PDFs Optimizadas -->
+                    @if (count($pdfArray) > 1)
+                        <div class="border-t border-gray-200 pt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-sm font-medium text-gray-900">Documentos PDF</h4>
+                                <div class="flex items-center space-x-2">
+                                    <!-- Búsqueda en PDFs -->
+                                    <div class="relative">
+                                        <input type="text" placeholder="Buscar PDF..."
+                                            class="w-48 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            onkeyup="filterPdfs(this.value)">
+                                        <flux:icon name="magnifying-glass"
+                                            class="absolute right-2 top-1.5 w-4 h-4 text-gray-400" />
+                                    </div>
+                                    <button onclick="toggleThumbnails()"
+                                        class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                                        title="Alternar vista de miniaturas">
+                                        <flux:icon name="squares-2x2" class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Vista de miniaturas -->
+                            <div id="thumbnails-container"
+                                class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                @foreach ($pdfArray as $index => $pdf)
+                                    <div class="relative group pdf-thumbnail"
+                                        data-title="{{ strtolower($pdf['title']) }}">
+                                        <!-- Botón de eliminar individual -->
+                                        <button wire:click="deleteMedia({{ $index }})"
+                                            class="absolute top-1 right-1 z-10 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Eliminar este PDF" wire:loading.attr="disabled"
+                                            wire:target="deleteMedia">
+                                            <flux:icon name="x-mark" class="w-3 h-3" wire:loading.remove
+                                                wire:target="deleteMedia" />
+                                            <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" wire:loading
+                                                wire:target="deleteMedia" />
+                                        </button>
+
+                                        <!-- Miniatura clickeable -->
+                                        <button wire:click="selectPdf({{ $index }})"
+                                            class="relative w-full h-28 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1
+                                                   {{ $index === $currentPdfIndex ? 'ring-2 ring-indigo-500 shadow-lg scale-105' : 'hover:ring-1 hover:ring-gray-300' }}">
+                                            <div
+                                                class="w-full h-28 bg-gradient-to-br from-red-50 to-red-100 flex flex-col items-center justify-center group-hover:from-red-100 group-hover:to-red-200 transition-all duration-300">
+                                                <flux:icon name="document-text" class="w-10 h-10 text-red-600 mb-2" />
+                                                <span
+                                                    class="text-xs text-red-800 font-medium text-center px-2 leading-tight">
+                                                    {{ Str::limit($pdf['title'], 25) }}
+                                                </span>
+                                                @if ($pdf['descripcion'])
+                                                    <span
+                                                        class="text-xs text-red-600 text-center px-2 mt-1 leading-tight">
+                                                        {{ Str::limit($pdf['descripcion'], 20) }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if ($index === $currentPdfIndex)
+                                                <div
+                                                    class="absolute inset-0 bg-indigo-500 bg-opacity-20 flex items-center justify-center">
+                                                    <div
+                                                        class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                                                        <flux:icon name="check" class="w-4 h-4 text-white" />
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <!-- Indicador de estado -->
+                                            <div class="absolute bottom-1 left-1">
+                                                <span
+                                                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-white text-gray-800 shadow-sm">
+                                                    {{ $index + 1 }}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Mensaje cuando no hay resultados de búsqueda -->
+                            <div id="no-results" class="hidden text-center py-8">
+                                <flux:icon name="magnifying-glass" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                <p class="text-gray-500">No se encontraron PDFs que coincidan con la búsqueda</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Información del archivo mejorada -->
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="flex items-center space-x-2">
+                                <flux:icon name="document-text" class="w-4 h-4 text-gray-400" />
+                                <span class="text-gray-600">Documento {{ $currentPdfIndex + 1 }} de
+                                    {{ count($pdfArray) }}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <flux:icon name="clock" class="w-4 h-4 text-gray-400" />
+                                <span class="text-gray-600">{{ $currentPdf['modified'] ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <flux:icon name="archive-box" class="w-4 h-4 text-gray-400" />
+                                <span class="text-gray-600">{{ $currentPdf['size'] ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="font-medium text-gray-900">{{ $currentPdf['title'] }}</h5>
+                            @if ($currentPdf['descripcion'] && $currentPdf['descripcion'] !== 'Sin descripción')
+                                <p class="text-sm text-gray-600 mt-1">{{ $currentPdf['descripcion'] }}</p>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                            <flux:icon name="document-text" class="w-8 h-8 text-gray-400" />
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No hay documentos PDF disponibles</h3>
+                        <p class="text-sm text-gray-500">Este proyecto no tiene documentos PDF cargados.</p>
+                    </div>
+                @endif
+            </div>
+        @endif
+    </flux:modal>
 </div>
-
-<!-- Script para SweetAlert2 -->
-<script>
-    document.addEventListener('livewire:init', () => {
-        // Escuchar eventos de éxito
-        Livewire.on('show-success', (event) => {
-            window.showSuccess(event.message);
-        });
-
-        // Escuchar eventos de error
-        Livewire.on('show-error', (event) => {
-            window.showError(event.message);
-        });
-    });
-</script>

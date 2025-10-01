@@ -7,16 +7,28 @@
                     <h1 class="text-2xl font-bold text-gray-900">Dashboard CRM Inmobiliario</h1>
                     <p class="text-sm text-gray-600">Vista general de tu negocio inmobiliario</p>
                 </div>
-                <div class="flex space-x-2">
-                    <flux:button icon="arrow-path" size="xs" variant="outline" wire:click="refreshDashboard">
-                        Actualizar
-                    </flux:button>
-                </div>
+                
             </div>
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Filtros -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div>
+                    <flux:input size="xs" type="date" label="Fecha inicio" wire:model.live="startDate" />
+                </div>
+                <div>
+                    <flux:input size="xs" type="date" label="Fecha fin" wire:model.live="endDate" />
+                </div>
+                <div class="md:col-span-2 flex gap-2 justify-end">
+                    <flux:button size="xs" variant="outline" icon="x-mark" wire:click="clearFilters" wire:loading.attr="disabled">Limpiar</flux:button>
+                    <flux:button size="xs" icon="magnifying-glass" wire:click="refreshDashboard" wire:loading.attr="disabled">Aplicar</flux:button>
+                </div>
+            </div>
+        </div>
+
         <!-- Tarjetas de Estadísticas Principales -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Clientes -->
@@ -155,8 +167,8 @@
                 </div>
             </div>
 
-            <!-- Fila 2: Gráficos de Rendimiento -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Fila 2: Gráfico de Rendimiento de Vendedores a ancho completo -->
+            <div class="grid grid-cols-1 gap-8">
                 <!-- Gráfico de Oportunidades Cerradas por Vendedor -->
                 <div class="bg-white shadow-lg rounded-xl border border-gray-100 p-6">
                     <div class="flex items-center justify-between mb-6">
@@ -165,17 +177,6 @@
                     </div>
                     <div class="h-80">
                         <canvas id="sellersChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Gráfico de Rendimiento por Asesor -->
-                <div class="bg-white shadow-lg rounded-xl border border-gray-100 p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-bold text-gray-900">Rendimiento por Asesor</h3>
-                        <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    </div>
-                    <div class="h-80">
-                        <canvas id="performanceChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -281,11 +282,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Instancias persistentes de gráficos
+    const charts = { opportunities: null, clients: null, sellers: null, performance: null };
+    // Debounce de recarga cuando cambian fechas
+    let refreshTimer = null;
+    window.addEventListener('dashboard-schedule-refresh', () => {
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => {
+            window.Livewire.find(document.querySelector('[wire\\:id]')?.getAttribute('wire:id'))?.call('loadDashboardData');
+        }, 400);
+    });
+
+    // Indicadores de carga global
+    window.addEventListener('dashboard-loading', (e) => {
+        const isLoading = e.detail === true;
+        const buttons = document.querySelectorAll('button[wire\\:click="refreshDashboard"], button[wire\\:click="clearFilters"]');
+        buttons.forEach(btn => {
+            if (isLoading) btn.setAttribute('disabled', 'disabled'); else btn.removeAttribute('disabled');
+        });
+    });
     // Gráfico de Oportunidades por Etapa
     const opportunitiesCtx = document.getElementById('opportunitiesChart');
     if (opportunitiesCtx) {
         const opportunitiesData = @json($opportunitiesByStage);
-        new Chart(opportunitiesCtx, {
+        charts.opportunities = new Chart(opportunitiesCtx, {
             type: 'doughnut',
             data: {
                 labels: opportunitiesData.map(item => item.stage),
@@ -346,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const clientsCtx = document.getElementById('clientsChart');
     if (clientsCtx) {
         const clientsData = @json($clientsByStatus);
-        new Chart(clientsCtx, {
+        charts.clients = new Chart(clientsCtx, {
             type: 'pie',
             data: {
                 labels: clientsData.map(item => item.status),
@@ -405,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sellersCtx = document.getElementById('sellersChart');
     if (sellersCtx) {
         const sellersData = @json($closedOpportunitiesBySeller);
-        new Chart(sellersCtx, {
+        charts.sellers = new Chart(sellersCtx, {
             type: 'bar',
             data: {
                 labels: sellersData.map(item => item.name),
@@ -530,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const performanceCtx = document.getElementById('performanceChart');
     if (performanceCtx) {
         const performanceData = @json($advisorPerformance);
-        new Chart(performanceCtx, {
+        charts.performance = new Chart(performanceCtx, {
             type: 'radar',
             data: {
                 labels: performanceData.map(item => item.name),
@@ -614,5 +634,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    // Actualizar gráficos cuando Livewire informe nuevos datos
+    window.addEventListener('dashboard-data-updated', (event) => {
+        const data = event.detail || {};
+        if (charts.opportunities && Array.isArray(data.opportunitiesByStage)) {
+            charts.opportunities.data.labels = data.opportunitiesByStage.map(i => i.stage);
+            charts.opportunities.data.datasets[0].data = data.opportunitiesByStage.map(i => i.count);
+            charts.opportunities.update();
+        }
+        if (charts.clients && Array.isArray(data.clientsByStatus)) {
+            charts.clients.data.labels = data.clientsByStatus.map(i => i.status);
+            charts.clients.data.datasets[0].data = data.clientsByStatus.map(i => i.count);
+            charts.clients.update();
+        }
+        if (charts.sellers && Array.isArray(data.closedOpportunitiesBySeller)) {
+            const sellers = data.closedOpportunitiesBySeller;
+            charts.sellers.data.labels = sellers.map(i => i.name);
+            charts.sellers.data.datasets[0].data = sellers.map(i => i.total_sales);
+            charts.sellers.data.datasets[1].data = sellers.map(i => i.closed_opportunities);
+            charts.sellers.update();
+        }
+        if (charts.performance && Array.isArray(data.advisorPerformance)) {
+            const perf = data.advisorPerformance;
+            charts.performance.data.labels = perf.map(i => i.name);
+            charts.performance.data.datasets[0].data = perf.map(i => i.total_opportunities);
+            charts.performance.data.datasets[1].data = perf.map(i => i.won_opportunities);
+            charts.performance.update();
+        }
+    });
 });
 </script>

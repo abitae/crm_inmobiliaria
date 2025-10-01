@@ -12,10 +12,10 @@ class Commission extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'advisor_id',
-        'project_id',
-        'unit_id',
-        'opportunity_id',
+        'advisor_id', // id del asesor
+        'project_id', // id del proyecto
+        'unit_id', // id de la unidad
+        'opportunity_id', // id de la oportunidad
         'commission_type', // venta, reserva, seguimiento, bono
         'base_amount', // monto base para el cálculo
         'commission_percentage', // porcentaje de comisión
@@ -26,11 +26,11 @@ class Commission extends Model
         'payment_date', // fecha de pago
         'payment_method', // método de pago
         'payment_reference', // referencia de pago
-        'notes',
+        'notes', // notas
         'approved_by',
-        'approved_at',
-        'paid_by',
-        'paid_at',
+        'approved_at', // fecha de aprobación
+        'paid_by', // id del usuario que pagó
+        'paid_at', // fecha de pago
         'created_by',
         'updated_by',
     ];

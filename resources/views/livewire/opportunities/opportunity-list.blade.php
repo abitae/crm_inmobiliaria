@@ -20,7 +20,6 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 xs:px-6 lg:px-8 py-6">
-
         <!-- Filtros y Búsqueda -->
         <div class="bg-white rounded-lg shadow-xs border border-gray-200 p-4 mb-6 mt-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">

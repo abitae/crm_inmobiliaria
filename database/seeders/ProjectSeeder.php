@@ -22,9 +22,9 @@ class ProjectSeeder extends Seeder
 
         $projects = [
             [
-                'name' => 'Residencial Miraflores Park',
-                'description' => 'Exclusivo proyecto residencial en el corazón de Miraflores, con acabados de lujo y amenidades premium.',
-                'project_type' => 'departamentos',
+                'name' => 'Lotes Miraflores Park',
+                'description' => 'Exclusivos lotes residenciales en el corazón de Miraflores, con ubicación privilegiada y amenidades premium.',
+                'project_type' => 'lotes',
                 'stage' => 'venta_activa',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Arequipa 1234',
@@ -43,59 +43,59 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2025-06-30',
                 'delivery_date' => '2025-12-31',
                 'status' => 'activo',
-                'path_image_portada' => '/storage/projects/miraflores-park/portada-principal.jpg',
-                'path_video_portada' => '/storage/projects/miraflores-park/video-portada.mp4',
+                'path_image_portada' => '/storage/projects/miraflores-park/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/miraflores-park/video-lotes.mp4',
                 'path_images' => [
                     [
-                        'title' => 'Portada del Proyecto',
-                        'path' => '/storage/projects/miraflores-park/portada.jpg',
-                        'descripcion' => 'Imagen principal que representa el proyecto'
+                        'title' => 'Vista Aérea de los Lotes',
+                        'path' => '/storage/projects/miraflores-park/vista-aerea.jpg',
+                        'descripcion' => 'Vista aérea de todos los lotes disponibles'
                     ],
                     [
-                        'title' => 'Interior de Departamento Modelo',
-                        'path' => '/storage/projects/miraflores-park/interior-1.jpg',
-                        'descripcion' => 'Vista del interior de un departamento modelo'
+                        'title' => 'Plano de Lotes Disponibles',
+                        'path' => '/storage/projects/miraflores-park/plano-lotes.jpg',
+                        'descripcion' => 'Plano detallado de lotes disponibles'
                     ],
                     [
-                        'title' => 'Vista Exterior del Edificio',
-                        'path' => '/storage/projects/miraflores-park/exterior-1.jpg',
-                        'descripcion' => 'Fachada principal del edificio residencial'
+                        'title' => 'Vista del Entorno',
+                        'path' => '/storage/projects/miraflores-park/entorno.jpg',
+                        'descripcion' => 'Vista del entorno y ubicación privilegiada'
                     ],
                 ],
                 'path_videos' => [
                     [
-                        'title' => 'Tour Virtual del Proyecto',
-                        'path' => '/storage/projects/miraflores-park/tour-virtual.mp4',
-                        'descripcion' => 'Recorrido virtual por todas las instalaciones'
+                        'title' => 'Tour Virtual de los Lotes',
+                        'path' => '/storage/projects/miraflores-park/tour-lotes.mp4',
+                        'descripcion' => 'Recorrido virtual por todos los lotes'
                     ],
                     [
-                        'title' => 'Video de Amenidades',
-                        'path' => '/storage/projects/miraflores-park/amenidades.mp4',
-                        'descripcion' => 'Presentación de las amenidades disponibles'
+                        'title' => 'Video de Ubicación',
+                        'path' => '/storage/projects/miraflores-park/ubicacion.mp4',
+                        'descripcion' => 'Video explicativo de la ubicación privilegiada'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'title' => 'Brochure Residencial Miraflores Park',
-                        'path' => '/storage/projects/miraflores-park/brochure.pdf',
-                        'descripcion' => 'Catálogo completo del proyecto residencial'
+                        'title' => 'Brochure Lotes Miraflores Park',
+                        'path' => '/storage/projects/miraflores-park/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo completo de lotes disponibles'
                     ],
                     [
-                        'title' => 'Plano General del Proyecto',
-                        'path' => '/storage/projects/miraflores-park/plano-general.pdf',
-                        'descripcion' => 'Plano arquitectónico del proyecto completo'
+                        'title' => 'Plano de Lotes',
+                        'path' => '/storage/projects/miraflores-park/plano-lotes.pdf',
+                        'descripcion' => 'Plano detallado de todos los lotes'
                     ],
                     [
                         'title' => 'Contrato de Compra Venta',
-                        'path' => '/storage/projects/miraflores-park/contrato-modelo.pdf',
-                        'descripcion' => 'Contrato modelo para la compra de unidades'
+                        'path' => '/storage/projects/miraflores-park/contrato-lotes.pdf',
+                        'descripcion' => 'Contrato modelo para la compra de lotes'
                     ]
                 ],
             ],
             [
-                'name' => 'Torres San Isidro Business',
-                'description' => 'Complejo de oficinas corporativas de alta gama en San Isidro, ideal para empresas multinacionales.',
-                'project_type' => 'oficinas',
+                'name' => 'Lotes San Isidro Business',
+                'description' => 'Exclusivos lotes comerciales en San Isidro, ideales para construir oficinas corporativas y edificios empresariales.',
+                'project_type' => 'lotes',
                 'stage' => 'lanzamiento',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Javier Prado 2345',
@@ -114,47 +114,47 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2026-08-31',
                 'delivery_date' => '2026-12-31',
                 'status' => 'activo',
-                'path_image_portada' => '/storage/projects/san-isidro-business/portada-corporativa.jpg',
-                'path_video_portada' => '/storage/projects/san-isidro-business/video-corporativo.mp4',
+                'path_image_portada' => '/storage/projects/san-isidro-business/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/san-isidro-business/video-lotes.mp4',
                 'path_images' => [
                     [
-                        'title' => 'Fachada Principal del Edificio',
-                        'path' => '/storage/projects/san-isidro-business/fachada.jpg',
-                        'descripcion' => 'Vista frontal del edificio corporativo'
+                        'title' => 'Vista Aérea de Lotes Comerciales',
+                        'path' => '/storage/projects/san-isidro-business/vista-aerea.jpg',
+                        'descripcion' => 'Vista aérea de los lotes comerciales disponibles'
                     ],
                     [
-                        'title' => 'Oficina Modelo',
-                        'path' => '/storage/projects/san-isidro-business/oficina-modelo.jpg',
-                        'descripcion' => 'Oficina modelo completamente equipada'
+                        'title' => 'Plano de Lotes Comerciales',
+                        'path' => '/storage/projects/san-isidro-business/plano-lotes.jpg',
+                        'descripcion' => 'Plano detallado de lotes comerciales'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'title' => 'Presentación del Proyecto',
-                        'path' => '/storage/projects/san-isidro-business/presentacion.mp4',
-                        'descripcion' => 'Video corporativo de presentación'
+                        'title' => 'Presentación de Lotes Comerciales',
+                        'path' => '/storage/projects/san-isidro-business/presentacion-lotes.mp4',
+                        'descripcion' => 'Video de presentación de lotes comerciales'
                     ],
                     [
-                        'title' => 'Recorrido por las Instalaciones',
-                        'path' => '/storage/projects/san-isidro-business/recorrido.mp4',
-                        'descripcion' => 'Tour completo por todas las instalaciones'
+                        'title' => 'Recorrido por los Lotes',
+                        'path' => '/storage/projects/san-isidro-business/recorrido-lotes.mp4',
+                        'descripcion' => 'Tour completo por todos los lotes'
                     ]
                 ],
                 'path_documents' => [
                     [
-                        'title' => 'Brochure Corporativo Torres San Isidro',
-                        'path' => '/storage/projects/san-isidro-business/brochure-corporativo.pdf',
-                        'descripcion' => 'Catálogo corporativo del proyecto'
+                        'title' => 'Brochure Lotes San Isidro Business',
+                        'path' => '/storage/projects/san-isidro-business/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes comerciales'
                     ],
                     [
-                        'title' => 'Plano de Oficinas Disponibles',
-                        'path' => '/storage/projects/san-isidro-business/plano-oficinas.pdf',
-                        'descripcion' => 'Plano detallado de oficinas disponibles'
+                        'title' => 'Plano de Lotes Comerciales',
+                        'path' => '/storage/projects/san-isidro-business/plano-lotes.pdf',
+                        'descripcion' => 'Plano detallado de lotes comerciales'
                     ],
                     [
-                        'title' => 'Especificaciones Técnicas',
-                        'path' => '/storage/projects/san-isidro-business/especificaciones-tecnicas.pdf',
-                        'descripcion' => 'Documento técnico con especificaciones'
+                        'title' => 'Especificaciones de Lotes',
+                        'path' => '/storage/projects/san-isidro-business/especificaciones-lotes.pdf',
+                        'descripcion' => 'Especificaciones técnicas de los lotes'
                     ]
                 ],
             ],
@@ -225,9 +225,9 @@ class ProjectSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Casas Surco Family',
-                'description' => 'Proyecto de casas familiares en Surco, con amplios jardines y excelente conectividad.',
-                'project_type' => 'casas',
+                'name' => 'Lotes Surco Family',
+                'description' => 'Lotes familiares en Surco, con amplios espacios y excelente conectividad para construir casas familiares.',
+                'project_type' => 'lotes',
                 'stage' => 'venta_activa',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Benavides 4567',
@@ -246,25 +246,25 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2024-12-31',
                 'delivery_date' => '2025-03-31',
                 'status' => 'activo',
-                'path_image_portada' => '/storage/projects/surco-family/portada-familiar.jpg',
-                'path_video_portada' => '/storage/projects/surco-family/video-familiar.mp4',
+                'path_image_portada' => '/storage/projects/surco-family/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/surco-family/video-lotes.mp4',
                 'path_images' => [
                     [
-                        'title' => 'Casa Modelo',
-                        'path' => '/storage/projects/surco-family/casa-modelo.jpg',
-                        'descripcion' => 'Vista frontal de la casa modelo'
+                        'title' => 'Vista de Lotes Familiares',
+                        'path' => '/storage/projects/surco-family/lotes-familiares.jpg',
+                        'descripcion' => 'Vista de los lotes familiares disponibles'
                     ],
                     [
-                        'title' => 'Jardín de la Casa',
-                        'path' => '/storage/projects/surco-family/jardin.jpg',
-                        'descripcion' => 'Jardín trasero de la casa'
+                        'title' => 'Plano de Lotes',
+                        'path' => '/storage/projects/surco-family/plano-lotes.jpg',
+                        'descripcion' => 'Plano detallado de lotes familiares'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'title' => 'Tour de la Casa',
-                        'path' => '/storage/projects/surco-family/tour-casa.mp4',
-                        'descripcion' => 'Recorrido completo por la casa'
+                        'title' => 'Tour de Lotes Familiares',
+                        'path' => '/storage/projects/surco-family/tour-lotes.mp4',
+                        'descripcion' => 'Recorrido por todos los lotes familiares'
                     ],
                     [
                         'title' => 'Video del Entorno',
@@ -274,14 +274,14 @@ class ProjectSeeder extends Seeder
                 ],
                 'path_documents' => [
                     [
-                        'title' => 'Brochure Casas Surco Family',
-                        'path' => '/storage/projects/surco-family/brochure-familiar.pdf',
-                        'descripcion' => 'Catálogo familiar del proyecto'
+                        'title' => 'Brochure Lotes Surco Family',
+                        'path' => '/storage/projects/surco-family/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes familiares'
                     ],
                     [
-                        'title' => 'Plano de Casas Disponibles',
-                        'path' => '/storage/projects/surco-family/plano-casas.pdf',
-                        'descripcion' => 'Plano de casas disponibles'
+                        'title' => 'Plano de Lotes Familiares',
+                        'path' => '/storage/projects/surco-family/plano-lotes.pdf',
+                        'descripcion' => 'Plano de lotes familiares disponibles'
                     ],
                     [
                         'title' => 'Opciones de Financiamiento',
@@ -291,9 +291,9 @@ class ProjectSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Mixto Chorrillos Plaza',
-                'description' => 'Proyecto mixto con departamentos, oficinas y locales comerciales en Chorrillos.',
-                'project_type' => 'mixto',
+                'name' => 'Lotes Chorrillos Plaza',
+                'description' => 'Lotes mixtos en Chorrillos, ideales para construir proyectos residenciales, comerciales o mixtos.',
+                'project_type' => 'lotes',
                 'stage' => 'lanzamiento',
                 'legal_status' => 'en_tramite',
                 'address' => 'Av. Primavera 5678',
@@ -312,25 +312,25 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2027-06-30',
                 'delivery_date' => '2027-12-31',
                 'status' => 'activo',
-                'path_image_portada' => '/storage/projects/chorrillos-plaza/portada-mixto.jpg',
-                'path_video_portada' => '/storage/projects/chorrillos-plaza/video-mixto.mp4',
+                'path_image_portada' => '/storage/projects/chorrillos-plaza/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/chorrillos-plaza/video-lotes.mp4',
                 'path_images' => [
                     [
-                        'title' => 'Maqueta del Proyecto',
-                        'path' => '/storage/projects/chorrillos-plaza/maqueta.jpg',
-                        'descripcion' => 'Maqueta arquitectónica del proyecto'
+                        'title' => 'Vista Aérea de Lotes Mixtos',
+                        'path' => '/storage/projects/chorrillos-plaza/vista-aerea.jpg',
+                        'descripcion' => 'Vista aérea de los lotes mixtos disponibles'
                     ],
                     [
-                        'title' => 'Plano General del Proyecto',
-                        'path' => '/storage/projects/chorrillos-plaza/plano-general.jpg',
-                        'descripcion' => 'Plano general del proyecto mixto'
+                        'title' => 'Plano de Lotes Mixtos',
+                        'path' => '/storage/projects/chorrillos-plaza/plano-lotes.jpg',
+                        'descripcion' => 'Plano general de lotes mixtos'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'title' => 'Video del Concepto',
-                        'path' => '/storage/projects/chorrillos-plaza/concepto.mp4',
-                        'descripcion' => 'Video explicativo del concepto'
+                        'title' => 'Video de Lotes Mixtos',
+                        'path' => '/storage/projects/chorrillos-plaza/video-lotes.mp4',
+                        'descripcion' => 'Video explicativo de los lotes mixtos'
                     ],
                     [
                         'title' => 'Video del Desarrollo',
@@ -340,14 +340,14 @@ class ProjectSeeder extends Seeder
                 ],
                 'path_documents' => [
                     [
-                        'title' => 'Brochure Mixto Chorrillos Plaza',
-                        'path' => '/storage/projects/chorrillos-plaza/brochure-mixto.pdf',
-                        'descripcion' => 'Catálogo del proyecto mixto'
+                        'title' => 'Brochure Lotes Chorrillos Plaza',
+                        'path' => '/storage/projects/chorrillos-plaza/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes mixtos'
                     ],
                     [
-                        'title' => 'Plano General del Proyecto Mixto',
-                        'path' => '/storage/projects/chorrillos-plaza/plano-mixto.pdf',
-                        'descripcion' => 'Plano general del proyecto'
+                        'title' => 'Plano de Lotes Mixtos',
+                        'path' => '/storage/projects/chorrillos-plaza/plano-lotes.pdf',
+                        'descripcion' => 'Plano general de lotes mixtos'
                     ],
                     [
                         'title' => 'Estudio de Mercado',
@@ -357,9 +357,9 @@ class ProjectSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Oficinas San Borja Center',
-                'description' => 'Centro empresarial moderno en San Borja con oficinas flexibles y espacios de coworking.',
-                'project_type' => 'oficinas',
+                'name' => 'Lotes San Borja Center',
+                'description' => 'Lotes comerciales en San Borja, perfectos para construir edificios empresariales y centros de negocios.',
+                'project_type' => 'lotes',
                 'stage' => 'venta_activa',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Aviación 6789',
@@ -378,25 +378,25 @@ class ProjectSeeder extends Seeder
                 'end_date' => '2025-12-31',
                 'delivery_date' => '2026-03-31',
                 'status' => 'activo',
-                'path_image_portada' => '/storage/projects/san-borja-center/portada-empresarial.jpg',
-                'path_video_portada' => '/storage/projects/san-borja-center/video-empresarial.mp4',
+                'path_image_portada' => '/storage/projects/san-borja-center/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/san-borja-center/video-lotes.mp4',
                 'path_images' => [
                     [
-                        'title' => 'Vista del Edificio',
-                        'path' => '/storage/projects/san-borja-center/edificio.jpg',
-                        'descripcion' => 'Vista frontal del edificio empresarial'
+                        'title' => 'Vista de Lotes Comerciales',
+                        'path' => '/storage/projects/san-borja-center/lotes-comerciales.jpg',
+                        'descripcion' => 'Vista de los lotes comerciales disponibles'
                     ],
                     [
-                        'title' => 'Espacio de Coworking',
-                        'path' => '/storage/projects/san-borja-center/coworking.jpg',
-                        'descripcion' => 'Área de coworking disponible'
+                        'title' => 'Plano de Lotes Empresariales',
+                        'path' => '/storage/projects/san-borja-center/plano-lotes.jpg',
+                        'descripcion' => 'Plano de lotes empresariales'
                     ]
                 ],
                 'path_videos' => [
                     [
-                        'title' => 'Video de las Instalaciones',
-                        'path' => '/storage/projects/san-borja-center/instalaciones.mp4',
-                        'descripcion' => 'Tour por todas las instalaciones'
+                        'title' => 'Video de Lotes Empresariales',
+                        'path' => '/storage/projects/san-borja-center/video-lotes.mp4',
+                        'descripcion' => 'Tour por los lotes empresariales'
                     ],
                     [
                         'title' => 'Video de Ventajas del Proyecto',
@@ -406,14 +406,14 @@ class ProjectSeeder extends Seeder
                 ],
                 'path_documents' => [
                     [
-                        'title' => 'Brochure Empresarial San Borja Center',
-                        'path' => '/storage/projects/san-borja-center/brochure-empresarial.pdf',
-                        'descripcion' => 'Catálogo empresarial del proyecto'
+                        'title' => 'Brochure Lotes San Borja Center',
+                        'path' => '/storage/projects/san-borja-center/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes empresariales'
                     ],
                     [
-                        'title' => 'Plano de Oficinas y Coworking',
-                        'path' => '/storage/projects/san-borja-center/plano-oficinas.pdf',
-                        'descripcion' => 'Plano de oficinas y espacios coworking'
+                        'title' => 'Plano de Lotes Empresariales',
+                        'path' => '/storage/projects/san-borja-center/plano-lotes.pdf',
+                        'descripcion' => 'Plano de lotes empresariales'
                     ],
                     [
                         'title' => 'Servicios Incluidos',

@@ -8,7 +8,8 @@
                     <p class="text-sm text-gray-600">Gestión de clientes del CRM</p>
                 </div>
                 <div class="flex space-x-2">
-                    <flux:button icon="user-group" size="xs" color="primary" href="{{ route('clients.registro-masivo') }}">
+                    <flux:button icon="user-group" size="xs" color="primary"
+                        href="{{ route('clients.registro-masivo') }}">
                         Registro masivo
                     </flux:button>
                     <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal">
@@ -130,7 +131,8 @@
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
                                         {{ $client->status === 'nuevo'
                                             ? 'bg-blue-100 text-blue-800'
                                             : ($client->status === 'contacto_inicial'
@@ -155,7 +157,10 @@
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
-                                    {{ $client->activities_count ?? '-' }}
+                                    {{ $client->activities ? $client->activities->last()->title : 'Sin actividad' }}
+                                    <br>
+                                    {{ $client->activities ? $client->activities->last()->start_date->format('d/m/Y') : '' }}
+                                    
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap font-medium">
                                     <div class="flex space-x-1">

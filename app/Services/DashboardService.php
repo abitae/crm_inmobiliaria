@@ -15,11 +15,16 @@ class DashboardService
     /**
      * Obtener estadísticas generales del dashboard
      */
-    public function getDashboardStats(): array
+    public function getDashboardStats(array $filters = []): array
     {
         $now = Carbon::now();
-        $startOfMonth = $now->startOfMonth();
-        $endOfMonth = $now->endOfMonth();
+        $startOfMonth = $now->copy()->startOfMonth();
+        $endOfMonth = $now->copy()->endOfMonth();
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $startOfMonth = Carbon::parse($filters['start_date'])->startOfDay();
+            $endOfMonth = Carbon::parse($filters['end_date'])->endOfDay();
+        }
 
         // Estadísticas de clientes
         $totalClients = Client::count();
@@ -189,7 +194,7 @@ class DashboardService
     /**
      * Obtener gráfico de ventas por mes (últimos 12 meses)
      */
-    public function getSalesByMonth(): array
+    public function getSalesByMonth(array $filters = []): array
     {
         $months = [];
         $sales = [];
@@ -200,9 +205,14 @@ class DashboardService
             $monthStart = $date->startOfMonth();
             $monthEnd = $date->endOfMonth();
 
-            $monthlySales = Opportunity::where('status', 'pagado')
-                ->whereBetween('actual_close_date', [$monthStart, $monthEnd])
-                ->sum('close_value');
+            $monthlyQuery = Opportunity::where('status', 'pagado')
+                ->whereBetween('actual_close_date', [$monthStart, $monthEnd]);
+
+            if (!empty($filters['advisor_id'])) {
+                $monthlyQuery->where('advisor_id', $filters['advisor_id']);
+            }
+
+            $monthlySales = $monthlyQuery->sum('close_value');
 
             $months[] = $monthName;
             $sales[] = $monthlySales;
@@ -266,14 +276,18 @@ class DashboardService
     /**
      * Obtener oportunidades que cierran pronto
      */
-    public function getUpcomingClosings(int $limit = 10): array
+    public function getUpcomingClosings(int $limit = 10, array $filters = []): array
     {
         $nextWeek = Carbon::now()->addWeek();
-
-        return Opportunity::with(['client', 'project', 'unit'])
+        $query = Opportunity::with(['client', 'project', 'unit'])
             ->where('status', 'activa')
-            ->where('expected_close_date', '<=', $nextWeek)
-            ->orderBy('expected_close_date', 'asc')
+            ->where('expected_close_date', '<=', $nextWeek);
+
+        if (!empty($filters['advisor_id'])) {
+            $query->where('advisor_id', $filters['advisor_id']);
+        }
+
+        return $query->orderBy('expected_close_date', 'asc')
             ->limit($limit)
             ->get()
             ->toArray();
@@ -282,23 +296,35 @@ class DashboardService
     /**
      * Obtener métricas de rendimiento por asesor
      */
-    public function getAdvisorPerformance(): array
+    public function getAdvisorPerformance(array $filters = []): array
     {
-        return DB::table('users')
-            ->leftJoin('opportunities', 'users.id', '=', 'opportunities.advisor_id')
-            ->leftJoin('clients', 'users.id', '=', 'clients.assigned_advisor_id')
+        // Solo líderes y sumar ventas de sus cazadores (hunters)
+        $query = DB::table('users as leaders')
+            ->leftJoin('users as hunters', 'hunters.lider_id', '=', 'leaders.id')
+            ->leftJoin('opportunities', 'opportunities.advisor_id', '=', 'hunters.id')
             ->select(
-                'users.id',
-                'users.name',
+                'leaders.id',
+                'leaders.name',
                 DB::raw('COUNT(DISTINCT opportunities.id) as total_opportunities'),
                 DB::raw('COUNT(DISTINCT CASE WHEN opportunities.status = "pagado" THEN opportunities.id END) as won_opportunities'),
-                DB::raw('COUNT(DISTINCT clients.id) as assigned_clients'),
                 DB::raw('SUM(CASE WHEN opportunities.status = "pagado" THEN opportunities.close_value ELSE 0 END) as total_sales')
             )
-            ->groupBy('users.id', 'users.name')
-            ->orderBy('total_sales', 'desc')
-            ->get()
-            ->toArray();
+            ->whereNull('leaders.lider_id') // líderes no tienen líder asignado
+            ->groupBy('leaders.id', 'leaders.name')
+            ->orderBy('total_sales', 'desc');
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $query->whereBetween('opportunities.actual_close_date', [
+                Carbon::parse($filters['start_date'])->startOfDay(),
+                Carbon::parse($filters['end_date'])->endOfDay(),
+            ]);
+        }
+
+        if (!empty($filters['advisor_id'])) {
+            $query->where('leaders.id', $filters['advisor_id']);
+        }
+
+        return $query->get()->toArray();
     }
 
     /**

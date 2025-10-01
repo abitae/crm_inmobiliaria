@@ -15,6 +15,7 @@ use App\Livewire\Reports\SalesReport;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
+use App\Livewire\Actividades\ActivityList;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,38 +54,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Vista de Proyecto
     Route::get('/projects/{projectId}', ProjectView::class)->middleware('permission:view_projects')->name('projects.project-view');
 
-// Gestión de Oportunidades
+    // Gestión de Oportunidades
     Route::get('/opportunities', OpportunityList::class)->middleware('permission:view_opportunities')->name('opportunities.index');
 
+    // Actividades
+    Route::get('/activities', ActivityList::class)->name('activities.index');
     // Gestión de Tareas
     Route::get('/tasks', TaskList::class)->middleware('permission:view_tasks')->name('tasks.index');
 
     // Reportes
     Route::get('/reports/sales', SalesReport::class)->middleware('permission:view_reports')->name('reports.sales');
 
-    // Rutas adicionales del CRM
-    Route::prefix('crm')->name('crm.')->group(function () {
-        // Reservas
-        Route::get('/reservations', function () {
-            return view('crm.reservations.index');
-        })->middleware('permission:view_reservations')->name('reservations.index');
-
-        // Comisiones
-        Route::get('/commissions', function () {
-            return view('crm.commissions.index');
-        })->middleware('permission:view_commissions')->name('commissions.index');
-
-        // Documentos
-        Route::get('/documents', function () {
-            return view('crm.documents.index');
-        })->middleware('permission:view_documents')->name('documents.index');
-
-        // Actividades
-        Route::get('/activities', function () {
-            return view('crm.activities.index');
-        })->middleware('permission:view_activities')->name('activities.index');
-
-    });
+    
 
     // Gestión de Roles y Usuarios
     Route::get('/roles', RoleList::class)->name('roles.index');

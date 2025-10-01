@@ -1,8 +1,10 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
+import Chart from 'chart.js/auto';
 
 // Configuración global de SweetAlert2
 window.Swal = Swal;
+window.Chart = Chart;
 
 // Configuración personalizada para el tema de la aplicación
 Swal.mixin({
