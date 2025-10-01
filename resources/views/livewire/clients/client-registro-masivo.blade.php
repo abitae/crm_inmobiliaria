@@ -74,7 +74,7 @@
 
                     <div class="flex flex-col gap-4">
                         <flux:input.group>
-                            <flux:select class="w-full" wire:model.live="document_type">
+                            <flux:select class="w-24" wire:model.live="document_type">
                                 @foreach ($documentTypes as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach

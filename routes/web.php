@@ -16,6 +16,7 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Actividades\ActivityList;
+use App\Livewire\Logs\LogViewer;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,7 +66,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reportes
     Route::get('/reports/sales', SalesReport::class)->middleware('permission:view_reports')->name('reports.sales');
 
-    
+    // Logs del Sistema
+    Route::get('/logs', LogViewer::class)->middleware('permission:view_logs')->name('logs.index');
 
     // Gestión de Roles y Usuarios
     Route::get('/roles', RoleList::class)->name('roles.index');

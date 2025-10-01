@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
         ]);
         $admin->setRole('admin');
 
-        // Líderes de ventas
+       /*  // Líderes de ventas
         $lideres = [
             [
                 'name' => 'María González',
@@ -154,7 +154,7 @@ class UserSeeder extends Seeder
         foreach ($clientes as $cliente) {
             $user = User::create($cliente);
             $user->setRole('cliente');
-        }
+        } */
 
         $this->command->info('Usuarios creados exitosamente con los roles: admin, lider, vendedor, datero, cliente');
     }

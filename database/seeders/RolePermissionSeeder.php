@@ -70,7 +70,6 @@ class RolePermissionSeeder extends Seeder
             'edit_activities',
             'delete_activities',
 
-
             // Documentos
             'view_documents',
             'create_documents',
@@ -192,6 +191,7 @@ class RolePermissionSeeder extends Seeder
             'create_activities',
             'view_documents',
             'create_documents',
+            'edit_documents',
             'view_tasks',
             'create_tasks',
             'view_reports',
@@ -208,6 +208,8 @@ class RolePermissionSeeder extends Seeder
             'view_tasks',
             'view_activities',
             'view_documents',
+            'create_documents',
+            'edit_documents',
             'manage_roles',
             'manage_users',
             'manage_permissions',

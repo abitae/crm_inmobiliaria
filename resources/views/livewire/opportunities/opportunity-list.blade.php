@@ -79,7 +79,6 @@
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Cliente / Proyecto
                             </th>
-                            </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Etapa/Estado
                             </th>
@@ -219,26 +218,30 @@
 
                     <!-- Proyecto -->
                     <div>
-                        <flux:select label="Proyecto *" size="xs" wire:model.live="project_id">
-                            <option value="">Seleccionar proyecto</option>
-                            @foreach ($projects as $project)
-                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="project_id" />
+                        <flux:field>
+                            <flux:select label="Proyecto *" size="xs" wire:model.live="project_id">
+                                <option value="">Seleccionar proyecto</option>
+                                @foreach ($projects as $project)
+                                    <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="project_id" />
+                        </flux:field>
                     </div>
 
                     <!-- Unidad -->
                     <div>
-                        <flux:select label="Unidad" size="xs" wire:model.live="unit_id">
-                            <option value="">Seleccionar unidad</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">
-                                    {{ $unit->unit_manzana ? $unit->unit_manzana : '' }} -
-                                    {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="unit_id" />
+                        <flux:field>
+                            <flux:select label="Unidad" size="xs" wire:model.live="unit_id">
+                                <option value="">Seleccionar unidad</option>
+                                @foreach ($units as $unit)
+                                    <option value="{{ $unit->id }}">
+                                        {{ $unit->unit_manzana ? $unit->unit_manzana : '' }} -
+                                        {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="unit_id" />
+                        </flux:field>
                     </div>
 
                     <!-- Asesor -->
@@ -256,27 +259,29 @@
 
                     <!-- Etapa -->
                     <div>
-
-                        <flux:select label="Etapa *" size="xs" wire:model="stage">
-                            <option value="calificado">Calificado</option>
-                            <option value="visita">Visita</option>
-                            <option value="cierre">Cierre</option>
-                        </flux:select>
-                        <flux:error name="stage" />
+                        <flux:field>
+                            <flux:select label="Etapa *" size="xs" wire:model="stage">
+                                <option value="calificado">Calificado</option>
+                                <option value="visita">Visita</option>
+                                <option value="cierre">Cierre</option>
+                            </flux:select>
+                            <flux:error name="stage" />
+                        </flux:field>
                     </div>
 
                     <!-- Estado -->
                     <div>
-
-                        <flux:select label="Estado *" size="xs" wire:model="status">
-                            <option value="registrado">Registrado</option>
-                            <option value="reservado">Reservado</option>
-                            <option value="cuotas">Cuotas</option>
-                            <option value="pagado">Pagado</option>
-                            <option value="transferido">Transferido</option>
-                            <option value="cancelado">Cancelado</option>
-                        </flux:select>
-                        <flux:error name="status" />
+                        <flux:field>
+                            <flux:select label="Estado *" size="xs" wire:model="status">
+                                <option value="registrado">Registrado</option>
+                                <option value="reservado">Reservado</option>
+                                <option value="cuotas">Cuotas</option>
+                                <option value="pagado">Pagado</option>
+                                <option value="transferido">Transferido</option>
+                                <option value="cancelado">Cancelado</option>
+                            </flux:select>
+                            <flux:error name="status" />
+                        </flux:field>
                     </div>
 
                     <!-- Probabilidad -->
@@ -290,44 +295,49 @@
 
                     <!-- Valor Esperado -->
                     <div>
-
-                        <flux:input label="Valor Esperado (S/) *" size="xs" type="number"
-                            wire:model="expected_value" step="0.01" min="0" />
-                        <flux:error name="expected_value" />
+                        <flux:field>
+                            <flux:input label="Valor Esperado (S/) *" size="xs" type="number"
+                                wire:model="expected_value" step="0.01" min="0" />
+                            <flux:error name="expected_value" />
+                        </flux:field>
                     </div>
 
                     <!-- Fecha de Cierre -->
                     <div>
-
-                        <flux:input label="Fecha de Cierre *" size="xs" type="date"
-                            wire:model="expected_close_date" />
-                        <flux:error name="expected_close_date" />
+                        <flux:field>
+                            <flux:input label="Fecha de Cierre *" size="xs" type="date"
+                                wire:model="expected_close_date" />
+                            <flux:error name="expected_close_date" />
+                        </flux:field>
                     </div>
 
                     <!-- Origen -->
                     <div>
-
-                        <flux:input label="Origen" size="xs" wire:model="source"
-                            placeholder="Ej: Website, Referido, etc." />
-                        <flux:error name="source" />
+                        <flux:field>
+                            <flux:input label="Origen" size="xs" wire:model="source"
+                                placeholder="Ej: Website, Referido, etc." />
+                            <flux:error name="source" />
+                        </flux:field>
                     </div>
 
                     <!-- Campaña -->
                     <div>
-
-                        <flux:input label="Campaña" size="xs" wire:model="campaign"
-                            placeholder="Ej: Facebook Ads, Google Ads, etc." />
-                        <flux:error name="campaign" />
+                        <flux:field>
+                            <flux:input label="Campaña" size="xs" wire:model="campaign"
+                                placeholder="Ej: Facebook Ads, Google Ads, etc." />
+                            <flux:error name="campaign" />
+                        </flux:field>
                     </div>
                 </div>
 
                 <!-- Notas -->
                 <div class="mt-6">
-
-                    <textarea label="Notas" wire:model="notes" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Información adicional sobre la oportunidad..."></textarea>
-                    <flux:error name="notes" />
+                    <flux:field>
+                        <flux:label>Notas</flux:label>
+                        <flux:textarea wire:model="notes" rows="3"
+                            placeholder="Información adicional sobre la oportunidad..."></flux:textarea>
+                        <flux:error name="notes" />
+                    </flux:field>
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
@@ -519,77 +529,91 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Título -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Título *</label>
-                        <flux:input size="xs" wire:model="activity_title"
-                            placeholder="Título de la actividad" />
-                        <flux:error name="activity_title" />
+                        <flux:field>
+                            <flux:label>Título *</flux:label>
+                            <flux:input size="xs" wire:model="activity_title"
+                                placeholder="Título de la actividad" />
+                            <flux:error name="activity_title" />
+                        </flux:field>
                     </div>
 
                     <!-- Descripción -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Descripción</label>
-                        <textarea wire:model="activity_description" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Descripción de la actividad..."></textarea>
-                        <flux:error name="activity_description" />
+                        <flux:field>
+                            <flux:label>Descripción</flux:label>
+                            <flux:textarea wire:model="activity_description" rows="3"
+                                placeholder="Descripción de la actividad..."></flux:textarea>
+                            <flux:error name="activity_description" />
+                        </flux:field>
                     </div>
 
                     <!-- Tipo de Actividad -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Tipo de Actividad *</label>
-                        <flux:select size="xs" wire:model="activity_type">
-                            <option value="llamada">Llamada</option>
-                            <option value="reunion">Reunión</option>
-                            <option value="visita">Visita</option>
-                            <option value="seguimiento">Seguimiento</option>
-                            <option value="tarea">Tarea</option>
-                        </flux:select>
-                        <flux:error name="activity_type" />
+                        <flux:field>
+                            <flux:label>Tipo de Actividad *</flux:label>
+                            <flux:select size="xs" wire:model="activity_type">
+                                <option value="llamada">Llamada</option>
+                                <option value="reunion">Reunión</option>
+                                <option value="visita">Visita</option>
+                                <option value="seguimiento">Seguimiento</option>
+                                <option value="tarea">Tarea</option>
+                            </flux:select>
+                            <flux:error name="activity_type" />
+                        </flux:field>
                     </div>
 
                     <!-- Prioridad -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Prioridad *</label>
-                        <flux:select size="xs" wire:model="activity_priority">
-                            <option value="baja">Baja</option>
-                            <option value="media">Media</option>
-                            <option value="alta">Alta</option>
-                            <option value="urgente">Urgente</option>
-                        </flux:select>
-                        <flux:error name="activity_priority" />
+                        <flux:field>
+                            <flux:label>Prioridad *</flux:label>
+                            <flux:select size="xs" wire:model="activity_priority">
+                                <option value="baja">Baja</option>
+                                <option value="media">Media</option>
+                                <option value="alta">Alta</option>
+                                <option value="urgente">Urgente</option>
+                            </flux:select>
+                            <flux:error name="activity_priority" />
+                        </flux:field>
                     </div>
 
                     <!-- Fecha de Inicio -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Fecha de Inicio *</label>
-                        <flux:input size="xs" type="date" wire:model="activity_start_date" />
-                        <flux:error name="activity_start_date" />
+                        <flux:field>
+                            <flux:label>Fecha de Inicio *</flux:label>
+                            <flux:input size="xs" type="date" wire:model="activity_start_date" />
+                            <flux:error name="activity_start_date" />
+                        </flux:field>
                     </div>
 
                     <!-- Duración -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Duración (minutos) *</label>
-                        <flux:input size="xs" type="number" wire:model="activity_duration" min="1"
-                            max="1440" />
-                        <flux:error name="activity_duration" />
+                        <flux:field>
+                            <flux:label>Duración (minutos) *</flux:label>
+                            <flux:input size="xs" type="number" wire:model="activity_duration" min="1"
+                                max="1440" />
+                            <flux:error name="activity_duration" />
+                        </flux:field>
                     </div>
 
                     <!-- Ubicación -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Ubicación</label>
-                        <flux:input size="xs" wire:model="activity_location"
-                            placeholder="Ubicación de la actividad" />
-                        <flux:error name="activity_location" />
+                        <flux:field>
+                            <flux:label>Ubicación</flux:label>
+                            <flux:input size="xs" wire:model="activity_location"
+                                placeholder="Ubicación de la actividad" />
+                            <flux:error name="activity_location" />
+                        </flux:field>
                     </div>
                 </div>
 
                 <!-- Notas -->
                 <div class="mt-6">
-                    <label class="block text-xs font-medium text-gray-700 mb-2">Notas</label>
-                    <textarea wire:model="activity_notes" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Notas adicionales..."></textarea>
-                    <flux:error name="activity_notes" />
+                    <flux:field>
+                        <flux:label>Notas</flux:label>
+                        <flux:textarea wire:model="activity_notes" rows="3" placeholder="Notas adicionales...">
+                        </flux:textarea>
+                        <flux:error name="activity_notes" />
+                    </flux:field>
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">
@@ -625,47 +649,55 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Título -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Título *</label>
-                        <flux:input size="xs" wire:model="task_title" placeholder="Título de la tarea" />
-                        <flux:error name="task_title" />
+                        <flux:field>
+                            <flux:label>Título *</flux:label>
+                            <flux:input size="xs" wire:model="task_title" placeholder="Título de la tarea" />
+                            <flux:error name="task_title" />
+                        </flux:field>
                     </div>
 
                     <!-- Descripción -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Descripción</label>
-                        <textarea wire:model="task_description" rows="3"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Descripción de la tarea..."></textarea>
-                        <flux:error name="task_description" />
+                        <flux:field>
+                            <flux:label>Descripción</flux:label>
+                            <flux:textarea wire:model="task_description" rows="3"
+                                placeholder="Descripción de la tarea..."></flux:textarea>
+                            <flux:error name="task_description" />
+                        </flux:field>
                     </div>
 
                     <!-- Prioridad -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Prioridad *</label>
-                        <flux:select size="xs" wire:model="task_priority">
-                            <option value="baja">Baja</option>
-                            <option value="media">Media</option>
-                            <option value="alta">Alta</option>
-                            <option value="urgente">Urgente</option>
-                        </flux:select>
-                        <flux:error name="task_priority" />
+                        <flux:field>
+                            <flux:label>Prioridad *</flux:label>
+                            <flux:select size="xs" wire:model="task_priority">
+                                <option value="baja">Baja</option>
+                                <option value="media">Media</option>
+                                <option value="alta">Alta</option>
+                                <option value="urgente">Urgente</option>
+                            </flux:select>
+                            <flux:error name="task_priority" />
+                        </flux:field>
                     </div>
 
                     <!-- Fecha de Vencimiento -->
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">Fecha de Vencimiento *</label>
-                        <flux:input size="xs" type="date" wire:model="task_due_date" />
-                        <flux:error name="task_due_date" />
+                        <flux:field>
+                            <flux:label>Fecha de Vencimiento *</flux:label>
+                            <flux:input size="xs" type="date" wire:model="task_due_date" />
+                            <flux:error name="task_due_date" />
+                        </flux:field>
                     </div>
                 </div>
 
                 <!-- Notas -->
                 <div class="mt-6">
-                    <label class="block text-xs font-medium text-gray-700 mb-2">Notas</label>
-                    <textarea wire:model="task_notes" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Notas adicionales..."></textarea>
-                    <flux:error name="task_notes" />
+                    <flux:field>
+                        <flux:label>Notas</flux:label>
+                        <flux:textarea wire:model="task_notes" rows="3" placeholder="Notas adicionales...">
+                        </flux:textarea>
+                        <flux:error name="task_notes" />
+                    </flux:field>
                 </div>
 
                 <div class="flex justify-end space-x-3 mt-6">

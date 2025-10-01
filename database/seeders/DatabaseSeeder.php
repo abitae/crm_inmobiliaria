@@ -19,24 +19,24 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
 
             // 3. Entidades Principales (dependen de Users)
-            ClientSeeder::class,
-            ProjectSeeder::class,
+            //ClientSeeder::class,
+            //ProjectSeeder::class,
 
             // 4. Entidades Secundarias (dependen de Projects y Users)
-            UnitSeeder::class,
+            //UnitSeeder::class,
 
             // 5. Entidades de Negocio (dependen de Clients, Projects, Units y Users)
-            OpportunitySeeder::class,
-            ReservationSeeder::class,
+            //OpportunitySeeder::class,
+           // ReservationSeeder::class,
 
             // 6. Entidades de Comisiones (dependen de Users, Projects, Units y Opportunities)
-            CommissionSeeder::class,
+            //CommissionSeeder::class,
 
             // 7. Entidades de Seguimiento (dependen de múltiples entidades)
-            ActivitySeeder::class,
+            //ActivitySeeder::class,
 
             // 8. Relaciones Many-to-Many y Precios (dependen de todas las entidades anteriores)
-            RelationshipSeeder::class,
+            //RelationshipSeeder::class,
         ]);
 
         $this->command->info('¡Base de datos poblada exitosamente!');

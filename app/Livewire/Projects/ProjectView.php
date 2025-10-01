@@ -226,7 +226,7 @@ class ProjectView extends Component
             $this->currentPdfIndex--;
         }
     }
-    
+
     public function selectPdf($index)
     {
         $this->currentPdfIndex = $index;
@@ -398,7 +398,7 @@ class ProjectView extends Component
         $this->documentTitles = [];
         $this->documentDescriptions = [];
     }
-    
+
     public function closeAddDocumentsModal()
     {
         $this->showAddDocumentsModal = false;
@@ -406,14 +406,14 @@ class ProjectView extends Component
         $this->documentTitles = [];
         $this->documentDescriptions = [];
     }
-    
+
     public function updatedNewDocuments()
     {
         // Limpiar arrays de títulos y descripciones cuando se cambian los documentos
         $this->documentTitles = array_fill(0, count($this->newDocuments), '');
         $this->documentDescriptions = array_fill(0, count($this->newDocuments), '');
     }
-    
+
     public function saveDocuments()
     {
         $this->validate([
@@ -459,61 +459,14 @@ class ProjectView extends Component
             $this->dispatch('show-error', message: 'Error al guardar los documentos: ' . $e->getMessage());
         }
     }
+    
+    
+    
+    
 
     public function deleteMedia($index)
     {
         try {
-            // Si estamos en el modal de PDFs, usar la lógica específica para PDFs
-            if ($this->showPdfModal) {
-                $pdfArray = $this->getPdfDocuments();
-                
-                if (!isset($pdfArray[$index])) {
-                    $this->dispatch('show-error', message: 'PDF no encontrado');
-                    return;
-                }
-
-                $pdfToDelete = $pdfArray[$index];
-                $filePath = $pdfToDelete['path'];
-                
-                // Eliminar archivo físico del storage
-                if (Storage::disk('public')->exists($filePath)) {
-                    Storage::disk('public')->delete($filePath);
-                }
-                
-                // Encontrar el índice real en el array de documentos
-                $existingDocuments = $this->project->path_documents ?: [];
-                $realIndex = null;
-                
-                foreach ($existingDocuments as $docIndex => $doc) {
-                    $docPath = is_array($doc) ? $doc['path'] : $doc;
-                    if ($docPath === $filePath) {
-                        $realIndex = $docIndex;
-                        break;
-                    }
-                }
-                
-                if ($realIndex !== null) {
-                    unset($existingDocuments[$realIndex]);
-                    $this->project->update([
-                        'path_documents' => array_values($existingDocuments)
-                    ]);
-                }
-                
-                // Ajustar el índice actual si es necesario
-                $newPdfArray = $this->getPdfDocuments();
-                if (count($newPdfArray) === 0) {
-                    // Si no quedan PDFs, cerrar el modal
-                    $this->closePdfModal();
-                } else {
-                    // Ajustar el índice actual
-                    if ($this->currentPdfIndex >= count($newPdfArray)) {
-                        $this->currentPdfIndex = count($newPdfArray) - 1;
-                    }
-                }
-                
-                $this->dispatch('show-success', message: 'PDF eliminado exitosamente');
-                return;
-            }
             
             // Lógica original para otros tipos de medios
             $mediaArray = $this->getMediaArray();
@@ -678,6 +631,68 @@ class ProjectView extends Component
         return $pdfDocuments;
     }
     
+    public function getCurrentPdfProperty()
+    {
+        $pdfArray = $this->getPdfDocuments();
+        if (isset($pdfArray[$this->currentPdfIndex])) {
+            return $pdfArray[$this->currentPdfIndex];
+        }
+        return null;
+    }
+    
+    public function getPdfDocumentsCountProperty()
+    {
+        return count($this->getPdfDocuments());
+    }
+    
+    public function getPdfDocumentsProperty()
+    {
+        return $this->getPdfDocuments();
+    }
+    
+    public function downloadPdf($index)
+    {
+        $pdfArray = $this->getPdfDocuments();
+        
+        if (!isset($pdfArray[$index])) {
+            $this->dispatch('show-error', message: 'Documento no encontrado');
+            return;
+        }
+        
+        $pdf = $pdfArray[$index];
+        $filePath = storage_path('app/public/' . $pdf['path']);
+        
+        if (!file_exists($filePath)) {
+            $this->dispatch('show-error', message: 'El archivo no existe en el servidor');
+            return;
+        }
+        
+        return response()->download($filePath, $pdf['title'] . '.pdf');
+    }
+    
+    public function downloadDocument($index)
+    {
+        $mediaArray = $this->getMediaArray();
+        
+        if (!isset($mediaArray[$index])) {
+            $this->dispatch('show-error', message: 'Documento no encontrado');
+            return;
+        }
+        
+        $document = $mediaArray[$index];
+        $filePath = storage_path('app/public/' . $document['path']);
+        
+        if (!file_exists($filePath)) {
+            $this->dispatch('show-error', message: 'El archivo no existe en el servidor');
+            return;
+        }
+        
+        $extension = pathinfo($document['path'], PATHINFO_EXTENSION);
+        $fileName = $document['title'] . '.' . $extension;
+        
+        return response()->download($filePath, $fileName);
+    }
+    
     private function getFileSize($path)
     {
         try {
@@ -726,24 +741,6 @@ class ProjectView extends Component
         return null;
     }
     
-    public function getCurrentPdfProperty()
-    {
-        $pdfArray = $this->getPdfDocuments();
-        if (isset($pdfArray[$this->currentPdfIndex])) {
-            return $pdfArray[$this->currentPdfIndex];
-        }
-        return null;
-    }
-    
-    public function getPdfDocumentsCountProperty()
-    {
-        return count($this->getPdfDocuments());
-    }
-    
-    public function getPdfDocumentsProperty()
-    {
-        return $this->getPdfDocuments();
-    }
 
     public function getFilteredUnitsProperty()
     {

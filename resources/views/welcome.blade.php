@@ -3,9 +3,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="description" content="Open9 CRM Inmobiliaria - La solución completa para gestionar tu negocio inmobiliario">
+        <meta name="description" content="Open9 CRM Inmobiliaria - La solución completa para gestionar tu negocio inmobiliario con inteligencia artificial y automatización">
 
-        <title>Open9 CRM Inmobiliaria - Gestión Profesional de Propiedades</title>
+        <title>Open9 CRM Inmobiliaria - Revoluciona tu Negocio Inmobiliario</title>
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -13,8 +13,8 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
-        <link href="https://fonts.bunny.net/css?family=poppins:400,500,600,700,800" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800,900" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=poppins:300,400,500,600,700,800,900" rel="stylesheet" />
 
         <!-- Tailwind CSS -->
         <script src="https://cdn.tailwindcss.com"></script>
@@ -29,28 +29,101 @@
                         colors: {
                             'primary': {
                                 50: '#eff6ff',
+                                100: '#dbeafe',
+                                200: '#bfdbfe',
+                                300: '#93c5fd',
+                                400: '#60a5fa',
                                 500: '#3b82f6',
                                 600: '#2563eb',
                                 700: '#1d4ed8',
+                                800: '#1e40af',
                                 900: '#1e3a8a',
+                                950: '#172554',
                             },
                             'accent': {
-                                50: '#fef3c7',
+                                50: '#fffbeb',
+                                100: '#fef3c7',
+                                200: '#fde68a',
+                                300: '#fcd34d',
+                                400: '#fbbf24',
                                 500: '#f59e0b',
                                 600: '#d97706',
                                 700: '#b45309',
+                                800: '#92400e',
+                                900: '#78350f',
+                                950: '#451a03',
+                            },
+                            'success': {
+                                50: '#f0fdf4',
+                                500: '#22c55e',
+                                600: '#16a34a',
+                                700: '#15803d',
+                            },
+                            'warning': {
+                                50: '#fffbeb',
+                                500: '#f59e0b',
+                                600: '#d97706',
+                            },
+                            'error': {
+                                50: '#fef2f2',
+                                500: '#ef4444',
+                                600: '#dc2626',
                             }
                         },
                         animation: {
                             'float': 'float 6s ease-in-out infinite',
+                            'float-reverse': 'float-reverse 8s ease-in-out infinite',
                             'bounce-slow': 'bounce 3s infinite',
                             'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                            'fade-in': 'fade-in 0.5s ease-out',
+                            'slide-up': 'slide-up 0.6s ease-out',
+                            'slide-right': 'slide-right 0.6s ease-out',
+                            'scale-in': 'scale-in 0.4s ease-out',
+                            'wiggle': 'wiggle 1s ease-in-out infinite',
+                            'gradient': 'gradient 15s ease infinite',
+                            'shimmer': 'shimmer 2s linear infinite',
                         },
                         keyframes: {
                             float: {
-                                '0%, 100%': { transform: 'translateY(0px)' },
-                                '50%': { transform: 'translateY(-20px)' },
+                                '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                                '50%': { transform: 'translateY(-20px) rotate(5deg)' },
+                            },
+                            'float-reverse': {
+                                '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                                '50%': { transform: 'translateY(15px) rotate(-3deg)' },
+                            },
+                            'fade-in': {
+                                '0%': { opacity: '0' },
+                                '100%': { opacity: '1' },
+                            },
+                            'slide-up': {
+                                '0%': { transform: 'translateY(30px)', opacity: '0' },
+                                '100%': { transform: 'translateY(0)', opacity: '1' },
+                            },
+                            'slide-right': {
+                                '0%': { transform: 'translateX(-30px)', opacity: '0' },
+                                '100%': { transform: 'translateX(0)', opacity: '1' },
+                            },
+                            'scale-in': {
+                                '0%': { transform: 'scale(0.9)', opacity: '0' },
+                                '100%': { transform: 'scale(1)', opacity: '1' },
+                            },
+                            wiggle: {
+                                '0%, 100%': { transform: 'rotate(-3deg)' },
+                                '50%': { transform: 'rotate(3deg)' },
+                            },
+                            gradient: {
+                                '0%, 100%': { 'background-position': '0% 50%' },
+                                '50%': { 'background-position': '100% 50%' },
+                            },
+                            shimmer: {
+                                '0%': { transform: 'translateX(-100%)' },
+                                '100%': { transform: 'translateX(100%)' },
                             }
+                        },
+                        backgroundImage: {
+                            'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                            'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
                         }
                     }
                 }
@@ -58,185 +131,366 @@
         </script>
     </head>
     <body class="font-poppins bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700 text-slate-800 dark:text-slate-200 min-h-screen overflow-x-hidden">
-        <!-- Header -->
-        <header class="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 shadow-lg">
+        <!-- Header Mejorado -->
+        <header class="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50 shadow-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <nav class="flex justify-between items-center py-4">
-                    <a href="#" class="flex items-center gap-3 text-2xl font-bold text-primary-600 dark:text-primary-400 hover:scale-105 transition-transform">
-                        <div class="w-12 h-12 bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg animate-pulse-slow">9</div>
-                        <span class="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">Open9 CRM</span>
+                    <!-- Logo Mejorado -->
+                    <a href="#" class="group flex items-center gap-3 text-2xl font-bold text-primary-600 dark:text-primary-400 hover:scale-105 transition-all duration-300">
+                        <div class="relative">
+                            <div class="w-12 h-12 bg-gradient-to-br from-primary-600 via-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 group-hover:rotate-12">
+                                9
+                            </div>
+                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-success-500 rounded-full animate-pulse"></div>
+                        </div>
+                        <span class="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent group-hover:from-accent-600 group-hover:to-primary-600 transition-all duration-300">
+                            Open9 CRM
+                        </span>
                     </a>
-                    <div class="hidden md:flex items-center gap-8">
-                        <a href="#features" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-200 hover:scale-105">Características</a>
-                        <a href="#pricing" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-200 hover:scale-105">Precios</a>
-                        <a href="#contact" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-200 hover:scale-105">Contacto</a>
+
+                    <!-- Navegación Desktop -->
+                    <div class="hidden lg:flex items-center gap-8">
+                        <a href="#features" class="relative text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 hover:scale-105 group">
+                            <span class="relative z-10">Características</span>
+                            <div class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-accent-500 group-hover:w-full transition-all duration-300"></div>
+                        </a>
+                        <a href="#pricing" class="relative text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 hover:scale-105 group">
+                            <span class="relative z-10">Precios</span>
+                            <div class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-accent-500 group-hover:w-full transition-all duration-300"></div>
+                        </a>
+                        <a href="#testimonials" class="relative text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 hover:scale-105 group">
+                            <span class="relative z-10">Testimonios</span>
+                            <div class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-accent-500 group-hover:w-full transition-all duration-300"></div>
+                        </a>
+                        <a href="#contact" class="relative text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-all duration-300 hover:scale-105 group">
+                            <span class="relative z-10">Contacto</span>
+                            <div class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-accent-500 group-hover:w-full transition-all duration-300"></div>
+                        </a>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="flex items-center gap-4">
                         @if (Route::has('login'))
                             @auth
-                                <a href="{{ url('/dashboard') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-500 text-white font-semibold rounded-xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">Dashboard</a>
+                                <a href="{{ url('/dashboard') }}" class="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-500 text-white font-semibold rounded-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 shadow-lg relative overflow-hidden">
+                                    <span class="relative z-10">Dashboard</span>
+                                    <div class="absolute inset-0 bg-gradient-to-r from-accent-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                </a>
                             @else
-                                <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-semibold rounded-xl hover:bg-primary-600 hover:text-white transition-all duration-300 hover:scale-105">Iniciar Sesión</a>
+                                <a href="{{ route('login') }}" class="hidden sm:inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-semibold rounded-xl hover:bg-primary-600 hover:text-white transition-all duration-300 hover:scale-105 group">
+                                    <span>Iniciar Sesión</span>
+                                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                                    </svg>
+                                </a>
                             @endauth
                         @endif
                         @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-semibold rounded-xl hover:bg-primary-600 hover:text-white transition-all duration-300 hover:scale-105">Registrarse</a>
+                            <a href="{{ route('register') }}" class="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-500 text-white font-semibold rounded-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 shadow-lg relative overflow-hidden">
+                                <span class="relative z-10">Comenzar Gratis</span>
+                                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                </svg>
+                                <div class="absolute inset-0 bg-gradient-to-r from-accent-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </a>
                         @endif
+
+                        <!-- Botón Mobile Menu -->
+                        <button class="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200" onclick="toggleMobileMenu()">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
                     </div>
                 </nav>
+
+                <!-- Mobile Menu -->
+                <div id="mobile-menu" class="hidden lg:hidden py-4 border-t border-slate-200 dark:border-slate-700">
+                    <div class="flex flex-col space-y-4">
+                        <a href="#features" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 py-2">Características</a>
+                        <a href="#pricing" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 py-2">Precios</a>
+                        <a href="#testimonials" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 py-2">Testimonios</a>
+                        <a href="#contact" class="text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors duration-200 py-2">Contacto</a>
+                        @if (Route::has('login') && !auth()->check())
+                            <a href="{{ route('login') }}" class="text-primary-600 dark:text-primary-400 font-semibold py-2">Iniciar Sesión</a>
+                        @endif
+                    </div>
+                </div>
             </div>
         </header>
 
         <main>
-            <!-- Hero Section -->
-            <section class="relative py-24 px-4 overflow-hidden">
-                <!-- Background Elements -->
+            <!-- Hero Section Mejorada -->
+            <section class="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+                <!-- Background Elements Mejorados -->
                 <div class="absolute inset-0 overflow-hidden">
-                    <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-200/30 to-accent-200/30 rounded-full blur-3xl animate-float"></div>
-                    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-200/20 to-indigo-200/20 rounded-full blur-3xl animate-float" style="animation-delay: -3s;"></div>
+                    <!-- Gradientes animados -->
+                    <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-primary-200/40 to-accent-200/40 rounded-full blur-3xl animate-float"></div>
+                    <div class="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-gradient-to-tr from-blue-200/30 to-indigo-200/30 rounded-full blur-3xl animate-float-reverse" style="animation-delay: -2s;"></div>
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-200/20 to-pink-200/20 rounded-full blur-3xl animate-pulse-slow"></div>
+                    
+                    <!-- Patrones decorativos -->
+                    <div class="absolute inset-0 opacity-5">
+                        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, #3b82f6 1px, transparent 0); background-size: 50px 50px;"></div>
+                    </div>
                 </div>
                 
                 <div class="max-w-7xl mx-auto text-center relative z-10">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-100 to-accent-100 dark:from-primary-900/30 dark:to-accent-900/30 rounded-full text-primary-700 dark:text-primary-300 font-medium mb-6 animate-bounce-slow">
-                        🚀 La plataforma líder en CRM Inmobiliario
+                    <!-- Badge de confianza mejorado -->
+                    <div class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-100 to-accent-100 dark:from-primary-900/30 dark:to-accent-900/30 rounded-full text-primary-700 dark:text-primary-300 font-semibold mb-8 animate-bounce-slow border border-primary-200/50 dark:border-primary-700/50 shadow-lg">
+                        <div class="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
+                        <span>🚀 La plataforma líder en CRM Inmobiliario</span>
+                        <div class="w-2 h-2 bg-success-500 rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
                     </div>
                     
-                    <h1 class="text-5xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-slate-900 via-primary-700 to-accent-600 dark:from-slate-100 dark:via-primary-300 dark:to-accent-400 bg-clip-text text-transparent leading-tight">
-                        Gestiona tu Negocio Inmobiliario con <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-500">Open9 CRM</span>
+                    <!-- Título principal mejorado -->
+                    <h1 class="text-6xl md:text-8xl lg:text-9xl font-black mb-8 leading-tight">
+                        <span class="block bg-gradient-to-r from-slate-900 via-primary-700 to-accent-600 dark:from-slate-100 dark:via-primary-300 dark:to-accent-400 bg-clip-text text-transparent animate-fade-in">
+                            Revoluciona tu
+                        </span>
+                        <span class="block bg-gradient-to-r from-primary-600 via-accent-500 to-primary-600 bg-clip-text text-transparent animate-slide-up" style="animation-delay: 0.2s;">
+                            Negocio Inmobiliario
+                        </span>
+                        <span class="block text-4xl md:text-6xl lg:text-7xl font-bold text-slate-600 dark:text-slate-300 animate-slide-up" style="animation-delay: 0.4s;">
+                            con Open9 CRM
+                        </span>
                     </h1>
                     
-                    <p class="text-xl md:text-2xl text-slate-600 dark:text-slate-300 mb-10 max-w-4xl mx-auto leading-relaxed">
-                        La plataforma completa para agentes inmobiliarios que quieren <span class="font-semibold text-primary-600 dark:text-primary-400">vender más propiedades</span>, gestionar clientes eficientemente y hacer crecer su negocio de manera exponencial.
+                    <!-- Subtítulo mejorado -->
+                    <p class="text-xl md:text-2xl lg:text-3xl text-slate-600 dark:text-slate-300 mb-12 max-w-5xl mx-auto leading-relaxed animate-slide-up" style="animation-delay: 0.6s;">
+                        La plataforma más avanzada para agentes inmobiliarios que quieren 
+                        <span class="font-bold text-transparent bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text">
+                            vender más propiedades
+                        </span>, 
+                        <span class="font-bold text-transparent bg-gradient-to-r from-accent-500 to-primary-600 bg-clip-text">
+                            gestionar clientes eficientemente
+                        </span> 
+                        y hacer crecer su negocio de manera exponencial.
                     </p>
                     
-                    <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-                        <a href="#demo" class="group inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-primary-600 to-accent-500 text-white font-bold rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 text-lg shadow-lg">
-                            <span>Solicitar Demo</span>
-                            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Botones de acción mejorados -->
+                    <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 animate-scale-in" style="animation-delay: 0.8s;">
+                        <a href="#demo" class="group relative inline-flex items-center gap-3 px-12 py-6 bg-gradient-to-r from-primary-600 to-accent-500 text-white font-bold rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 text-xl shadow-xl overflow-hidden">
+                            <span class="relative z-10">Solicitar Demo Gratis</span>
+                            <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                             </svg>
+                            <div class="absolute inset-0 bg-gradient-to-r from-accent-500 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </a>
-                        <a href="#features" class="group inline-flex items-center gap-3 px-10 py-5 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-bold rounded-2xl hover:bg-primary-600 hover:text-white transition-all duration-300 text-lg hover:scale-105">
+                        <a href="#features" class="group inline-flex items-center gap-3 px-12 py-6 border-2 border-primary-600 text-primary-600 dark:text-primary-400 font-bold rounded-2xl hover:bg-primary-600 hover:text-white transition-all duration-300 text-xl hover:scale-105 hover:shadow-xl">
                             <span>Ver Características</span>
-                            <svg class="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19l-7-7 7-7m8 14l-7-7 7-7"></path>
                             </svg>
                         </a>
                     </div>
                     
-                    <!-- Trust Indicators -->
-                    <div class="flex flex-wrap justify-center items-center gap-8 text-slate-500 dark:text-slate-400">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="text-sm font-medium">Sin costos ocultos</span>
+                    <!-- Indicadores de confianza mejorados -->
+                    <div class="flex flex-wrap justify-center items-center gap-8 text-slate-500 dark:text-slate-400 animate-fade-in" style="animation-delay: 1s;">
+                        <div class="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/50 dark:border-slate-700/50">
+                            <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <span class="font-semibold">Sin costos ocultos</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="text-sm font-medium">Implementación en 24h</span>
+                        <div class="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/50 dark:border-slate-700/50">
+                            <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <span class="font-semibold">Implementación en 24h</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="text-sm font-medium">Soporte 24/7</span>
+                        <div class="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-200/50 dark:border-slate-700/50">
+                            <div class="w-6 h-6 bg-success-500 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <span class="font-semibold">Soporte 24/7</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Scroll indicator -->
+                <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                    <div class="w-6 h-10 border-2 border-slate-400 dark:border-slate-500 rounded-full flex justify-center">
+                        <div class="w-1 h-3 bg-slate-400 dark:bg-slate-500 rounded-full mt-2 animate-pulse"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- Features Section -->
-            <section id="features" class="relative py-24 bg-white dark:bg-slate-800 overflow-hidden">
-                <!-- Background Pattern -->
-                <div class="absolute inset-0 opacity-5">
-                    <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, #3b82f6 1px, transparent 0); background-size: 40px 40px;"></div>
+            <!-- Features Section Mejorada -->
+            <section id="features" class="relative py-32 bg-gradient-to-br from-white via-slate-50 to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700 overflow-hidden">
+                <!-- Background Elements Mejorados -->
+                <div class="absolute inset-0">
+                    <div class="absolute inset-0 opacity-5">
+                        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, #3b82f6 1px, transparent 0); background-size: 60px 60px;"></div>
+                    </div>
+                    <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary-200/20 to-transparent rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-accent-200/20 to-transparent rounded-full blur-3xl"></div>
                 </div>
                 
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <!-- Header de la sección -->
                     <div class="text-center mb-20">
-                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-100 to-primary-100 dark:from-accent-900/30 dark:to-primary-900/30 rounded-full text-accent-700 dark:text-accent-300 font-medium mb-6">
-                            ✨ Características Principales
+                        <div class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-100 to-primary-100 dark:from-accent-900/30 dark:to-primary-900/30 rounded-full text-accent-700 dark:text-accent-300 font-semibold mb-8 border border-accent-200/50 dark:border-accent-700/50 shadow-lg">
+                            <span class="text-2xl">✨</span>
+                            <span>Características Principales</span>
                         </div>
-                        <h2 class="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6">
-                            Todo lo que necesitas en un <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-500">CRM Inmobiliario</span>
+                        <h2 class="text-5xl md:text-7xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
+                            Todo lo que necesitas en un 
+                            <span class="text-transparent bg-gradient-to-r from-primary-600 via-accent-500 to-primary-600 bg-clip-text animate-gradient">
+                                CRM Inmobiliario
+                            </span>
                         </h2>
-                        <p class="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
-                            Herramientas poderosas diseñadas específicamente para el sector inmobiliario que transformarán tu forma de trabajar
+                        <p class="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-4xl mx-auto leading-relaxed">
+                            Herramientas poderosas diseñadas específicamente para el sector inmobiliario que 
+                            <span class="font-bold text-primary-600 dark:text-primary-400">transformarán</span> 
+                            tu forma de trabajar
                         </p>
                     </div>
                     
+                    <!-- Grid de características mejorado -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Feature 1 -->
-                        <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-3 hover:shadow-2xl transition-all duration-500 hover:border-primary-200 dark:hover:border-primary-700">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">🏠</div>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Gestión de Propiedades</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
-                                Administra tu inventario de propiedades con fotos, descripciones, precios y estado de disponibilidad en tiempo real.
-                            </p>
-                            <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-full bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"></div>
+                        <!-- Feature 1 - Gestión de Propiedades -->
+                        <div class="group relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-4 hover:shadow-2xl transition-all duration-500 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative z-10">
+                                <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-accent-500 rounded-3xl flex items-center justify-center text-white text-4xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
+                                    🏠
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    Gestión de Propiedades
+                                </h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg mb-6">
+                                    Administra tu inventario de propiedades con fotos, descripciones, precios y estado de disponibilidad en tiempo real.
+                                </p>
+                                <div class="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                                    <span>Saber más</span>
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 to-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                         </div>
 
-                        <!-- Feature 2 -->
-                        <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-3 hover:shadow-2xl transition-all duration-500 hover:border-primary-200 dark:hover:border-primary-700">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">👥</div>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Gestión de Clientes</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
-                                Mantén un historial completo de cada cliente, sus preferencias, visitas y comunicaciones para cerrar más ventas.
-                            </p>
-                            <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-full bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"></div>
+                        <!-- Feature 2 - Gestión de Clientes -->
+                        <div class="group relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-4 hover:shadow-2xl transition-all duration-500 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative z-10">
+                                <div class="w-20 h-20 bg-gradient-to-br from-accent-500 to-primary-500 rounded-3xl flex items-center justify-center text-white text-4xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
+                                    👥
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    Gestión de Clientes
+                                </h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg mb-6">
+                                    Mantén un historial completo de cada cliente, sus preferencias, visitas y comunicaciones para cerrar más ventas.
+                                </p>
+                                <div class="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                                    <span>Saber más</span>
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-accent-500 to-primary-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                         </div>
 
-                        <!-- Feature 3 -->
-                        <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-3 hover:shadow-2xl transition-all duration-500 hover:border-primary-200 dark:hover:border-primary-700">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">📊</div>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Reportes y Analytics</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
-                                Analiza el rendimiento de tu negocio con reportes detallados sobre ventas, clientes y propiedades más populares.
-                            </p>
-                            <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-full bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"></div>
+                        <!-- Feature 3 - Reportes y Analytics -->
+                        <div class="group relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-4 hover:shadow-2xl transition-all duration-500 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative z-10">
+                                <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-accent-500 rounded-3xl flex items-center justify-center text-white text-4xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
+                                    📊
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    Reportes y Analytics
+                                </h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg mb-6">
+                                    Analiza el rendimiento de tu negocio con reportes detallados sobre ventas, clientes y propiedades más populares.
+                                </p>
+                                <div class="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                                    <span>Saber más</span>
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 to-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                         </div>
 
-                        <!-- Feature 4 -->
-                        <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-3 hover:shadow-2xl transition-all duration-500 hover:border-primary-200 dark:hover:border-primary-700">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">📱</div>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Acceso Móvil</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
-                                Gestiona tu negocio desde cualquier lugar con nuestra aplicación móvil optimizada para agentes inmobiliarios.
-                            </p>
-                            <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-full bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"></div>
+                        <!-- Feature 4 - Acceso Móvil -->
+                        <div class="group relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-4 hover:shadow-2xl transition-all duration-500 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative z-10">
+                                <div class="w-20 h-20 bg-gradient-to-br from-accent-500 to-primary-500 rounded-3xl flex items-center justify-center text-white text-4xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
+                                    📱
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    Acceso Móvil
+                                </h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg mb-6">
+                                    Gestiona tu negocio desde cualquier lugar con nuestra aplicación móvil optimizada para agentes inmobiliarios.
+                                </p>
+                                <div class="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                                    <span>Saber más</span>
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-accent-500 to-primary-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                         </div>
 
-                        <!-- Feature 5 -->
-                        <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-3 hover:shadow-2xl transition-all duration-500 hover:border-primary-200 dark:hover:border-primary-700">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">🔔</div>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Notificaciones Inteligentes</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
-                                Recibe alertas automáticas sobre nuevas oportunidades, recordatorios de seguimiento y actualizaciones importantes.
-                            </p>
-                            <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-full bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"></div>
+                        <!-- Feature 5 - Notificaciones Inteligentes -->
+                        <div class="group relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-4 hover:shadow-2xl transition-all duration-500 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative z-10">
+                                <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-accent-500 rounded-3xl flex items-center justify-center text-white text-4xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
+                                    🔔
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    Notificaciones Inteligentes
+                                </h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg mb-6">
+                                    Recibe alertas automáticas sobre nuevas oportunidades, recordatorios de seguimiento y actualizaciones importantes.
+                                </p>
+                                <div class="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                                    <span>Saber más</span>
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-primary-500 to-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                         </div>
 
-                        <!-- Feature 6 -->
-                        <div class="group bg-gradient-to-br from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-3 hover:shadow-2xl transition-all duration-500 hover:border-primary-200 dark:hover:border-primary-700">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">💼</div>
-                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Gestión de Tareas</h3>
-                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
-                                Organiza tu agenda con tareas, recordatorios y seguimientos para nunca perder una oportunidad de venta.
-                            </p>
-                            <div class="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <div class="w-full bg-gradient-to-r from-primary-500 to-accent-500 h-1 rounded-full"></div>
+                        <!-- Feature 6 - Gestión de Tareas -->
+                        <div class="group relative bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-700 p-8 rounded-3xl border border-slate-200/50 dark:border-slate-600/50 hover:-translate-y-4 hover:shadow-2xl transition-all duration-500 hover:border-primary-300 dark:hover:border-primary-600 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative z-10">
+                                <div class="w-20 h-20 bg-gradient-to-br from-accent-500 to-primary-500 rounded-3xl flex items-center justify-center text-white text-4xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-xl">
+                                    💼
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                    Gestión de Tareas
+                                </h3>
+                                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg mb-6">
+                                    Organiza tu agenda con tareas, recordatorios y seguimientos para nunca perder una oportunidad de venta.
+                                </p>
+                                <div class="flex items-center text-primary-600 dark:text-primary-400 font-semibold group-hover:translate-x-2 transition-transform duration-300">
+                                    <span>Saber más</span>
+                                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-accent-500 to-primary-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                         </div>
                     </div>
                 </div>
@@ -695,5 +949,93 @@
                 </div>
             </div>
         </footer>
+
+        <!-- JavaScript para funcionalidades interactivas -->
+        <script>
+            // Función para toggle del menú móvil
+            function toggleMobileMenu() {
+                const mobileMenu = document.getElementById('mobile-menu');
+                mobileMenu.classList.toggle('hidden');
+            }
+
+            // Smooth scrolling para enlaces de navegación
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Animaciones al hacer scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-fade-in');
+                    }
+                });
+            }, observerOptions);
+
+            // Observar elementos para animaciones
+            document.querySelectorAll('.group').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Efecto parallax suave para elementos de fondo
+            window.addEventListener('scroll', () => {
+                const scrolled = window.pageYOffset;
+                const parallaxElements = document.querySelectorAll('.animate-float, .animate-float-reverse');
+                
+                parallaxElements.forEach((element, index) => {
+                    const speed = 0.5 + (index * 0.1);
+                    element.style.transform = `translateY(${scrolled * speed}px)`;
+                });
+            });
+
+            // Efecto de typing para el título principal
+            function typeWriter(element, text, speed = 100) {
+                let i = 0;
+                element.innerHTML = '';
+                
+                function type() {
+                    if (i < text.length) {
+                        element.innerHTML += text.charAt(i);
+                        i++;
+                        setTimeout(type, speed);
+                    }
+                }
+                type();
+            }
+
+            // Inicializar efectos cuando la página esté cargada
+            document.addEventListener('DOMContentLoaded', function() {
+                // Agregar clase de animación a elementos
+                const animatedElements = document.querySelectorAll('h1, h2, .group');
+                animatedElements.forEach((el, index) => {
+                    el.style.animationDelay = `${index * 0.1}s`;
+                });
+            });
+
+            // Efecto de hover mejorado para botones
+            document.querySelectorAll('a[class*="group"]').forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px) scale(1.02)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        </script>
     </body>
 </html>

@@ -71,8 +71,12 @@
 
                     <div class="flex flex-col gap-4">
                         <flux:input.group>
-
-                            <flux:input class="w-full" placeholder="Ingrese el número de DNI"
+                            <flux:select wire:model="document_type" size="xs" class="w-24">
+                                <option value="DNI">DNI</option>
+                                <option value="CE">CE</option>
+                                <option value="RUC">RUC</option>
+                            </flux:select>
+                            <flux:input class="w-full" placeholder="Ingrese el número de documento"
                                 wire:model="document_number" />
                             @if ($document_type == 'DNI')
                                 <flux:button icon="magnifying-glass" wire:click="buscarDocumento"></flux:button>

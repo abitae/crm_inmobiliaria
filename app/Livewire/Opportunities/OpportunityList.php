@@ -180,69 +180,6 @@ class OpportunityList extends Component
         'task_due_date.after_or_equal' => 'La fecha de vencimiento debe ser hoy o posterior.'
     ];
 
-    // Validación en tiempo real
-    public function updated($propertyName)
-    {
-        try {
-            // Determinar qué conjunto de reglas usar según el campo
-            if (str_starts_with($propertyName, 'activity_')) {
-                $this->validateOnly($propertyName, $this->rules_activity, $this->messages_activity);
-            } elseif (str_starts_with($propertyName, 'task_')) {
-                $this->validateOnly($propertyName, $this->rules_task, $this->messages_task);
-            } else {
-                $this->validateOnly($propertyName, $this->rules_opportunity, $this->messages_opportunity);
-            }
-
-            // Resetear página cuando cambian los filtros
-            if (in_array($propertyName, ['search', 'statusFilter', 'stageFilter', 'advisorFilter', 'projectFilter', 'clientFilter'])) {
-                $this->resetPage();
-            }
-
-            // Cargar unidades cuando cambia el proyecto
-            if ($propertyName === 'project_id') {
-                $this->loadUnitsForProject();
-            }
-
-            // Validar fecha de cierre cuando cambia
-            if ($propertyName === 'expected_close_date' && $this->expected_close_date) {
-                $closeDate = \Carbon\Carbon::parse($this->expected_close_date);
-                if ($closeDate->isPast()) {
-                    $this->addError('expected_close_date', 'La fecha de cierre debe ser posterior a hoy.');
-                }
-            }
-
-            // Validar probabilidad cuando cambia
-            if ($propertyName === 'probability' && $this->probability) {
-                if ($this->probability < 0 || $this->probability > 100) {
-                    $this->addError('probability', 'La probabilidad debe estar entre 0% y 100%.');
-                }
-            }
-
-            // Validar valor esperado cuando cambia
-            if ($propertyName === 'expected_value' && $this->expected_value) {
-                if ($this->expected_value < 0) {
-                    $this->addError('expected_value', 'El valor esperado debe ser mayor a 0.');
-                }
-            }
-        } catch (ValidationException $e) {
-            Log::warning('Error de validación en OpportunityList', [
-                'property' => $propertyName,
-                'value' => $this->$propertyName ?? null,
-                'user_id' => Auth::id(),
-                'errors' => $e->errors()
-            ]);
-        } catch (Exception $e) {
-            Log::error('Error inesperado en validación de OpportunityList', [
-                'property' => $propertyName,
-                'value' => $this->$propertyName ?? null,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            // Los errores de validación se muestran en el campo correspondiente
-        }
-    }
-
     public function boot(OpportunityService $opportunityService)
     {
         $this->opportunityService = $opportunityService;
@@ -572,7 +509,7 @@ class OpportunityList extends Component
     public function saveTask()
     {
         try {
-            $this->validate($this->getTaskValidationRules(), $this->getTaskValidationMessages());
+            $this->validate($this->rules_task, $this->messages_task);
 
             if (!$this->selectedOpportunity) {
                 $this->addError('task_title', 'No se ha seleccionado una oportunidad.');
@@ -1006,5 +943,42 @@ class OpportunityList extends Component
             'due_date' => $this->task_due_date,
             'notes' => $this->task_notes
         ];
+    }
+
+    public function viewActivity($activityId)
+    {
+        try {
+            $activity = Activity::findOrFail($activityId);
+            $this->dispatch('show-info', message: 'Actividad: ' . $activity->title);
+        } catch (Exception $e) {
+            Log::error('Error al ver actividad', [
+                'activity_id' => $activityId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->dispatch('show-error', message: 'Error al cargar la actividad.');
+        }
+    }
+
+    public function deleteActivity($activityId)
+    {
+        try {
+            $activity = Activity::findOrFail($activityId);
+            $activity->delete();
+            
+            Log::info('Actividad eliminada exitosamente', [
+                'activity_id' => $activityId,
+                'user_id' => Auth::id()
+            ]);
+            
+            $this->dispatch('show-success', message: 'Actividad eliminada exitosamente.');
+        } catch (Exception $e) {
+            Log::error('Error al eliminar actividad', [
+                'activity_id' => $activityId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->dispatch('show-error', message: 'Error al eliminar la actividad.');
+        }
     }
 }

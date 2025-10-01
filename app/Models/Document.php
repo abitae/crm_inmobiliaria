@@ -118,20 +118,21 @@ class Document extends Model
         return $this->belongsTo(User::class, 'signed_by');
     }
 
-    public function versions(): HasMany
-    {
-        return $this->hasMany(DocumentVersion::class);
-    }
+    // Relaciones adicionales (comentadas hasta que se creen los modelos)
+    // public function versions(): HasMany
+    // {
+    //     return $this->hasMany(DocumentVersion::class);
+    // }
 
-    public function comments(): HasMany
-    {
-        return $this->hasMany(DocumentComment::class);
-    }
+    // public function comments(): HasMany
+    // {
+    //     return $this->hasMany(DocumentComment::class);
+    // }
 
-    public function signatures(): HasMany
-    {
-        return $this->hasMany(DocumentSignature::class);
-    }
+    // public function signatures(): HasMany
+    // {
+    //     return $this->hasMany(DocumentSignature::class);
+    // }
 
     // Scopes
     public function scopeCurrentVersion($query)
@@ -218,14 +219,14 @@ class Document extends Model
 
     public function getIsExpiredAttribute(): bool
     {
-        return $this->expiration_date && $this->expiration_date->isPast();
+        return $this->expiration_date && $this->expiration_date < now();
     }
 
     public function getIsExpiringSoonAttribute(): bool
     {
         if (!$this->expiration_date) return false;
-        return $this->expiration_date->isFuture() &&
-            $this->expiration_date->diffInDays(now()) <= 30;
+        return $this->expiration_date > now() &&
+            now()->diffInDays($this->expiration_date) <= 30;
     }
 
     public function getFileSizeInMBAttribute(): float
