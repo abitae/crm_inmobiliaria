@@ -8,75 +8,62 @@ use App\Models\Client;
 use App\Services\ClientService;
 use App\Traits\SearchDocument;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Rule;
+use Carbon\Carbon;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
+/**
+ * Componente Livewire para el registro masivo de clientes
+ * 
+ * @package App\Livewire\Clients
+ */
 #[Layout('components.layouts.auth')]
 class ClientRegistroMasivo extends Component
 {
     use SearchDocument;
     
-    // Propiedades del formulario
-    #[Rule('required|string|max:255')]
-    public $name = '';
-
-    #[Rule('required|string|max:9|min:9')]
-    public $phone = '';
-
-    #[Rule('required|in:DNI')]
-    public $document_type = 'DNI';
-
-    #[Rule('required|string|max:8|min:8')]
-    public $document_number = '';
-
-    #[Rule('nullable|string|max:500')]
-    public $address = '';
-
-    #[Rule('nullable|date')]
-    public $birth_date = '';
-
-    #[Rule('required|in:inversor,comprador,empresa,constructor')]
-    // Mensajes de validación personalizados
+    // Constantes para configuraciones
+    private const DEFAULT_SCORE = 50;
+    private const QR_SIZE = 150;
+    private const DATE_FORMATS = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
     
-
-    public $client_type = 'comprador';
-
-    #[Rule('required|in:redes_sociales,ferias,referidos,formulario_web,publicidad')]
-    public $source = 'formulario_web';
-
-    #[Rule('required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido')]
-    public $status = 'nuevo';
-
-    #[Rule('required|integer|min:0|max:100')]
-    public $score = 50;
-
-    #[Rule('nullable|string')]
-    public $notes = '';
+    // Propiedades del formulario
+    public string $name = '';
+    public string $phone = '';
+    public string $document_type = 'DNI';
+    public string $document_number = '';
+    public ?string $address = null;
+    public ?string $birth_date = null;
+    public string $client_type = 'comprador';
+    public string $source = 'formulario_web';
+    public string $status = 'nuevo';
+    public int $score = self::DEFAULT_SCORE;
+    public ?string $notes = null;
 
     // El asesor asignado será automáticamente el usuario autenticado
-    public $assigned_advisor_id = null;
+    public ?int $assigned_advisor_id = null;
 
     // Propiedades para el estado del formulario
-    public $showSuccessMessage = false;
-    public $successMessage = '';
-    public $showErrorMessage = false;
-    public $errorMessage = '';
+    public bool $showSuccessMessage = false;
+    public string $successMessage = '';
+    public bool $showErrorMessage = false;
+    public string $errorMessage = '';
 
     // Modal para ver el QR
-    public $showQRModal = false;
+    public bool $showQRModal = false;
 
     // Opciones para los selects
-    public $documentTypes = [
+    public array $documentTypes = [
         'DNI' => 'DNI',
     ];
 
-    public $clientTypes = [
+    public array $clientTypes = [
         'inversor' => 'Inversor',
         'comprador' => 'Comprador',
         'empresa' => 'Empresa',
         'constructor' => 'Constructor'
     ];
 
-    public $sources = [
+    public array $sources = [
         'redes_sociales' => 'Redes Sociales',
         'ferias' => 'Ferias',
         'referidos' => 'Referidos',
@@ -84,22 +71,42 @@ class ClientRegistroMasivo extends Component
         'publicidad' => 'Publicidad'
     ];
 
-    public $statuses = [
+    public array $statuses = [
         'nuevo' => 'Nuevo',
+        'contacto_inicial' => 'Contacto Inicial',
+        'en_seguimiento' => 'En Seguimiento',
+        'cierre' => 'Cierre',
+        'perdido' => 'Perdido'
     ];
 
-    protected $clientService;
+    protected ClientService $clientService;
+    protected ?string $cachedQRCode = null;
+
+    // Reglas de validación
+    protected $rules = [
+        'name' => 'required|string|max:255',
+        'phone' => 'required|string|size:9',
+        'document_type' => 'required|in:DNI',
+        'document_number' => 'required|string|size:8',
+        'address' => 'nullable|string|max:500',
+        'birth_date' => 'nullable|date',
+        'client_type' => 'required|in:inversor,comprador,empresa,constructor',
+        'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
+        'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
+        'score' => 'required|integer|min:0|max:100',
+        'notes' => 'nullable|string',
+    ];
+
+    // Mensajes de validación personalizados
     protected $messages = [
         'name.required' => 'El nombre es obligatorio.',
         'name.max' => 'El nombre no debe exceder los 255 caracteres.',
         'phone.required' => 'El teléfono es obligatorio.',
-        'phone.max' => 'El teléfono debe tener como máximo 9 dígitos.',
-        'phone.min' => 'El teléfono debe tener al menos 9 dígitos.',
+        'phone.size' => 'El teléfono debe tener exactamente 9 dígitos.',
         'document_type.required' => 'El tipo de documento es obligatorio.',
         'document_type.in' => 'El tipo de documento seleccionado no es válido.',
         'document_number.required' => 'El número de documento es obligatorio.',
-        'document_number.max' => 'El número de documento debe tener como máximo 8 dígitos.',
-        'document_number.min' => 'El número de documento debe tener al menos 8 dígitos.',
+        'document_number.size' => 'El número de documento debe tener exactamente 8 dígitos.',
         'address.max' => 'La dirección no debe exceder los 500 caracteres.',
         'birth_date.date' => 'La fecha de nacimiento no es válida.',
         'client_type.required' => 'El tipo de cliente es obligatorio.',
@@ -115,64 +122,31 @@ class ClientRegistroMasivo extends Component
         'notes.string' => 'Las notas deben ser texto.',
     ];
 
-    public function boot(ClientService $clientService)
+    /**
+     * Inicializar el servicio de cliente
+     */
+    public function boot(ClientService $clientService): void
     {
         $this->clientService = $clientService;
     }
 
-    public function mount($id = null)
+    /**
+     * Montar el componente con el ID del asesor
+     */
+    public function mount(?int $id = null): void
     {
-        
-        $this->assigned_advisor_id = $id ? $id : Auth::id();
+        $this->assigned_advisor_id = $id ?? Auth::id();
     }
 
-    public function save()
+    /**
+     * Guardar el cliente en la base de datos
+     */
+    public function save(): void
     {
         $this->validate();
 
         try {
-            // Convertir la fecha de nacimiento al formato correcto
-            $birthDate = null;
-            if ($this->birth_date) {
-                // Intentar diferentes formatos de fecha
-                $formats = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
-                $birthDate = null;
-                
-                foreach ($formats as $format) {
-                    try {
-                        $birthDate = \Carbon\Carbon::createFromFormat($format, $this->birth_date)->format('Y-m-d');
-                        break; // Si funciona, salir del bucle
-                    } catch (\Exception $e) {
-                        continue; // Intentar el siguiente formato
-                    }
-                }
-                
-                // Si ningún formato funcionó, intentar parse automático
-                if (!$birthDate) {
-                    try {
-                        $birthDate = \Carbon\Carbon::parse($this->birth_date)->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        // Si todo falla, usar null
-                        $birthDate = null;
-                    }
-                }
-            }
-
-            $data = [
-                'name' => $this->name,
-                'phone' => $this->phone,
-                'document_type' => $this->document_type,
-                'document_number' => $this->document_number,
-                'address' => $this->address,
-                'birth_date' => $birthDate,
-                'client_type' => $this->client_type,
-                'source' => $this->source,
-                'status' => $this->status,
-                'score' => $this->score,
-                'notes' => $this->notes,
-                'assigned_advisor_id' => $this->assigned_advisor_id,
-            ];
-
+            $data = $this->prepareClientData();
             $client = $this->clientService->createClient($data);
 
             $this->resetForm();
@@ -180,13 +154,14 @@ class ClientRegistroMasivo extends Component
             $this->successMessage = "Cliente '{$client->name}' registrado exitosamente.";
             $this->showErrorMessage = false;
         } catch (\Exception $e) {
-            $this->showErrorMessage = true;
-            $this->errorMessage = $e->getMessage();
-            $this->showSuccessMessage = false;
+            $this->handleError($e->getMessage());
         }
     }
 
-    public function resetForm()
+    /**
+     * Resetear el formulario a valores por defecto
+     */
+    public function resetForm(): void
     {
         $this->reset([
             'name',
@@ -199,86 +174,206 @@ class ClientRegistroMasivo extends Component
             'source',
             'status',
             'score',
-            'notes',
-            'assigned_advisor_id'
+            'notes'
         ]);
 
-        // Resetear a valores por defecto
-        $this->document_type = 'DNI';
-        $this->client_type = 'comprador';
-        $this->source = 'formulario_web';
-        $this->status = 'nuevo';
-        $this->score = 50;
-        // Mantener el asesor asignado como el usuario autenticado
-        $this->assigned_advisor_id = Auth::id();
+        $this->setDefaultValues();
     }
 
-    public function closeMessages()
+    /**
+     * Cerrar los mensajes de éxito y error
+     */
+    public function closeMessages(): void
     {
         $this->showSuccessMessage = false;
         $this->showErrorMessage = false;
     }
 
-    public function buscarDocumento()
+    /**
+     * Buscar información del cliente por documento
+     */
+    public function buscarDocumento(): void
     {
         $tipo = strtolower($this->document_type);
         $num_doc = $this->document_number;
-        $client = client::where('document_number', $num_doc)->where('document_type', $tipo)->first();
-        if ($client) {
-            $this->showErrorMessage = true;
-            $this->errorMessage = 'Cliente ya existe en la base de datos, asesor asignado: '. $client->assignedAdvisor->name;
+        
+        // Verificar si el cliente ya existe
+        if ($this->clientExists($tipo, $num_doc)) {
             return;
         }
         
-        if ($tipo == 'dni' and strlen($num_doc) == 8) {
-            $result = $this->searchComplete($tipo, $num_doc);
-            if ($result['encontrado']) {
-                $this->document_type = 'DNI';
-                $this->document_number = $num_doc;
-                $this->name = $result['data']->nombre;
-                // Convertir la fecha de nacimiento del formato DD/MM/YYYY a Y-m-d
-                $fecha_nacimiento = $result['data']->fecha_nacimiento;
-                try {
-                    // Intentar parsear el formato DD/MM/YYYY
-                    $this->birth_date = \Carbon\Carbon::createFromFormat('d/m/Y', $fecha_nacimiento)->format('Y-m-d');
-                } catch (\Exception $e) {
-                    // Si falla, intentar otros formatos comunes
-                    try {
-                        $this->birth_date = \Carbon\Carbon::parse($fecha_nacimiento)->format('Y-m-d');
-                    } catch (\Exception $e2) {
-                        // Si todo falla, dejar vacío
-                        $this->birth_date = '';
-                    }
-                }
-                $this->showSuccessMessage = true;
-                $this->successMessage = 'Cliente encontrado: ' . $this->name;
-            } else {
-                $this->showErrorMessage = true;
-                $this->errorMessage = 'No encontrado';
-            }
-        }else{
-            $this->showErrorMessage = true;
-            $this->errorMessage = 'ingrese un número de documento válido';
+        if ($tipo === 'dni' && strlen($num_doc) === 8) {
+            $this->searchClientData($tipo, $num_doc);
+        } else {
+            $this->handleError('Ingrese un número de documento válido');
         }
     }
 
-    public function verQR()
+    /**
+     * Mostrar el modal con el código QR
+     */
+    public function verQR(): void
     {
         $this->showQRModal = true;
     }
 
-    public function closeQRModal()
+    /**
+     * Cerrar el modal del código QR
+     */
+    public function closeQRModal(): void
     {
         $this->showQRModal = false;
     }
+    /**
+     * Renderizar el componente
+     */
     public function render()
     {
-        $url = url('clients/registro-masivo/'.Auth::id());
-        $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)
-                            ->color(0, 0, 255)
-                            ->margin(2)
-                            ->backgroundColor(0, 255, 0)
-                            ->generate($url);
-        return view('livewire.clients.client-registro-masivo',compact('qrcode'));
+        $qrcode = $this->getQRCode();
+        return view('livewire.clients.client-registro-masivo', compact('qrcode'));
+    }
+
+    /**
+     * Preparar los datos del cliente para guardar
+     */
+    private function prepareClientData(): array
+    {
+        return [
+            'name' => $this->name,
+            'phone' => $this->phone,
+            'document_type' => $this->document_type,
+            'document_number' => $this->document_number,
+            'address' => $this->address,
+            'birth_date' => $this->parseBirthDate(),
+            'client_type' => $this->client_type,
+            'source' => $this->source,
+            'status' => $this->status,
+            'score' => $this->score,
+            'notes' => $this->notes,
+            'assigned_advisor_id' => $this->assigned_advisor_id,
+        ];
+    }
+
+    /**
+     * Parsear la fecha de nacimiento a formato Y-m-d
+     */
+    private function parseBirthDate(): ?string
+    {
+        if (!$this->birth_date) {
+            return null;
+        }
+
+        foreach (self::DATE_FORMATS as $format) {
+            try {
+                return Carbon::createFromFormat($format, $this->birth_date)->format('Y-m-d');
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        try {
+            return Carbon::parse($this->birth_date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Verificar si el cliente ya existe en la base de datos
+     */
+    private function clientExists(string $tipo, string $num_doc): bool
+    {
+        $client = Client::where('document_number', $num_doc)
+            ->where('document_type', $tipo)
+            ->first();
+            
+        if ($client) {
+            $this->handleError('Cliente ya existe en la base de datos, asesor asignado: ' . $client->assignedAdvisor->name);
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Buscar datos del cliente en la API externa
+     */
+    private function searchClientData(string $tipo, string $num_doc): void
+    {
+        $result = $this->searchComplete($tipo, $num_doc);
+        
+        if ($result['encontrado']) {
+            $this->fillClientData($result['data']);
+            $this->showSuccessMessage = true;
+            $this->successMessage = 'Cliente encontrado: ' . $this->name;
+        } else {
+            $this->handleError('No encontrado');
+        }
+    }
+
+    /**
+     * Llenar los datos del cliente desde la API
+     */
+    private function fillClientData(object $data): void
+    {
+        $this->document_type = 'DNI';
+        $this->name = $data->nombre;
+        $this->birth_date = $this->parseApiBirthDate($data->fecha_nacimiento);
+    }
+
+    /**
+     * Parsear la fecha de nacimiento de la API
+     */
+    private function parseApiBirthDate(string $fecha_nacimiento): string
+    {
+        try {
+            return Carbon::createFromFormat('d/m/Y', $fecha_nacimiento)->format('Y-m-d');
+        } catch (\Exception $e) {
+            try {
+                return Carbon::parse($fecha_nacimiento)->format('Y-m-d');
+            } catch (\Exception $e2) {
+                return '';
+            }
+        }
+    }
+
+    /**
+     * Establecer valores por defecto
+     */
+    private function setDefaultValues(): void
+    {
+        $this->document_type = 'DNI';
+        $this->client_type = 'comprador';
+        $this->source = 'formulario_web';
+        $this->status = 'nuevo';
+        $this->score = self::DEFAULT_SCORE;
+        $this->assigned_advisor_id = Auth::id();
+    }
+
+    /**
+     * Manejar errores de manera consistente
+     */
+    private function handleError(string $message): void
+    {
+        $this->showErrorMessage = true;
+        $this->errorMessage = $message;
+        $this->showSuccessMessage = false;
+    }
+
+    /**
+     * Obtener el código QR (con caché)
+     */
+    private function getQRCode(): string
+    {
+        if ($this->cachedQRCode === null) {
+            $url = url('clients/registro-masivo/' . Auth::id());
+            $this->cachedQRCode = QrCode::size(self::QR_SIZE)
+                ->color(0, 0, 255)
+                ->margin(2)
+                ->backgroundColor(0, 255, 0)
+                ->generate($url);
+        }
+        
+        return $this->cachedQRCode;
     }
 }

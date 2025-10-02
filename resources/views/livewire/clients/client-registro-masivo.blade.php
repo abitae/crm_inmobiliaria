@@ -1,29 +1,30 @@
-<div class="max-w-4xl mx-auto p-4 sm:p-6">
-    <div class="bg-white rounded-lg shadow-lg">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 rounded-t-lg">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold">Registro de Clientes</h1>
-                    <p class="text-blue-100 mt-1 sm:mt-2 text-sm sm:text-base">Complete el formulario para registrar un
-                        nuevo cliente en el sistema
-                    </p>
-                    <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}">
-                        Lista de Clientes
-                    </flux:button>
-                    <flux:button size="xs" icon="qr-code" wire:click="verQR">
-                        Ver mi QR
-                    </flux:button>
-
-                    
-                </div>
+<div class="max-w-4xl mx-auto p-4">
+    <div class="bg-white border border-gray-200 rounded-lg">
+        <!-- Header Minimalista -->
+        <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+            <div>
+                <h1 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <flux:icon name="user-plus" class="w-5 h-5 text-gray-600" />
+                    Registro de Clientes
+                </h1>
+                <p class="text-gray-600 mt-1 text-sm">
+                    Complete el formulario para registrar un nuevo cliente
+                </p>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <flux:button size="sm" icon="list-bullet" href="{{ route('clients.index') }}" variant="outline">
+                    Lista
+                </flux:button>
+                <flux:button size="sm" icon="qr-code" wire:click="verQR" variant="outline">
+                    QR
+                </flux:button>
             </div>
         </div>
 
-        <!-- Mensajes de éxito y error -->
+        <!-- Mensajes -->
         @if ($showSuccessMessage)
-            <div class="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mx-2 sm:mx-6 mt-4">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div class="bg-green-50 border-l-4 border-green-400 p-4 mx-6 mt-4">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <flux:icon name="check-circle" class="w-5 h-5 text-green-500 mr-3" />
                         <div>
@@ -31,21 +32,16 @@
                             <p class="text-sm text-green-600 mt-1">{{ $successMessage }}</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeMessages"
-                        class="text-green-500 hover:text-green-700 mt-2 sm:mt-0">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd"></path>
-                        </svg>
+                    <button type="button" wire:click="closeMessages" class="text-green-500 hover:text-green-700">
+                        <flux:icon name="x-mark" class="w-4 h-4" />
                     </button>
                 </div>
             </div>
         @endif
 
         @if ($showErrorMessage)
-            <div class="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mx-2 sm:mx-6 mt-4">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mx-6 mt-4">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <flux:icon name="exclamation-triangle" class="w-5 h-5 text-red-500 mr-3" />
                         <div>
@@ -53,75 +49,72 @@
                             <p class="text-sm text-red-600 mt-1">{{ $errorMessage }}</p>
                         </div>
                     </div>
-                    <button type="button" wire:click="closeMessages"
-                        class="text-green-500 hover:text-green-700 mt-2 sm:mt-0">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd"></path>
-                        </svg>
+                    <button type="button" wire:click="closeMessages" class="text-red-500 hover:text-red-700">
+                        <flux:icon name="x-mark" class="w-4 h-4" />
                     </button>
                 </div>
             </div>
         @endif
 
         <!-- Formulario -->
-        <div class="p-4 sm:p-6">
-            <form wire:submit.prevent="save" class="space-y-8">
+        <div class="p-6">
+            <form wire:submit.prevent="save" class="space-y-6">
                 <!-- Información Personal -->
-                <div class="space-y-6">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-900">Información Personal</h2>
+                <div class="space-y-4">
+                    <h2 class="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+                        Información Personal
+                    </h2>
 
-                    <div class="flex flex-col gap-4">
-                        <flux:input.group>
-                            <flux:select class="w-24" wire:model.live="document_type">
-                                @foreach ($documentTypes as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </flux:select>
-                            <flux:input class="w-full" placeholder="Ingrese el número de documento"
-                                wire:model="document_number" />
-                            @if ($document_type == 'DNI')
-                                <flux:button icon="plus" wire:click="buscarDocumento"></flux:button>
-                            @endif
-                        </flux:input.group>
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Documento -->
+                        <div class="flex gap-2">
+                            <flux:input.group class="flex items-end w-full">
+                                <flux:select wire:model.live="document_type" class="w-32" label="Tipo">
+                                    @foreach ($documentTypes as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </flux:select>
+                                <flux:input class="flex-1" label="Número de documento" placeholder="Número de documento"
+                                    wire:model.live="document_number" />
+                                @if ($document_type == 'DNI')
+                                    <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
+                                        label="Buscar" />
+                                @endif
+                            </flux:input.group>
+                        </div>
 
                         <!-- Nombre -->
-                        <div>
-                            <flux:input label="Nombre Completo" wire:model.live="name"
-                                placeholder="Ingrese el nombre completo" class="w-full" />
-                        </div>
+                        <flux:input label="Nombre Completo" wire:model.live="name"
+                            placeholder="Nombre completo del cliente" />
 
                         <!-- Teléfono -->
-                        <div>
-                            <flux:input label="Teléfono" wire:model="phone" placeholder="Ej: +51 999 999 999"
-                                class="w-full" />
-                        </div>
+                        <flux:input label="Teléfono" wire:model="phone" placeholder="Ej: 999999999" />
 
                         <!-- Fecha de Nacimiento -->
-                        <div>
-                            <flux:input label="Fecha de Nacimiento" type="date" wire:model.live="birth_date"
-                                class="w-full" />
-                        </div>
+                        <flux:input label="Fecha de Nacimiento" type="date" wire:model.live="birth_date" />
 
                         <!-- Dirección -->
                         <div>
-                            <textarea id="address" wire:model="address" rows="3"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 @enderror"
-                                placeholder="Ingrese la dirección completa"></textarea>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                            <textarea wire:model="address" rows="2"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 @enderror"
+                                placeholder="Dirección completa"></textarea>
                         </div>
                     </div>
                 </div>
 
                 <!-- Información Comercial -->
-                <div class="space-y-6">
-                    <h2 class="text-base sm:text-lg font-semibold text-gray-900">Información Comercial</h2>
+                <div class="space-y-4">
+                    <h2 class="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+                        Información Comercial
+                    </h2>
 
-                    <div class="flex flex-col gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Tipo de Cliente -->
                         <div>
-                            <select label="Tipo de Cliente" id="client_type" wire:model="client_type"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('client_type') border-red-500 @enderror">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Cliente</label>
+                            <select wire:model="client_type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('client_type') border-red-500 @enderror">
                                 @foreach ($clientTypes as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
@@ -130,8 +123,9 @@
 
                         <!-- Fuente -->
                         <div>
-                            <select label="Fuente" id="source" wire:model="source"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('source') border-red-500 @enderror">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Fuente</label>
+                            <select wire:model="source"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('source') border-red-500 @enderror">
                                 @foreach ($sources as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
@@ -140,8 +134,9 @@
 
                         <!-- Estado -->
                         <div>
-                            <select label="Estado" id="status" wire:model="status"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <select wire:model="status"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
                                 @foreach ($statuses as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
@@ -149,45 +144,42 @@
                         </div>
 
                         <!-- Score -->
-                        <div>
-                            <flux:input label="Score (0-100)" type="number" wire:model="score" min="0"
-                                max="100" class="w-full" />
-                        </div>
+                        <flux:input label="Score (0-100)" type="number" wire:model="score" min="0"
+                            max="100" />
+                    </div>
 
-                        <!-- Notas -->
-                        <div>
-                            <textarea label="Notas Adicionales" id="notes" wire:model="notes" rows="4"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('notes') border-red-500 @enderror"
-                                placeholder="Ingrese cualquier información adicional sobre el cliente"></textarea>
-                        </div>
+                    <!-- Notas -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                        <textarea wire:model="notes" rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('notes') border-red-500 @enderror"
+                            placeholder="Información adicional sobre el cliente"></textarea>
                     </div>
                 </div>
 
-                <!-- Botones de Acción -->
-                <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6">
-                    <flux:button icon="x-mark" type="button" variant="outline" wire:click="resetForm">
-                        Limpiar Formulario
+                <!-- Botones -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <flux:button type="button" variant="outline" wire:click="resetForm">
+                        Limpiar
                     </flux:button>
-
-                    <flux:button icon="plus" type="submit" color="primary">
+                    <flux:button type="submit" color="primary">
                         Registrar Cliente
                     </flux:button>
                 </div>
             </form>
         </div>
-        <flux:modal wire:model="showQRModal" class="w-full max-w-md">
-            <div class="flex flex-col items-center justify-center p-6">
-                <h2 class="text-lg font-semibold mb-4 text-blue-700 flex items-center">
-                    <flux:icon name="qr-code" class="w-6 h-6 mr-2 text-blue-500" />
-                    Mi Código QR Personal
+
+        <!-- Modal QR -->
+        <flux:modal wire:model="showQRModal" class="w-full max-w-sm">
+            <div class="p-6 text-center">
+                <h2 class="text-lg font-medium text-gray-900 mb-4 flex items-center justify-center gap-2">
+                    <flux:icon name="qr-code" class="w-5 h-5 text-gray-600" />
+                    Mi Código QR
                 </h2>
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
                     {!! $qrcode !!}
-                    <p class="text-sm text-gray-500 mt-3 text-center">
-                        Escanea este código QR para acceder rápidamente a tu perfil o compartir tu información.
-                    </p>
                 </div>
-                <flux:button icon="x-mark" type="button" variant="outline" class="mt-6 w-full" wire:click="closeQRModal">
+                <flux:button type="button" variant="outline" class="mt-4 w-full" wire:click="closeQRModal">
                     Cerrar
                 </flux:button>
             </div>
