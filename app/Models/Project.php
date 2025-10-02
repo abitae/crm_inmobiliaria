@@ -24,8 +24,7 @@ class Project extends Model
         'province', // provincia del proyecto
         'region', // región del proyecto
         'country', // país del proyecto
-        'latitude', // latitud del proyecto
-        'longitude', // longitud del proyecto
+        'ubicacion', // ubicación del proyecto (link de Google Maps)
         'total_units', // total de unidades del proyecto
         'available_units', // unidades disponibles del proyecto
         'reserved_units', // unidades reservadas del proyecto
@@ -50,8 +49,6 @@ class Project extends Model
         'reserved_units' => 'integer',
         'sold_units' => 'integer',
         'blocked_units' => 'integer',
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
         'start_date' => 'date',
         'end_date' => 'date',
         'delivery_date' => 'date',
@@ -170,9 +167,20 @@ class Project extends Model
 
     public function getCoordinatesAttribute(): array
     {
+        // Extraer coordenadas del link de Google Maps
+        if ($this->ubicacion && preg_match('/q=([^&]+)/', $this->ubicacion, $matches)) {
+            $coords = explode(',', $matches[1]);
+            if (count($coords) === 2) {
+                return [
+                    'lat' => (float) trim($coords[0]),
+                    'lng' => (float) trim($coords[1])
+                ];
+            }
+        }
+        
         return [
-            'lat' => $this->latitude,
-            'lng' => $this->longitude
+            'lat' => null,
+            'lng' => null
         ];
     }
 

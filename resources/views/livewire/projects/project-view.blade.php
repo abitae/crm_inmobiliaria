@@ -474,7 +474,7 @@
                                             unidades
                                         </h3>
                                         <p class="mt-1 text-sm text-gray-500">
-                                            @if ($search || $statusFilter || $typeFilter || $priceMin || $priceMax)
+                                            @if ($search || $statusFilter || $typeFilter)
                                                 Intenta ajustar los filtros de búsqueda.
                                             @else
                                                 No hay unidades registradas para este proyecto.

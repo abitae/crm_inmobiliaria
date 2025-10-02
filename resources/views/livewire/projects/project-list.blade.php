@@ -474,17 +474,11 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Latitud</label>
-                                        <flux:input wire:model="latitude" type="number" step="any"
-                                            placeholder="0.000000" size="xs" class="w-full" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Longitud</label>
-                                        <flux:input wire:model="longitude" type="number" step="any"
-                                            placeholder="0.000000" size="xs" class="w-full" />
-                                    </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ubicación (Google Maps)</label>
+                                    <flux:input wire:model="ubicacion" type="url"
+                                        placeholder="https://maps.google.com/?q=latitud,longitud" size="xs" class="w-full" />
+                                    <p class="text-xs text-gray-500 mt-1">Ingresa el enlace de Google Maps de la ubicación del proyecto</p>
                                 </div>
 
                                 <div class="grid grid-cols-3 gap-4">

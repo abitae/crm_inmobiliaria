@@ -42,8 +42,7 @@ class ProjectList extends Component
     public $province = '';
     public $region = '';
     public $country = '';
-    public $latitude = '';
-    public $longitude = '';
+    public $ubicacion = '';
     public $start_date = '';
     public $end_date = '';
     public $delivery_date = '';
@@ -85,8 +84,7 @@ class ProjectList extends Component
         'province' => 'nullable|string|max:255',
         'region' => 'nullable|string|max:255',
         'country' => 'nullable|string|max:255',
-        'latitude' => 'nullable|numeric|between:-90,90',
-        'longitude' => 'nullable|numeric|between:-180,180',
+        'ubicacion' => 'nullable|url|max:500',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'delivery_date' => 'nullable|date|after_or_equal:start_date',
@@ -226,8 +224,7 @@ class ProjectList extends Component
             'province',
             'region',
             'country',
-            'latitude',
-            'longitude',
+            'ubicacion',
             'start_date',
             'end_date',
             'delivery_date',
@@ -258,8 +255,7 @@ class ProjectList extends Component
         $this->province = $project->province;
         $this->region = $project->region;
         $this->country = $project->country;
-        $this->latitude = $project->latitude;
-        $this->longitude = $project->longitude;
+        $this->ubicacion = $project->ubicacion;
         $this->start_date = $project->start_date?->format('Y-m-d') ?? '';
         $this->end_date = $project->end_date?->format('Y-m-d') ?? '';
         $this->delivery_date = $project->delivery_date?->format('Y-m-d') ?? '';
@@ -478,8 +474,7 @@ class ProjectList extends Component
             'province' => $this->province,
             'region' => $this->region,
             'country' => $this->country,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
+            'ubicacion' => $this->ubicacion,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'delivery_date' => $this->delivery_date,

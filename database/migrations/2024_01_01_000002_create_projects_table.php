@@ -23,8 +23,7 @@ return new class extends Migration
             $table->string('province')->nullable();
             $table->string('region')->nullable();
             $table->string('country')->nullable();
-            $table->decimal('latitude', 10, 8)->nullable();
-            $table->decimal('longitude', 11, 8)->nullable();
+            $table->string('ubicacion')->nullable();
             $table->integer('total_units')->default(0);
             $table->integer('available_units')->default(0);
             $table->integer('reserved_units')->default(0);
@@ -47,7 +46,6 @@ return new class extends Migration
             $table->index(['status', 'project_type']);
             $table->index(['stage', 'status']);
             $table->index(['district', 'province', 'region']);
-            $table->index(['latitude', 'longitude']);
         });
     }
 
