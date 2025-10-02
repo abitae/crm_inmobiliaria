@@ -123,9 +123,11 @@
                 </div>
                 <div class="flex-1 flex flex-col justify-between">
                     @if ($project->path_images && is_array($project->path_images) && count($project->path_images) > 0)
-                        <div class="flex items-center justify-between bg-blue-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
+                        <div
+                            class="flex items-center justify-between bg-blue-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
                             <div class="flex items-center space-x-3 flex-1">
-                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shadow-sm">
+                                <div
+                                    class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shadow-sm">
                                     <flux:icon name="photo" class="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div>
@@ -152,7 +154,8 @@
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                            <div
+                                class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                 <flux:icon name="photo" class="w-8 h-8 text-gray-400" />
                             </div>
                             <p class="text-sm text-gray-500">No hay imágenes disponibles</p>
@@ -175,9 +178,11 @@
                 </div>
                 <div class="flex-1 flex flex-col justify-between">
                     @if ($project->path_videos && is_array($project->path_videos) && count($project->path_videos) > 0)
-                        <div class="flex items-center justify-between bg-purple-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
+                        <div
+                            class="flex items-center justify-between bg-purple-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
                             <div class="flex items-center space-x-3 flex-1">
-                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center shadow-sm">
+                                <div
+                                    class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center shadow-sm">
                                     <flux:icon name="play" class="w-5 h-5 text-purple-600" />
                                 </div>
                                 <div>
@@ -204,7 +209,8 @@
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                            <div
+                                class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                 <flux:icon name="play" class="w-8 h-8 text-gray-400" />
                             </div>
                             <p class="text-sm text-gray-500">No hay videos disponibles</p>
@@ -227,9 +233,11 @@
                 </div>
                 <div class="flex-1 flex flex-col justify-between">
                     @if ($project->path_documents && is_array($project->path_documents) && count($project->path_documents) > 0)
-                        <div class="flex items-center justify-between bg-orange-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
+                        <div
+                            class="flex items-center justify-between bg-orange-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
                             <div class="flex items-center space-x-3 flex-1">
-                                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shadow-sm">
+                                <div
+                                    class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shadow-sm">
                                     <flux:icon name="document" class="w-5 h-5 text-orange-600" />
                                 </div>
                                 <div>
@@ -256,7 +264,8 @@
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                            <div
+                                class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
                                 <flux:icon name="document" class="w-8 h-8 text-gray-400" />
                             </div>
                             <p class="text-sm text-gray-500">No hay documentos disponibles</p>
@@ -838,7 +847,8 @@
                                                     </div>
                                                 </div>
                                                 <!-- Botón de descarga en hover -->
-                                                <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div
+                                                    class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button wire:click="downloadDocument({{ $index }})"
                                                         class="w-6 h-6 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center"
                                                         title="Descargar {{ $media['title'] ?? 'Documento' }}">
@@ -944,14 +954,18 @@
                         <div class="relative bg-gray-100 rounded-lg p-4">
                             <!-- Visor de PDF -->
                             <div class="w-full h-96 bg-white rounded-lg shadow-inner flex items-center justify-center">
-                                <iframe src="{{ asset('storage/' . $currentPdf['path']) }}#toolbar=0&navpanes=0&scrollbar=0"
+                                <iframe
+                                    src="{{ asset('storage/' . $currentPdf['path']) }}#toolbar=0&navpanes=0&scrollbar=0"
                                     class="w-full h-full rounded-lg" frameborder="0">
                                     <div class="text-center py-12">
-                                        <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                        <div
+                                            class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                             <flux:icon name="document" class="w-8 h-8 text-gray-400" />
                                         </div>
-                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No se puede mostrar el PDF</h3>
-                                        <p class="text-sm text-gray-500 mb-4">Tu navegador no soporta la visualización de PDFs.</p>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No se puede mostrar el PDF
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mb-4">Tu navegador no soporta la visualización
+                                            de PDFs.</p>
                                         <a href="{{ asset('storage/' . $currentPdf['path']) }}" target="_blank"
                                             class="inline-flex items-center px-4 py-2 bg-orange-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
                                             <flux:icon name="arrow-down-tray" class="w-4 h-4 mr-2" />
@@ -1001,10 +1015,12 @@
                                         <button wire:click="selectPdf({{ $index }})"
                                             class="w-full p-3 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all {{ $index === $currentPdfIndex ? 'border-orange-500 bg-orange-50' : '' }}">
                                             <div class="flex flex-col items-center text-center">
-                                                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-2">
+                                                <div
+                                                    class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-2">
                                                     <flux:icon name="document" class="w-6 h-6 text-orange-600" />
                                                 </div>
-                                                <p class="text-xs font-medium text-gray-900 leading-tight line-clamp-2">
+                                                <p
+                                                    class="text-xs font-medium text-gray-900 leading-tight line-clamp-2">
                                                     {{ $pdf['title'] }}
                                                 </p>
                                                 <p class="text-xs text-gray-500 mt-1">
@@ -1013,14 +1029,16 @@
                                             </div>
 
                                             @if ($index === $currentPdfIndex)
-                                                <div class="absolute inset-0 bg-orange-500 bg-opacity-20 flex items-center justify-center">
-                                                    <div class="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center">
+                                                <div
+                                                    class="absolute inset-0 bg-orange-500 bg-opacity-20 flex items-center justify-center">
+                                                    <div
+                                                        class="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center">
                                                         <flux:icon name="check" class="w-3 h-3 text-white" />
                                                     </div>
                                                 </div>
                                             @endif
                                         </button>
-                                        
+
                                         <!-- Botón de descarga individual -->
                                         <button wire:click="downloadPdf({{ $index }})"
                                             class="absolute top-1 right-1 w-6 h-6 bg-orange-600 hover:bg-orange-700 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1307,14 +1325,15 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Seleccionar Documentos
                         </label>
-                        <input type="file" wire:model="newDocuments" multiple 
+                        <input type="file" wire:model="newDocuments" multiple
                             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf"
                             class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100" />
                         @error('newDocuments.*')
                             <span class="text-red-500 text-sm">{{ $message }}</span>
                         @enderror
                         <p class="mt-1 text-xs text-gray-500">
-                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF. Tamaño máximo: 50MB por archivo.
+                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF. Tamaño máximo: 50MB por
+                            archivo.
                         </p>
                     </div>
 
@@ -1339,7 +1358,8 @@
                                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                                     Título del Documento
                                                 </label>
-                                                <input type="text" wire:model="documentTitles.{{ $index }}"
+                                                <input type="text"
+                                                    wire:model="documentTitles.{{ $index }}"
                                                     placeholder="Ingrese un título descriptivo"
                                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
                                                 @error('documentTitles.' . $index)
@@ -1352,8 +1372,7 @@
                                                     Descripción
                                                 </label>
                                                 <textarea wire:model="documentDescriptions.{{ $index }}"
-                                                    placeholder="Agregue una descripción del documento (opcional)"
-                                                    rows="2"
+                                                    placeholder="Agregue una descripción del documento (opcional)" rows="2"
                                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
                                                 @error('documentDescriptions.' . $index)
                                                     <span class="text-red-500 text-sm">{{ $message }}</span>
@@ -1362,8 +1381,10 @@
 
                                             <!-- Información del archivo -->
                                             <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $document->getClientOriginalName() }}</p>
-                                                <p><strong>Tamaño:</strong> {{ number_format($document->getSize() / 1024, 2) }} KB</p>
+                                                <p><strong>Archivo:</strong> {{ $document->getClientOriginalName() }}
+                                                </p>
+                                                <p><strong>Tamaño:</strong>
+                                                    {{ number_format($document->getSize() / 1024, 2) }} KB</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1375,18 +1396,18 @@
 
                 <!-- Botones de acción -->
                 <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <button type="button" wire:click="closeAddDocumentsModal"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                    <flux:button type="button" wire:click="closeAddDocumentsModal" variant="outline" color="gray" icon="x-mark"
+                        size="xs">
                         Cancelar
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-orange-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                    </flux:button>
+                    <flux:button type="submit" color="orange" size="xs"
+                        icon="plus" wire:loading.remove wire:target="saveDocuments">
                         <span wire:loading.remove wire:target="saveDocuments">Guardar Documentos</span>
                         <span wire:loading wire:target="saveDocuments" class="flex items-center">
                             <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                             Guardando...
                         </span>
-                    </button>
+                    </flux:button>
                 </div>
             </form>
         </div>
