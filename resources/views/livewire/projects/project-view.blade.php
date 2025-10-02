@@ -315,6 +315,11 @@
                             title="Agregar unidad">
                             Agregar
                         </flux:button>
+                        <flux:button size="xs" icon="arrow-up-tray" wire:click="importUnits()"
+                            class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
+                            title="Importar unidades desde Excel">
+                            Importar
+                        </flux:button>
                     </div>
                 </div>
 
@@ -439,9 +444,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     @if ($unit->base_price)
-                                        ${{ number_format($unit->base_price, 2) }}
+                                        <span class="font-medium">S/{{ number_format($unit->base_price, 2) }}</span>
                                         <div class="text-xs text-gray-500">
-                                            ${{ number_format($unit->price_per_square_meter, 2) }}/m²
+                                            S/{{ number_format($unit->price_per_square_meter, 2) }}/m²
                                         </div>
                                     @else
                                         <span class="text-gray-400">No definido</span>
@@ -449,7 +454,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     @if ($unit->final_price)
-                                        <span class="font-medium">${{ number_format($unit->final_price, 2) }}</span>
+                                        <span class="font-medium">S/{{ number_format($unit->final_price, 2) }}</span>
                                         @if ($unit->discount_percentage > 0)
                                             <div class="text-xs text-red-600">
                                                 -{{ $unit->discount_percentage }}%
@@ -1396,12 +1401,12 @@
 
                 <!-- Botones de acción -->
                 <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <flux:button type="button" wire:click="closeAddDocumentsModal" variant="outline" color="gray" icon="x-mark"
-                        size="xs">
+                    <flux:button type="button" wire:click="closeAddDocumentsModal" variant="outline" color="gray"
+                        icon="x-mark" size="xs">
                         Cancelar
                     </flux:button>
-                    <flux:button type="submit" color="orange" size="xs"
-                        icon="plus" wire:loading.remove wire:target="saveDocuments">
+                    <flux:button type="submit" color="orange" size="xs" icon="plus" wire:loading.remove
+                        wire:target="saveDocuments">
                         <span wire:loading.remove wire:target="saveDocuments">Guardar Documentos</span>
                         <span wire:loading wire:target="saveDocuments" class="flex items-center">
                             <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
@@ -1577,6 +1582,88 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </flux:modal>
+
+    <!-- Modal compacto para Importar Unidades -->
+    <flux:modal wire:model="showImportUnitsModal" size="md">
+        <div class="p-4">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-base font-semibold text-gray-900">Importar Unidades</h3>
+                <flux:button icon="x-mark" variant="ghost" wire:click="closeImportUnitsModal" size="xs">
+
+                </flux:button>
+            </div>
+            <div class="text-xs text-gray-600 mb-2">
+                Sube un archivo <b>CSV</b> con las unidades del proyecto.<br>
+                <span class="text-blue-700">Campos requeridos:</span> <b>numero_unidad, tipo, area, precio_base,
+                    precio_total</b>.<br>
+                <span class="text-blue-700">Tipos válidos:</span> lote, casa, departamento, oficina, local.<br>
+                <span class="text-blue-700">Estados válidos:</span> disponible, reservado, vendido, bloqueado,
+                en_construccion.<br>
+                <span class="text-blue-700">Importante:</span> Solo se aceptan archivos CSV.
+            </div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-gray-700">Descarga la plantilla:</span>
+                <flux:button wire:click="downloadTemplate" variant="outline" size="xs" icon="arrow-down-tray">
+                    Plantilla CSV
+                </flux:button>
+            </div>
+            <div class="mb-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">
+                    Archivo CSV
+                </label>
+                <flux:input type="file" wire:model="importFile" accept=".csv" class="w-full" />
+                @error('importFile')
+                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            @if ($importProgress > 0)
+                <div class="mb-2">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-gray-600">Progreso</span>
+                        <span class="text-gray-900 font-medium">{{ $importProgress }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1">
+                        <div class="bg-blue-600 h-1 rounded-full transition-all duration-300"
+                            style="width: {{ $importProgress }}%"></div>
+                    </div>
+                    @if ($importStatus)
+                        <p class="text-xs text-gray-600 mt-1">{{ $importStatus }}</p>
+                    @endif
+                </div>
+            @endif
+            @if ($importSuccessCount > 0 || $importErrorCount > 0)
+                <div class="mb-2 space-y-1">
+                    @if ($importSuccessCount > 0)
+                        <div class="flex items-center text-green-600 text-xs">
+                            <flux:icon name="check-circle" class="h-4 w-4 mr-1" />
+                            {{ $importSuccessCount }} importadas
+                        </div>
+                    @endif
+                    @if ($importErrorCount > 0)
+                        <div class="flex items-center text-red-600 text-xs">
+                            <flux:icon name="exclamation-triangle" class="h-4 w-4 mr-1" />
+                            {{ $importErrorCount }} errores
+                        </div>
+                    @endif
+                    @if (!empty($importErrors))
+                        <div class="bg-red-50 border border-red-200 rounded p-2 max-h-20 overflow-y-auto">
+                            @foreach ($importErrors as $error)
+                                <p class="text-xs text-red-700 mb-0.5">{{ $error }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @endif
+            <div class="flex justify-end space-x-2 pt-2 border-t mt-2">
+                <flux:button icon="x-mark" variant="ghost" wire:click="closeImportUnitsModal" size="xs">
+                    Cancelar
+                </flux:button>
+                <flux:button icon="arrow-up-tray" wire:click="processImport"
+                    :disabled="!$importFile || $importProgress > 0" variant="primary" size="xs">
+                </flux:button>
+            </div>
         </div>
     </flux:modal>
 

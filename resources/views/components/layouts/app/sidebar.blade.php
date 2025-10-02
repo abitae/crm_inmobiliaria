@@ -6,6 +6,22 @@
 </head>
 
 <body class="min-h-screen bg-white dark:bg-zinc-800">
+
+    <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+
+        <flux:navbar class="-mb-px max-lg:hidden">
+            <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                wire:navigate>
+                {{ __('Dashboard') }}
+            </flux:navbar.item>
+            <flux:navbar.item icon="layout-grid" :href="route('clients.registro-masivo')" :current="request()->routeIs('clients.registro-masivo')"
+                wire:navigate>
+                {{ __('Registro Masivo') }}
+            </flux:navbar.item>
+        </flux:navbar>
+
+    </flux:header>
+
     <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
@@ -78,25 +94,25 @@
                 @endcan
 
             </flux:navlist.group> --}}
-            
+
             <flux:navlist.group :heading="__('Administración')" class="grid">
                 @can('manage_roles')
                     <flux:navlist.item icon="cog" :href="route('roles.index')"
                         :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Roles') }}
                     </flux:navlist.item>
-                    @endcan
-                    @can('manage_users')
+                @endcan
+                @can('manage_users')
                     <flux:navlist.item icon="users" :href="route('users.index')"
                         :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
                     </flux:navlist.item>
-                    @endcan
-                    @can('view_logs')
+                @endcan
+                @can('view_logs')
                     <flux:navlist.item icon="document-text" :href="route('logs.index')"
                         :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
                     </flux:navlist.item>
-                    @endcan
+                @endcan
             </flux:navlist.group>
-            
+
 
             @can('view_reports')
                 <flux:navlist.group :heading="__('Reportes')" class="grid">
@@ -117,7 +133,7 @@
 
         <flux:spacer />
 
-        
+
 
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">

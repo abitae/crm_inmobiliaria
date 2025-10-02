@@ -44,6 +44,15 @@ class ProjectView extends Component
     public $showAddVideosModal = false;
     public $showAddDocumentsModal = false;
     public $showAddUnitModal = false;
+    public $showImportUnitsModal = false;
+    
+    // Propiedades para importar unidades
+    public $importFile = null;
+    public $importProgress = 0;
+    public $importStatus = '';
+    public $importErrors = [];
+    public $importSuccessCount = 0;
+    public $importErrorCount = 0;
     
     // Propiedades para agregar medios
     public $newImages = [];
@@ -105,6 +114,11 @@ class ProjectView extends Component
         'status' => 'required|in:disponible,reservado,vendido,bloqueado,en_construccion',
         'notes' => 'nullable|string|max:1000',
     ];
+
+    protected $importRules = [
+        'importFile' => 'required|file|mimes:csv|max:10240', // 10MB max, solo CSV por ahora
+    ];
+
     protected $unitMessages = [
         'unit_number.required' => 'El número de unidad es requerido',
         'unit_number.string' => 'El número de unidad debe ser una cadena de texto',
@@ -924,6 +938,365 @@ class ProjectView extends Component
         $this->commission_percentage = $this->editingUnit->commission_percentage ?? 0;
         $this->status = $this->editingUnit->status;
         $this->notes = $this->editingUnit->notes;
+    }
+    public function importUnits()
+    {
+        $this->resetImportData();
+        $this->showImportUnitsModal = true;
+    }
+
+    public function closeImportUnitsModal()
+    {
+        $this->showImportUnitsModal = false;
+        $this->resetImportData();
+    }
+
+    public function resetImportData()
+    {
+        $this->importFile = null;
+        $this->importProgress = 0;
+        $this->importStatus = '';
+        $this->importErrors = [];
+        $this->importSuccessCount = 0;
+        $this->importErrorCount = 0;
+    }
+
+    public function downloadTemplate()
+    {
+        // Crear un archivo CSV de plantilla
+        $headers = [
+            'numero_unidad',
+            'manzana',
+            'tipo',
+            'torre',
+            'bloque',
+            'piso',
+            'area',
+            'dormitorios',
+            'banos',
+            'estacionamientos',
+            'cocheras',
+            'area_balcon',
+            'area_terraza',
+            'area_jardin',
+            'precio_base',
+            'precio_total',
+            'descuento_porcentaje',
+            'comision_porcentaje',
+            'estado',
+            'notas'
+        ];
+        
+        $sampleData = [
+            'A-101',
+            'Manzana A',
+            'departamento',
+            'Torre 1',
+            'Bloque A',
+            '1',
+            '85.5',
+            '2',
+            '2',
+            '1',
+            '1',
+            '5.0',
+            '0',
+            '0',
+            '15000',
+            '1282500',
+            '5',
+            '3',
+            'disponible',
+            'Departamento con vista al mar'
+        ];
+        
+        $filename = 'plantilla_unidades_' . $this->project->name . '.csv';
+        
+        return response()->streamDownload(function() use ($headers, $sampleData) {
+            $file = fopen('php://output', 'w');
+            
+            // Escribir headers
+            fputcsv($file, $headers);
+            
+            // Escribir datos de ejemplo
+            fputcsv($file, $sampleData);
+            
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+        ]);
+    }
+
+    public function processImport()
+    {
+        $this->validate($this->importRules);
+        
+        $this->importStatus = 'Procesando archivo...';
+        $this->importProgress = 10;
+        
+        try {
+            // Usar la funcionalidad de Livewire para archivos temporales
+            $fullPath = $this->importFile->getRealPath();
+            
+            // Verificar que el archivo existe
+            if (!file_exists($fullPath)) {
+                throw new \Exception('No se pudo acceder al archivo temporal. Verifique que el archivo se subió correctamente.');
+            }
+            
+            $this->importProgress = 30;
+            $this->importStatus = 'Leyendo datos del archivo...';
+            
+            // Leer el archivo Excel/CSV
+            $data = $this->readExcelFile($fullPath);
+            
+            if (empty($data)) {
+                $this->importStatus = 'El archivo está vacío o no contiene datos válidos.';
+                $this->importErrorCount = 1;
+                return;
+            }
+            
+            $this->importProgress = 50;
+            $this->importStatus = 'Validando y procesando datos...';
+            
+            // Procesar cada fila
+            $this->processImportData($data);
+            
+            $this->importProgress = 100;
+            $this->importStatus = "Importación completada. {$this->importSuccessCount} unidades importadas exitosamente.";
+            
+            if ($this->importErrorCount > 0) {
+                $this->importStatus .= " {$this->importErrorCount} errores encontrados.";
+            }
+            
+        } catch (\Exception $e) {
+            $this->importStatus = 'Error durante la importación: ' . $e->getMessage();
+            $this->importErrorCount++;
+        }
+    }
+
+    private function readExcelFile($filePath)
+    {
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        
+        if ($extension === 'csv') {
+            return $this->readCsvFile($filePath);
+        } else {
+            // Para archivos Excel (.xlsx, .xls), usar una librería como PhpSpreadsheet
+            // Por ahora, solo soportamos CSV
+            throw new \Exception('Solo se soportan archivos CSV por el momento. Por favor, guarde su archivo Excel como CSV.');
+        }
+    }
+
+    private function readCsvFile($filePath)
+    {
+        $data = [];
+        
+        if (!file_exists($filePath)) {
+            throw new \Exception('El archivo no existe: ' . $filePath);
+        }
+        
+        $handle = fopen($filePath, 'r');
+        
+        if ($handle === false) {
+            throw new \Exception('No se pudo abrir el archivo CSV. Verifique que el archivo no esté corrupto.');
+        }
+        
+        // Leer la primera fila como headers
+        $headers = fgetcsv($handle);
+        
+        if ($headers === false || empty($headers)) {
+            fclose($handle);
+            throw new \Exception('El archivo CSV no tiene headers válidos.');
+        }
+        
+        // Leer las filas de datos
+        $rowNumber = 1; // Empezamos en 1 porque ya leímos los headers
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNumber++;
+            
+            // Saltar filas vacías
+            if (empty(array_filter($row))) {
+                continue;
+            }
+            
+            // Asegurar que la fila tenga el mismo número de columnas que los headers
+            if (count($row) >= count($headers)) {
+                // Truncar la fila si tiene más columnas que headers
+                $row = array_slice($row, 0, count($headers));
+                $data[] = array_combine($headers, $row);
+            } else {
+                // Rellenar con valores vacíos si la fila tiene menos columnas
+                while (count($row) < count($headers)) {
+                    $row[] = '';
+                }
+                $data[] = array_combine($headers, $row);
+            }
+        }
+        
+        fclose($handle);
+        
+        return $data;
+    }
+
+    private function processImportData($data)
+    {
+        $this->importSuccessCount = 0;
+        $this->importErrorCount = 0;
+        $this->importErrors = [];
+        
+        foreach ($data as $index => $row) {
+            $rowNumber = $index + 2; // +2 porque el índice empieza en 0 y la primera fila son headers
+            
+            try {
+                // Validar y limpiar datos
+                $unitData = $this->validateAndCleanUnitData($row, $rowNumber);
+                
+                if ($unitData) {
+                    // Crear la unidad
+                    $unit = $this->project->units()->create($unitData);
+                    $this->importSuccessCount++;
+                }
+                
+            } catch (\Exception $e) {
+                $this->importErrorCount++;
+                $this->importErrors[] = "Fila {$rowNumber}: " . $e->getMessage();
+            }
+        }
+    }
+
+    private function validateAndCleanUnitData($row, $rowNumber)
+    {
+        // Mapear columnas del Excel a campos de la base de datos
+        $mapping = [
+            'numero_unidad' => 'unit_number',
+            'manzana' => 'unit_manzana',
+            'tipo' => 'unit_type',
+            'torre' => 'tower',
+            'bloque' => 'block',
+            'piso' => 'floor',
+            'area' => 'area',
+            'dormitorios' => 'bedrooms',
+            'banos' => 'bathrooms',
+            'estacionamientos' => 'parking_spaces',
+            'cocheras' => 'storage_rooms',
+            'area_balcon' => 'balcony_area',
+            'area_terraza' => 'terrace_area',
+            'area_jardin' => 'garden_area',
+            'precio_base' => 'base_price',
+            'precio_total' => 'total_price',
+            'descuento_porcentaje' => 'discount_percentage',
+            'comision_porcentaje' => 'commission_percentage',
+            'estado' => 'status',
+            'notas' => 'notes'
+        ];
+        
+        $unitData = [
+            'project_id' => $this->project->id,
+            'created_by' => 1, // Admin user
+            'updated_by' => 1, // Admin user
+        ];
+        
+        foreach ($mapping as $excelColumn => $dbField) {
+            if (isset($row[$excelColumn]) && $row[$excelColumn] !== '') {
+                $value = trim($row[$excelColumn]);
+                
+                // Validaciones específicas por campo
+                switch ($dbField) {
+                    case 'unit_number':
+                        if (empty($value)) {
+                            throw new \Exception("El número de unidad es requerido");
+                        }
+                        // Verificar si ya existe
+                        if ($this->project->units()->where('unit_number', $value)->exists()) {
+                            throw new \Exception("El número de unidad '{$value}' ya existe en este proyecto");
+                        }
+                        break;
+                        
+                    case 'unit_type':
+                        $validTypes = ['lote', 'casa', 'departamento', 'oficina', 'local'];
+                        if (!in_array(strtolower($value), $validTypes)) {
+                            throw new \Exception("Tipo de unidad inválido: '{$value}'. Valores válidos: " . implode(', ', $validTypes));
+                        }
+                        $value = strtolower($value);
+                        break;
+                        
+                    case 'status':
+                        $validStatuses = ['disponible', 'reservado', 'vendido', 'bloqueado', 'en_construccion'];
+                        if (!in_array(strtolower($value), $validStatuses)) {
+                            throw new \Exception("Estado inválido: '{$value}'. Valores válidos: " . implode(', ', $validStatuses));
+                        }
+                        $value = strtolower($value);
+                        break;
+                        
+                    case 'area':
+                    case 'base_price':
+                    case 'total_price':
+                    case 'discount_percentage':
+                    case 'commission_percentage':
+                    case 'balcony_area':
+                    case 'terrace_area':
+                    case 'garden_area':
+                        if (!is_numeric($value)) {
+                            throw new \Exception("El campo '{$excelColumn}' debe ser numérico");
+                        }
+                        $value = (float) $value;
+                        break;
+                        
+                    case 'floor':
+                    case 'bedrooms':
+                    case 'bathrooms':
+                    case 'parking_spaces':
+                    case 'storage_rooms':
+                        if (!is_numeric($value)) {
+                            throw new \Exception("El campo '{$excelColumn}' debe ser numérico");
+                        }
+                        $value = (int) $value;
+                        break;
+                }
+                
+                $unitData[$dbField] = $value;
+            }
+        }
+        
+        // Validar campos requeridos
+        if (empty($unitData['unit_number'])) {
+            throw new \Exception("El número de unidad es requerido");
+        }
+        if (empty($unitData['unit_type'])) {
+            throw new \Exception("El tipo de unidad es requerido");
+        }
+        if (empty($unitData['area'])) {
+            throw new \Exception("El área es requerida");
+        }
+        if (empty($unitData['base_price'])) {
+            throw new \Exception("El precio base es requerido");
+        }
+        if (empty($unitData['total_price'])) {
+            throw new \Exception("El precio total es requerido");
+        }
+        if (empty($unitData['status'])) {
+            $unitData['status'] = 'disponible';
+        }
+        
+        // Calcular descuento y comisión si no se proporcionan
+        if (isset($unitData['discount_percentage']) && $unitData['discount_percentage'] > 0) {
+            $unitData['discount_amount'] = ($unitData['total_price'] * $unitData['discount_percentage']) / 100;
+        } else {
+            $unitData['discount_percentage'] = 0;
+            $unitData['discount_amount'] = 0;
+        }
+        
+        if (isset($unitData['commission_percentage']) && $unitData['commission_percentage'] > 0) {
+            $unitData['commission_amount'] = ($unitData['total_price'] * $unitData['commission_percentage']) / 100;
+        } else {
+            $unitData['commission_percentage'] = 0;
+            $unitData['commission_amount'] = 0;
+        }
+        
+        $unitData['final_price'] = $unitData['total_price'] - ($unitData['discount_amount'] ?? 0);
+        
+        return $unitData;
     }
     public function render()
     {

@@ -35,6 +35,8 @@ class ClientRegistroMasivo extends Component
     public $birth_date = '';
 
     #[Rule('required|in:inversor,comprador,empresa,constructor')]
+    // Mensajes de validación personalizados
+    
 
     public $client_type = 'comprador';
 
@@ -84,13 +86,34 @@ class ClientRegistroMasivo extends Component
 
     public $statuses = [
         'nuevo' => 'Nuevo',
-        'contacto_inicial' => 'Contacto Inicial',
-        'en_seguimiento' => 'En Seguimiento',
-        'cierre' => 'Cierre',
-        'perdido' => 'Perdido'
     ];
 
     protected $clientService;
+    protected $messages = [
+        'name.required' => 'El nombre es obligatorio.',
+        'name.max' => 'El nombre no debe exceder los 255 caracteres.',
+        'phone.required' => 'El teléfono es obligatorio.',
+        'phone.max' => 'El teléfono debe tener como máximo 9 dígitos.',
+        'phone.min' => 'El teléfono debe tener al menos 9 dígitos.',
+        'document_type.required' => 'El tipo de documento es obligatorio.',
+        'document_type.in' => 'El tipo de documento seleccionado no es válido.',
+        'document_number.required' => 'El número de documento es obligatorio.',
+        'document_number.max' => 'El número de documento debe tener como máximo 8 dígitos.',
+        'document_number.min' => 'El número de documento debe tener al menos 8 dígitos.',
+        'address.max' => 'La dirección no debe exceder los 500 caracteres.',
+        'birth_date.date' => 'La fecha de nacimiento no es válida.',
+        'client_type.required' => 'El tipo de cliente es obligatorio.',
+        'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
+        'source.required' => 'La fuente es obligatoria.',
+        'source.in' => 'La fuente seleccionada no es válida.',
+        'status.required' => 'El estado es obligatorio.',
+        'status.in' => 'El estado seleccionado no es válido.',
+        'score.required' => 'El puntaje es obligatorio.',
+        'score.integer' => 'El puntaje debe ser un número entero.',
+        'score.min' => 'El puntaje no puede ser menor a 0.',
+        'score.max' => 'El puntaje no puede ser mayor a 100.',
+        'notes.string' => 'Las notas deben ser texto.',
+    ];
 
     public function boot(ClientService $clientService)
     {
@@ -206,27 +229,29 @@ class ClientRegistroMasivo extends Component
             $this->errorMessage = 'Cliente ya existe en la base de datos, asesor asignado: '. $client->assignedAdvisor->name;
             return;
         }
+        
         if ($tipo == 'dni' and strlen($num_doc) == 8) {
             $result = $this->searchComplete($tipo, $num_doc);
             if ($result['encontrado']) {
-                // Simular datos de ejemplo para el DNI
-                $this->name = 'Nombre Ejemplo';
-                $this->last_name = 'Apellido Ejemplo';
-                $this->birth_date = '1990-01-01';
-                $this->address = 'Dirección Ejemplo';
-                $this->city = 'Lima';
-                $this->state = 'Lima';
-                $this->zip_code = '15001';
-                $this->country = 'Perú';
-                $this->gender = 'M';
-                $this->marital_status = 'Soltero';
-                $this->occupation = 'Empleado';
-                $this->company = 'Empresa Ejemplo';
-                $this->income = '5000';
-                $this->notes = 'Cliente encontrado por DNI';
-                
+                $this->document_type = 'DNI';
+                $this->document_number = $num_doc;
+                $this->name = $result['data']->nombre;
+                // Convertir la fecha de nacimiento del formato DD/MM/YYYY a Y-m-d
+                $fecha_nacimiento = $result['data']->fecha_nacimiento;
+                try {
+                    // Intentar parsear el formato DD/MM/YYYY
+                    $this->birth_date = \Carbon\Carbon::createFromFormat('d/m/Y', $fecha_nacimiento)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    // Si falla, intentar otros formatos comunes
+                    try {
+                        $this->birth_date = \Carbon\Carbon::parse($fecha_nacimiento)->format('Y-m-d');
+                    } catch (\Exception $e2) {
+                        // Si todo falla, dejar vacío
+                        $this->birth_date = '';
+                    }
+                }
                 $this->showSuccessMessage = true;
-                $this->successMessage = 'Cliente encontrado: ' . $this->name . ' ' . $this->last_name;
+                $this->successMessage = 'Cliente encontrado: ' . $this->name;
             } else {
                 $this->showErrorMessage = true;
                 $this->errorMessage = 'No encontrado';

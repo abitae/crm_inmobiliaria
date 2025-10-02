@@ -88,7 +88,7 @@
 
                         <!-- Nombre -->
                         <div>
-                            <flux:input label="Nombre Completo" wire:model="name"
+                            <flux:input label="Nombre Completo" wire:model.live="name"
                                 placeholder="Ingrese el nombre completo" class="w-full" />
                         </div>
 
@@ -100,7 +100,7 @@
 
                         <!-- Fecha de Nacimiento -->
                         <div>
-                            <flux:input label="Fecha de Nacimiento" type="date" wire:model="birth_date"
+                            <flux:input label="Fecha de Nacimiento" type="date" wire:model.live="birth_date"
                                 class="w-full" />
                         </div>
 
