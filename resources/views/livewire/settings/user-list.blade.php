@@ -179,6 +179,11 @@
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-1">
+                                        @if($user->isDatero())
+                                            <flux:button icon="qr-code" size="xs" variant="outline"
+                                                wire:click="verQR({{ $user->id }})" title="Ver QR">
+                                            </flux:button>
+                                        @endif
                                         <flux:button icon="pencil" size="xs" variant="outline"
                                             wire:click="openUserModal({{ $user->id }})" title="Editar usuario">
                                         </flux:button>
@@ -485,6 +490,24 @@
                     {{ $actionType === 'activate' ? 'Activar' : 'Desactivar' }} Usuario
                 </flux:button>
             </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal de QR -->
+    <flux:modal wire:model="showQRModal" size="md">
+        <div class="p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-2 flex items-center justify-center gap-2">
+                <flux:icon name="qr-code" class="w-5 h-5 text-gray-600" />
+                QR del Usuario
+            </h3>
+            <div class="bg-white p-4 rounded-lg border border-gray-200 flex justify-center items-center">
+                {!! $qrcode !!}
+            </div>
+            <flux:button icon="x-circle" type="button" variant="outline" size="sm"
+                wire:click="closeQRModal" class="mt-4 w-full">
+                Cerrar
+            </flux:button>
+
         </div>
     </flux:modal>
 </div>

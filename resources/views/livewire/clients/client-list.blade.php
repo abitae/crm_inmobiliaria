@@ -157,9 +157,9 @@
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
-                                    {{ $client->activities ? $client->activities->last()->title : 'Sin actividad' }}
+                                    {{ optional($client->activities->last())->title ?? 'Sin actividad' }}
                                     <br>
-                                    {{ $client->activities ? $client->activities->last()->start_date->format('d/m/Y') : '' }}
+                                    {{ optional(optional($client->activities->last())->start_date)->format('d/m/Y') }}
                                     
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap font-medium">
@@ -214,9 +214,6 @@
                         <flux:input.group>
                             <flux:select wire:model="document_type" size="xs">
                                 <flux:select.option selected>DNI</flux:select.option>
-                                <flux:select.option>RUC</flux:select.option>
-                                <flux:select.option>CE</flux:select.option>
-                                <flux:select.option>PASAPORTE</flux:select.option>
                             </flux:select>
                             <flux:input wire:model="document_number" size="xs" placeholder="N° Documento *"
                                 class="w-full" />

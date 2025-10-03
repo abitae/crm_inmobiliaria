@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Role;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserList extends Component
 {
@@ -31,13 +32,13 @@ class UserList extends Component
     public bool $showUserModal = false;
     public ?User $selectedUser = null;
     public bool $isCreating = false;
-    
+    public bool $showQRModal = false;
     // Propiedades para confirmación
     public bool $isConfirming = false;
     public string $confirmAction = '';
     public string $confirmMessage = '';
     public ?int $confirmUserId = null;
-    
+
     // Propiedades para modal de activación/desactivación
     public bool $showDeactivateModal = false;
     public ?User $userToModify = null;
@@ -55,14 +56,15 @@ class UserList extends Component
     // Propiedades para datos
     public $roles;
     public $leaders;
-
+    public string $qrcode;
+    protected ?string $cachedQRCode = null;
     /**
      * Inicializa el componente con datos necesarios
      */
     public function mount(): void
     {
         $this->roles = Role::orderBy('name')->get();
-        $this->leaders = User::whereHas('roles', function($query) {
+        $this->leaders = User::whereHas('roles', function ($query) {
             $query->whereIn('name', ['admin', 'lider']);
         })->select('id', 'name', 'email')->get();
     }
@@ -133,7 +135,7 @@ class UserList extends Component
         $this->isConfirming = true;
         $this->confirmAction = $action;
         $this->confirmUserId = $userId;
-        $this->confirmMessage = $action === 'activate' 
+        $this->confirmMessage = $action === 'activate'
             ? "¿Estás seguro de que deseas activar a {$userName}?"
             : "¿Estás seguro de que deseas desactivar a {$userName}?";
         $this->showUserModal = true;
@@ -209,8 +211,13 @@ class UserList extends Component
     private function resetForm(): void
     {
         $this->reset([
-            'name', 'email', 'phone', 'lider_id', 
-            'selectedRole', 'password', 'password_confirmation'
+            'name',
+            'email',
+            'phone',
+            'lider_id',
+            'selectedRole',
+            'password',
+            'password_confirmation'
         ]);
         $this->selectedUser = null;
         $this->isCreating = false;
@@ -291,7 +298,7 @@ class UserList extends Component
         ]);
 
         $this->selectedUser->setRole($this->selectedRole);
-        
+
         $this->dispatch('user-updated', message: 'Usuario actualizado correctamente.');
     }
 
@@ -301,7 +308,7 @@ class UserList extends Component
     public function confirmActivate(int $userId): void
     {
         $user = User::with('roles')->find($userId);
-        
+
         if (!$user) {
             $this->dispatch('show-error', message: 'Usuario no encontrado.');
             return;
@@ -323,7 +330,7 @@ class UserList extends Component
     public function confirmDeactivate(int $userId): void
     {
         $user = User::with('roles')->find($userId);
-        
+
         if (!$user) {
             $this->dispatch('show-error', message: 'Usuario no encontrado.');
             return;
@@ -350,7 +357,7 @@ class UserList extends Component
     private function validateUserStatus(int $userId, bool $shouldBeActive): ?User
     {
         $user = User::find($userId);
-        
+
         if (!$user) {
             $this->dispatch('show-error', message: 'Usuario no encontrado.');
             return null;
@@ -416,8 +423,8 @@ class UserList extends Component
                 $searchTerm = '%' . $this->search . '%';
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'like', $searchTerm)
-                      ->orWhere('email', 'like', $searchTerm)
-                      ->orWhere('phone', 'like', $searchTerm);
+                        ->orWhere('email', 'like', $searchTerm)
+                        ->orWhere('phone', 'like', $searchTerm);
                 });
             })
             ->when($this->statusFilter === 'active', function ($query) {
@@ -450,7 +457,29 @@ class UserList extends Component
         $this->reset(['search', 'statusFilter', 'roleFilter', 'leaderFilter']);
         $this->resetPage();
     }
-
+    public function verQR(int $userId): void
+    {
+        $this->selectedUser = User::find($userId);
+        $this->qrcode = $this->getQRCode();
+        $this->showQRModal = true;
+    }
+    public function closeQRModal(): void
+    {
+        $this->showQRModal = false;
+        $this->selectedUser = null;
+    }
+    public function getQRCode(): string
+    {
+        if ($this->cachedQRCode === null) {
+            $url = url('clients/registro-datero/' . $this->selectedUser->id);
+            $this->cachedQRCode = QrCode::size(150)
+                ->color(0, 0, 255)
+                ->margin(2)
+                ->backgroundColor(0, 255, 0)
+                ->generate($url);
+        }
+        return $this->cachedQRCode;
+    }
     /**
      * Renderiza el componente
      */

@@ -2,16 +2,17 @@
 
 namespace App\Livewire\Clients;
 
+use App\Models\Client;
 use App\Services\ClientService;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
-
+use App\Traits\SearchDocument;
 class ClientList extends Component
 {
     use WithPagination;
-
+    use SearchDocument;
     // Filtros
     public $search = '';
     public $statusFilter = '';
@@ -237,6 +238,46 @@ class ClientList extends Component
             'notes' => $this->notes,
             'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
         ];
+    }
+    public function searchClient()
+    {
+        $tipo = strtolower($this->document_type);
+        $num_doc = $this->document_number;
+        
+        // Verificar si el cliente ya existe
+        if ($this->clientExists($tipo, $num_doc)) {
+            return;
+        }
+        
+        if ($tipo === 'dni' && strlen($num_doc) === 8) {
+            $this->searchClientData($tipo, $num_doc);
+        } else {
+            $this->dispatch('show-error', message: 'Ingrese un número de documento válido');
+        }
+    }
+    private function clientExists(string $tipo, string $num_doc): bool
+    {
+        $client = Client::where('document_number', $num_doc)
+            ->where('document_type', $tipo)
+            ->first();
+            
+        if ($client) {
+            $this->dispatch('show-error', message: 'Cliente ya existe en la base de datos, asesor asignado: ' . $client->assignedAdvisor->name);
+            return true;
+        }
+        
+        return false;
+    }
+    private function searchClientData(string $tipo, string $num_doc): void
+    {
+        $result = $this->searchComplete($tipo, $num_doc);
+        
+        if ($result['encontrado']) {
+            $this->fillClientData($result['data']);
+            $this->dispatch('show-success', message: 'Cliente encontrado: ' . $this->name);
+        } else {
+            $this->dispatch('show-error', message: 'No encontrado');
+        }
     }
 
     public function render()

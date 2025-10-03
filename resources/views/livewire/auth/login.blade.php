@@ -1,17 +1,17 @@
 <div class="flex flex-col gap-6">
-    <x-auth-header :title="__('CRM Inmobiliario')" :description="__('Gestiona tu negocio inmobiliario con Open9 CRM')" />
+    <x-auth-header :title="__('Open9CRM')" :description="__('Gestiona tu negocio inmobiliario')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
 
     <form method="POST" wire:submit="login" class="flex flex-col gap-6">
         <!-- Email Address -->
-        <flux:input wire:model="email" :label="__('Email')" type="email" required autofocus autocomplete="email"
+        <flux:input size="xs" wire:model="email" :label="__('Email')" type="email" required autofocus autocomplete="email"
             placeholder="email@example.com" />
 
         <!-- Password -->
         <div class="relative">
-            <flux:input wire:model="password" :label="__('Contraseña')" type="password" required
+            <flux:input size="xs" wire:model="password" :label="__('Contraseña')" type="password" required
                 autocomplete="current-password" :placeholder="__('Contraseña')" viewable />
 
             @if (Route::has('password.request'))
@@ -22,10 +22,10 @@
         </div>
 
         <!-- Remember Me -->
-        <flux:checkbox wire:model="remember" :label="__('Recuérdame')" />
+        <flux:checkbox size="xs" wire:model="remember" :label="__('Recuérdame')" />
 
         <div class="flex items-center justify-end">
-            <flux:button variant="primary" type="submit" class="w-full">{{ __('Iniciar sesión') }}</flux:button>
+            <flux:button size="xs" variant="primary" type="submit" class="w-full">{{ __('Iniciar sesión') }}</flux:button>
         </div>
     </form>
 
