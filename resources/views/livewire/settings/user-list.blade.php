@@ -347,7 +347,27 @@
                                     <span class="text-red-500 text-xs">{{ $message }}</span>
                                 @enderror
                             </div>
-
+                            <div class="col-span-2">
+                                <flux:input id="banco" wire:model="banco" size="xs" placeholder="Banco"
+                                    class="w-full" />
+                                @error('banco')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="col-span-2">
+                                <flux:input id="cuenta_bancaria" wire:model="cuenta_bancaria" size="xs" placeholder="Cuenta bancaria"
+                                    class="w-full" />
+                                @error('cuenta_bancaria')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="col-span-2">
+                                <flux:input id="cci_bancaria" wire:model="cci_bancaria" size="xs" placeholder="CCI bancaria"
+                                    class="w-full" />
+                                @error('cci_bancaria')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
                             <!-- Campos de contraseña solo para creación -->
                             @if ($isCreating)
                                 <div class="col-span-2">

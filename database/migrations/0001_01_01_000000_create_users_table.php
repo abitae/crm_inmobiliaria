@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('banco')->nullable();
+            $table->string('cuenta_bancaria')->nullable();
+            $table->string('cci_bancaria')->nullable();
             $table->foreignId('lider_id')->nullable()->constrained('users')->onDelete('set null');
             $table->boolean('is_active')->default(true);
             $table->rememberToken();

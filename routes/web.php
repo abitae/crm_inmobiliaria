@@ -16,6 +16,7 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Actividades\ActivityList;
+use App\Livewire\Auth\RegisterDatero;
 use App\Livewire\Logs\LogViewer;
 
 /*
@@ -74,5 +75,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/users', UserList::class)->name('users.index');
 });
 Route::get('/clients/registro-datero/{id}', ClientRegistroDatero::class)->name('clients.registro-datero');
+Route::get('/register-datero', RegisterDatero::class)->name('register-datero');
 
 require __DIR__ . '/auth.php';

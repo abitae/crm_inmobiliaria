@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-6">
-    <x-auth-header :title="__('REGISTRO CAZADOR')" :description="__('Registrate como cazador para gestionar tus clientes')" />
+    <x-auth-header :title="__('REGISTRO DATERO')" :description="__('Regístrate como datero para gestionar tus clientes')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
@@ -37,15 +37,9 @@
         <flux:input size="xs" wire:model="password_confirmation" :label="__('Confirmar contraseña')" type="password" required
             autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
 
-        <!-- Líder -->
-        <flux:select size="xs" wire:model="lider_id" :label="__('Líder')">
-            @foreach ($leaders as $leader)
-                <option value="{{ $leader->id }}">{{ $leader->name }}</option>
-            @endforeach
-        </flux:select>
 
         <div class="flex items-center justify-end">
-            <flux:button size="xs" type="submit" variant="primary" class="w-full">
+            <flux:button type="submit" variant="primary" class="w-full" size="xs">
                 {{ __('Crear cuenta') }}
             </flux:button>
         </div>
@@ -53,6 +47,6 @@
 
     <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
         <span>{{ __('Ya tienes una cuenta?') }}</span>
-        <flux:link :href="route('login')" wire:navigate>{{ __('Iniciar sesión') }}</flux:link>
+        <flux:link :href="route('login')" wire:navigate size="xs">{{ __('Iniciar sesión') }}</flux:link>
     </div>
 </div>

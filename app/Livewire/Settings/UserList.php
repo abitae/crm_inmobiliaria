@@ -52,6 +52,9 @@ class UserList extends Component
     public string $selectedRole = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $banco = '';
+    public string $cuenta_bancaria = '';
+    public string $cci_bancaria = '';
 
     // Propiedades para datos
     public $roles;
@@ -217,7 +220,10 @@ class UserList extends Component
             'lider_id',
             'selectedRole',
             'password',
-            'password_confirmation'
+            'password_confirmation',
+            'banco',
+            'cuenta_bancaria',
+            'cci_bancaria'
         ]);
         $this->selectedUser = null;
         $this->isCreating = false;
@@ -235,6 +241,9 @@ class UserList extends Component
         $this->selectedRole = $this->selectedUser->roles->first()?->name ?? '';
         $this->password = '';
         $this->password_confirmation = '';
+        $this->banco = $this->selectedUser->banco ?? '';
+        $this->cuenta_bancaria = $this->selectedUser->cuenta_bancaria ?? '';
+        $this->cci_bancaria = $this->selectedUser->cci_bancaria ?? '';
     }
 
     /**
@@ -247,6 +256,9 @@ class UserList extends Component
             'phone' => 'nullable|string|max:20',
             'lider_id' => 'nullable|exists:users,id',
             'selectedRole' => 'required|exists:roles,name',
+            'banco' => 'nullable|string|max:255',
+            'cuenta_bancaria' => 'nullable|string|max:255',
+            'cci_bancaria' => 'nullable|string|max:255',
         ];
 
         if ($this->isCreating) {
@@ -279,6 +291,9 @@ class UserList extends Component
             'lider_id' => $this->lider_id,
             'password' => bcrypt($this->password),
             'is_active' => true,
+            'banco' => $this->banco,
+            'cuenta_bancaria' => $this->cuenta_bancaria,
+            'cci_bancaria' => $this->cci_bancaria,
         ]);
 
         $user->setRole($this->selectedRole);
@@ -295,6 +310,9 @@ class UserList extends Component
             'email' => $this->email,
             'phone' => $this->phone ?: null,
             'lider_id' => $this->lider_id,
+            'banco' => $this->banco,
+            'cuenta_bancaria' => $this->cuenta_bancaria,
+            'cci_bancaria' => $this->cci_bancaria,
         ]);
 
         $this->selectedUser->setRole($this->selectedRole);

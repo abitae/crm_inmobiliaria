@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 #[Layout('components.layouts.auth')]
-class Register extends Component
+class RegisterDatero extends Component
 {
     public string $name = '';
     public string $email = '';
@@ -22,20 +22,10 @@ class Register extends Component
     public string $banco = '';
     public string $cuenta_bancaria = '';
     public string $cci_bancaria = '';
-
-    /**
-     * Handle an incoming registration request.
-     */
-    public $leaders = [];
-
-    public function mount()
+    public function render()
     {
-        $this->leaders = User::whereHas('roles', function($query) {
-            $query->whereIn('name', ['lider', 'admin']);
-        })->get();
-        $this->lider_id = $this->leaders->first()->id;
+        return view('livewire.auth.register-datero');
     }
-
     public function register(): void
     {
         $validated = $this->validate([
@@ -88,7 +78,7 @@ class Register extends Component
         event(new Registered(($user = User::create($validated))));
 
         Auth::login($user);
-        $user->assignRole('vendedor');
+        $user->assignRole('datero');
         $this->redirect(route('dashboard', absolute: true));
     }
 }

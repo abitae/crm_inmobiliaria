@@ -26,6 +26,9 @@ class User extends Authenticatable
         'password',
         'lider_id',
         'is_active',
+        'banco',
+        'cuenta_bancaria',
+        'cci_bancaria',
     ];
 
     /**
