@@ -70,16 +70,15 @@
                     <h2 class="text-base sm:text-lg font-semibold text-gray-900">Información Personal</h2>
 
                     <div class="flex flex-col gap-4">
-                        <flux:input.group>
-                            <flux:select wire:model="document_type" size="xs" class="w-24">
+                        <flux:input.group class="flex items-end w-full">
+                            <flux:select wire:model.live="document_type" class="w-32" label="Tipo">
                                 <option value="DNI">DNI</option>
-                                <option value="CE">CE</option>
-                                <option value="RUC">RUC</option>
                             </flux:select>
-                            <flux:input class="w-full" placeholder="Ingrese el número de documento"
+                            <flux:input class="flex-1" label="Número de documento" placeholder="Número de documento"
                                 wire:model="document_number" />
                             @if ($document_type == 'DNI')
-                                <flux:button icon="magnifying-glass" wire:click="buscarDocumento"></flux:button>
+                            <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
+                            label="Buscar" />
                             @endif
                         </flux:input.group>
 
