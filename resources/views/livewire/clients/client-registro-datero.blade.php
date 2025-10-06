@@ -12,7 +12,7 @@
                         Completa el formulario para registrar un nuevo cliente y aumentar tus oportunidades.
                     </p>
                 </div>
-                <div class="flex flex-row gap-2 mt-4 sm:mt-0">
+                <div  class="flex gap-2 mt-4">
                     <flux:button size="sm" icon="list-bullet" href="{{ route('clients.index') }}"
                         class="bg-white text-green-700 border border-green-200 hover:bg-green-50 transition">
                         Mis Clientes
