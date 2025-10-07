@@ -9,46 +9,30 @@ use App\Services\ClientService;
 use App\Models\Client;
 use App\Models\User;
 use App\Traits\SearchDocument;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 #[Layout('components.layouts.auth')]
 class ClientRegistroDatero extends Component
 {
     use SearchDocument;
+    // Constantes para configuraciones
+    private const DEFAULT_SCORE = 50;
+    private const QR_SIZE = 150;
+    private const DATE_FORMATS = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
     
     // Propiedades del formulario
-    #[Rule('required|string|max:255')]
-    public $name = '';
-
-    #[Rule('required|string|max:9|min:9')]
-    public $phone = '';
-
-    #[Rule('required|in:DNI')]
-    public $document_type = 'DNI';
-
-    #[Rule('required|string|max:8|min:8')]
-    public $document_number = '';
-
-    #[Rule('nullable|string|max:500')]
-    public $address = '';
-
-    #[Rule('nullable|date')]
-    public $birth_date = '';
-
-    #[Rule('required|in:inversor,comprador,empresa,constructor')]
-
-    public $client_type = 'comprador';
-
-    #[Rule('required|in:redes_sociales,ferias,referidos,formulario_web,publicidad')]
-    public $source = 'formulario_web';
-
-    #[Rule('required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido')]
-    public $status = 'nuevo';
-
-    #[Rule('required|integer|min:0|max:100')]
-    public $score = 50;
-
-    #[Rule('nullable|string')]
-    public $notes = '';
+    public string $name = '';
+    public string $phone = '';
+    public string $document_type = 'DNI';
+    public string $document_number = '';
+    public ?string $address = null;
+    public ?string $birth_date = null;
+    public string $client_type = 'comprador';
+    public string $source = 'formulario_web';
+    public string $status = 'nuevo';
+    public int $score = self::DEFAULT_SCORE;
+    public ?string $notes = null;
 
     // El asesor asignado será automáticamente el usuario autenticado
     public $assigned_advisor_id = null;
@@ -95,6 +79,44 @@ class ClientRegistroDatero extends Component
 
     protected $clientService;
 
+    protected $rules = [
+        'name' => 'required|string|max:255',
+        'phone' => 'required|string|size:9',
+        'document_type' => 'required|in:DNI',
+        'document_number' => 'required|string|size:8',
+        'address' => 'nullable|string|max:500',
+        'birth_date' => 'nullable|date',
+        'client_type' => 'required|in:inversor,comprador,empresa,constructor',
+        'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
+        'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
+        'score' => 'required|integer|min:0|max:100',
+        'notes' => 'nullable|string',
+    ];
+
+    // Mensajes de validación personalizados
+    protected $messages = [
+        'name.required' => 'El nombre es obligatorio.',
+        'name.max' => 'El nombre no debe exceder los 255 caracteres.',
+        'phone.required' => 'El teléfono es obligatorio.',
+        'phone.size' => 'El teléfono debe tener exactamente 9 dígitos.',
+        'document_type.required' => 'El tipo de documento es obligatorio.',
+        'document_type.in' => 'El tipo de documento seleccionado no es válido.',
+        'document_number.required' => 'El número de documento es obligatorio.',
+        'document_number.size' => 'El número de documento debe tener exactamente 8 dígitos.',
+        'address.max' => 'La dirección no debe exceder los 500 caracteres.',
+        'birth_date.date' => 'La fecha de nacimiento no es válida.',
+        'client_type.required' => 'El tipo de cliente es obligatorio.',
+        'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
+        'source.required' => 'La fuente es obligatoria.',
+        'source.in' => 'La fuente seleccionada no es válida.',
+        'status.required' => 'El estado es obligatorio.',
+        'status.in' => 'El estado seleccionado no es válido.',
+        'score.required' => 'El puntaje es obligatorio.',
+        'score.integer' => 'El puntaje debe ser un número entero.',
+        'score.min' => 'El puntaje no puede ser menor a 0.',
+        'score.max' => 'El puntaje no puede ser mayor a 100.',
+        'notes.string' => 'Las notas deben ser texto.',
+    ];
     public function boot(ClientService $clientService)
     {
         $this->clientService = $clientService;
@@ -103,7 +125,6 @@ class ClientRegistroDatero extends Component
     public function mount($id)
     {
         $user = User::find($id);
-        $user->isDatero();
         if (!$user->isDatero()) {
             abort(404);
         }else{
@@ -128,7 +149,7 @@ class ClientRegistroDatero extends Component
                 
                 foreach ($formats as $format) {
                     try {
-                        $birthDate = \Carbon\Carbon::createFromFormat($format, $this->birth_date)->format('Y-m-d');
+                        $birthDate = Carbon::createFromFormat($format, $this->birth_date)->format('Y-m-d');
                         break; // Si funciona, salir del bucle
                     } catch (\Exception $e) {
                         continue; // Intentar el siguiente formato
@@ -138,7 +159,7 @@ class ClientRegistroDatero extends Component
                 // Si ningún formato funcionó, intentar parse automático
                 if (!$birthDate) {
                     try {
-                        $birthDate = \Carbon\Carbon::parse($this->birth_date)->format('Y-m-d');
+                        $birthDate = Carbon::parse($this->birth_date)->format('Y-m-d');
                     } catch (\Exception $e) {
                         // Si todo falla, usar null
                         $birthDate = null;
@@ -216,40 +237,16 @@ class ClientRegistroDatero extends Component
     {
         $tipo = strtolower($this->document_type);
         $num_doc = $this->document_number;
-        $client = client::where('document_number', $num_doc)->where('document_type', $tipo)->first();
-        if ($client) {
-            $this->showErrorMessage = true;
-            $this->errorMessage = 'Cliente ya existe en la base de datos, asesor asignado: '. $client->assignedAdvisor->name;
+        
+        // Verificar si el cliente ya existe
+        if ($this->clientExists($tipo, $num_doc)) {
             return;
         }
-        if ($tipo == 'dni' and strlen($num_doc) == 8) {
-            $result = $this->searchComplete($tipo, $num_doc);
-            if ($result['encontrado']) {
-                // Simular datos de ejemplo para el DNI
-                $this->name = 'Nombre Ejemplo';
-                $this->last_name = 'Apellido Ejemplo';
-                $this->birth_date = '1990-01-01';
-                $this->address = 'Dirección Ejemplo';
-                $this->city = 'Lima';
-                $this->state = 'Lima';
-                $this->zip_code = '15001';
-                $this->country = 'Perú';
-                $this->gender = 'M';
-                $this->marital_status = 'Soltero';
-                $this->occupation = 'Empleado';
-                $this->company = 'Empresa Ejemplo';
-                $this->income = '5000';
-                $this->notes = 'Cliente encontrado por DNI';
-                
-                $this->showSuccessMessage = true;
-                $this->successMessage = 'Cliente encontrado: ' . $this->name . ' ' . $this->last_name;
-            } else {
-                $this->showErrorMessage = true;
-                $this->errorMessage = 'No encontrado';
-            }
-        }else{
-            $this->showErrorMessage = true;
-            $this->errorMessage = 'ingrese un número de documento válido';
+        
+        if ($tipo === 'dni' && strlen($num_doc) === 8) {
+            $this->searchClientData($tipo, $num_doc);
+        } else {
+            $this->handleError('Ingrese un número de documento válido');
         }
     }
 
@@ -261,6 +258,80 @@ class ClientRegistroDatero extends Component
     public function closeQRModal()
     {
         $this->showQRModal = false;
+    }
+    private function clientExists(string $tipo, string $num_doc): bool
+    {
+        $client = Client::where('document_number', $num_doc)
+            ->where('document_type', $tipo)
+            ->first();
+            
+        if ($client) {
+            $this->handleError('Cliente ya existe en la base de datos, asesor asignado: ' . $client->assignedAdvisor->name);
+            return true;
+        }
+        
+        return false;
+    }
+    private function searchClientData(string $tipo, string $num_doc): void
+    {
+        $result = $this->searchComplete($tipo, $num_doc);
+        
+        if ($result['encontrado']) {
+            $this->fillClientData($result['data']);
+            $this->showSuccessMessage = true;
+            $this->successMessage = 'Cliente encontrado: ' . $this->name;
+        } else {
+            $this->handleError('No encontrado');
+        }
+    }
+
+    /**
+     * Llenar los datos del cliente desde la API
+     */
+    private function fillClientData(object $data): void
+    {
+        $this->document_type = 'DNI';
+        $this->name = $data->nombre;
+        $this->birth_date = $this->parseApiBirthDate($data->fecha_nacimiento);
+    }
+
+    /**
+     * Parsear la fecha de nacimiento de la API
+     */
+    private function parseApiBirthDate(string $fecha_nacimiento): string
+    {
+        try {
+            return Carbon::createFromFormat('d/m/Y', $fecha_nacimiento)->format('Y-m-d');
+        } catch (\Exception $e) {
+            try {
+                return Carbon::parse($fecha_nacimiento)->format('Y-m-d');
+            } catch (\Exception $e2) {
+                return '';
+            }
+        }
+    }
+
+    /**
+     * Establecer valores por defecto
+     */
+    private function setDefaultValues(): void
+    {
+        $this->document_type = 'DNI';
+        $this->client_type = 'comprador';
+        $this->source = 'formulario_web';
+        $this->status = 'nuevo';
+        $this->score = self::DEFAULT_SCORE;
+        $this->assigned_advisor_id = Auth::id();
+    }
+
+    /**
+     * Manejar errores de manera consistente
+     */
+    private function handleError(string $message): void
+    {
+        $this->showErrorMessage = true;
+        $this->errorMessage = $message;
+        $this->showSuccessMessage = false;
     }
     public function render()
     {
