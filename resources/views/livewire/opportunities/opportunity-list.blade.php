@@ -1,14 +1,21 @@
-<div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="bg-white shadow-xs border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 xs:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div>
-                    <h1 class="text-xl font-semibold text-gray-900">Oportunidades</h1>
-                    <p class="text-xs text-gray-600">Seguimiento de ventas y leads</p>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <!-- Header mejorado -->
+    <div class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-6 gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-blue-100 rounded-lg">
+                            <flux:icon name="building-office-2" class="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">Oportunidades</h1>
+                            <p class="text-sm text-gray-600 mt-1">Gestión integral de oportunidades</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex space-x-2">
-                    <flux:button icon="arrow-down-tray" size="xs" wire:click="exportOpportunities">
+                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <flux:button size="xs" icon="arrow-down-tray" variant="outline" wire:click="exportOpportunities">
                         Exportar
                     </flux:button>
                     <flux:button icon="plus" size="xs" color="primary" wire:click="openFormModal">
@@ -189,7 +196,7 @@
     </div>
 
     <!-- Modal de Formulario de Oportunidad -->
-    <flux:modal variant="flyout" wire:model="showFormModal" max-width="4xl">
+    <flux:modal variant="flyout" wire:model.self="showFormModal">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-medium text-gray-900">
@@ -205,8 +212,7 @@
                             <flux:select label="Cliente *" size="xs" wire:model="client_id">
                                 <option value="">Seleccionar cliente</option>
                                 @foreach ($clients as $client)
-                                    <option value="{{ $client->id }}">{{ $client->name }}
-                                    </option>
+                                    <option value="{{ $client->id }}">{{ $client->name }}</option>
                                 @endforeach
                             </flux:select>
                             @error('client_id')
@@ -352,10 +358,8 @@
         </div>
     </flux:modal>
 
-
-
     <!-- Modal de Detalle de Oportunidad -->
-    <flux:modal variant="flyout" wire:model="showDetailModal" class="w-1/3">
+    <flux:modal variant="flyout" wire:model.self="showDetailModal">
         <div class="p-0">
             <div
                 class="flex items-center justify-between px-8 pt-8 pb-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white rounded-t-lg">
@@ -509,7 +513,7 @@
     </flux:modal>
 
     <!-- Modal de Agregar Actividad -->
-    <flux:modal variant="flyout" wire:model="showActivityModal" max-width="2xl">
+    <flux:modal variant="flyout" wire:model.self="showActivityModal">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-medium text-gray-900">Agregar Actividad</h3>
@@ -629,7 +633,7 @@
     </flux:modal>
 
     <!-- Modal de Agregar Tarea -->
-    <flux:modal variant="flyout" wire:model="showTaskModal" max-width="2xl">
+    <flux:modal variant="flyout" wire:model.self="showTaskModal">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-medium text-gray-900">Agregar Tarea</h3>
@@ -713,7 +717,7 @@
     </flux:modal>
 
     <!-- Modal de Confirmación de Eliminación -->
-    <flux:modal wire:model="showDeleteModal" class="w-96">
+    <flux:modal wire:model.self="showDeleteModal">
         <div class="mt-3 text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
                 <flux:icon name="exclamation-triangle" class="h-6 w-6 text-red-600" />

@@ -15,11 +15,11 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <flux:button icon="arrow-down-tray" size="sm" variant="outline" wire:click="exportProjects"
+                    <flux:button size="xs" icon="arrow-down-tray" variant="outline" wire:click="exportProjects"
                         class="w-full sm:w-auto justify-center">
                         Exportar
                     </flux:button>
-                    <flux:button icon="plus" size="sm" color="primary" wire:click="openCreateModal"
+                    <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal"
                         class="w-full sm:w-auto justify-center">
                         Nuevo Proyecto
                     </flux:button>
@@ -117,7 +117,7 @@
                     </label>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <flux:button size="sm" variant="outline" wire:click="clearFilters"
+                    <flux:button size="xs" variant="outline" wire:click="clearFilters"
                         class="w-full sm:w-auto justify-center">
                         Limpiar filtros
                     </flux:button>
@@ -227,20 +227,20 @@
 
                                     <!-- Acciones del proyecto -->
                                     <div class="flex flex-col sm:flex-row gap-2 lg:flex-col">
-                                        <flux:button icon="eye" size="xs" variant="outline"
+                                        <flux:button size="xs" icon="eye" variant="outline"
                                             wire:click="viewProject({{ $project->id }})" class="justify-center">
                                             Ver
                                         </flux:button>
-                                        <flux:button icon="pencil" size="xs" variant="outline"
+                                        <flux:button size="xs" icon="pencil" variant="outline"
                                             wire:click="openEditModal({{ $project->id }})" class="justify-center">
                                             Editar
                                         </flux:button>
-                                        <flux:button icon="user-plus" size="xs" variant="outline"
+                                        <flux:button size="xs" icon="user-plus" variant="outline"
                                             wire:click="openAssignAdvisorModal({{ $project->id }})"
                                             class="justify-center">
                                             Asesor
                                         </flux:button>
-                                        <flux:button icon="trash" size="xs" color="danger" variant="outline"
+                                        <flux:button size="xs" icon="trash" color="danger" variant="outline"
                                             wire:click="openDeleteModal({{ $project->id }})" class="justify-center">
                                             Eliminar
                                         </flux:button>
@@ -255,7 +255,7 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron proyectos</h3>
                         <p class="text-gray-600 mb-6">Intenta ajustar los filtros de búsqueda o crear un nuevo
                             proyecto.</p>
-                        <flux:button icon="plus" size="sm" color="primary" wire:click="openCreateModal">
+                        <flux:button size="xs" icon="plus" color="primary" wire:click="openCreateModal">
                             Crear Primer Proyecto
                         </flux:button>
                     </div>

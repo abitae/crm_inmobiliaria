@@ -525,7 +525,7 @@
     </div>
 
     <!-- Modal de Detalles de Unidad usando flux:modal -->
-    <flux:modal wire:model="showUnitDetails" size="2xl">
+    <flux:modal wire:model.self="showUnitDetails">
         @if ($showUnitDetails && $selectedUnit)
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -656,7 +656,7 @@
     </flux:modal>
 
     <!-- Modal de Medios del Proyecto -->
-    <flux:modal wire:model="showMediaModal" class="w-full max-w-5xl">
+    <flux:modal wire:model.self="showMediaModal">
         @if ($showMediaModal)
             <div class="p-6">
                 <!-- Mensajes de éxito y error -->
@@ -917,7 +917,7 @@
     </flux:modal>
 
     <!-- Modal específico para visualización de documentos PDF -->
-    <flux:modal wire:model="showPdfModal" class="w-full max-w-6xl">
+    <flux:modal wire:model.self="showPdfModal">
         @if ($showPdfModal)
             <div class="p-6">
                 @php
@@ -1088,7 +1088,7 @@
     </flux:modal>
 
     <!-- Modal para Agregar Imágenes -->
-    <flux:modal wire:model="showAddImagesModal" size="2xl">
+    <flux:modal wire:model.self="showAddImagesModal">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
@@ -1112,9 +1112,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Seleccionar Imágenes
                         </label>
-                        <input type="file" wire:model="newImages" multiple accept="image/*"
-                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-
+                        <flux:input type="file" wire:model="newImages" multiple accept="image/*" />
                     </div>
 
                     <!-- Lista de imágenes seleccionadas -->
@@ -1179,25 +1177,23 @@
 
                 <!-- Botones de acción -->
                 <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <button type="button" wire:click="closeAddImagesModal"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <flux:button wire:click="closeAddImagesModal">
                         Cancelar
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    </flux:button>
+                    <flux:button type="submit">
                         <span wire:loading.remove wire:target="saveImages">Guardar Imágenes</span>
                         <span wire:loading wire:target="saveImages" class="flex items-center">
                             <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                             Guardando...
                         </span>
-                    </button>
+                    </flux:button>
                 </div>
             </form>
         </div>
     </flux:modal>
 
     <!-- Modal para Agregar Videos -->
-    <flux:modal wire:model="showAddVideosModal" size="2xl">
+    <flux:modal wire:model.self="showAddVideosModal">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
@@ -1221,8 +1217,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Seleccionar Videos
                         </label>
-                        <input type="file" wire:model="newVideos" multiple accept="video/*"
-                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100" />
+                        <flux:input type="file" wire:model="newVideos" multiple accept="video/*"/>
                         @error('newVideos.*')
                             <span class="text-red-500 text-sm">{{ $message }}</span>
                         @enderror
@@ -1288,25 +1283,23 @@
 
                 <!-- Botones de acción -->
                 <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <button type="button" wire:click="closeAddVideosModal"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    <flux:button wire:click="closeAddVideosModal">
                         Cancelar
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-purple-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    </flux:button>
+                    <flux:button type="submit">
                         <span wire:loading.remove wire:target="saveVideos">Guardar Videos</span>
                         <span wire:loading wire:target="saveVideos" class="flex items-center">
                             <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                             Guardando...
                         </span>
-                    </button>
+                    </flux:button>
                 </div>
             </form>
         </div>
     </flux:modal>
 
     <!-- Modal para Agregar Documentos -->
-    <flux:modal wire:model="showAddDocumentsModal" size="2xl">
+    <flux:modal wire:model.self="showAddDocumentsModal">
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center space-x-3">
@@ -1330,9 +1323,9 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Seleccionar Documentos
                         </label>
-                        <input type="file" wire:model="newDocuments" multiple
+                        <flux:input type="file" wire:model="newDocuments" multiple
                             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf"
-                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100" />
+                            />
                         @error('newDocuments.*')
                             <span class="text-red-500 text-sm">{{ $message }}</span>
                         @enderror
@@ -1401,7 +1394,7 @@
 
                 <!-- Botones de acción -->
                 <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <flux:button type="button" wire:click="closeAddDocumentsModal" variant="outline" color="gray"
+                    <flux:button wire:click="closeAddDocumentsModal" variant="outline" color="gray"
                         icon="x-mark" size="xs">
                         Cancelar
                     </flux:button>
@@ -1419,48 +1412,44 @@
     </flux:modal>
 
     <!-- Modal para Agregar Unidades -->
-    <flux:modal variant='flyout' wire:model="showAddUnitModal" size="xl">
-        <div class="p-0 md:p-0">
-            <!-- Encabezado mejorado -->
+    <flux:modal variant='flyout' wire:model.self="showAddUnitModal">
+        <div class="p-0">
+            <!-- Encabezado compacto -->
             <div
-                class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white rounded-t-xl">
-                <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 bg-blue-200 rounded-lg flex items-center justify-center shadow">
-                        <flux:icon name="{{ $isEditing ? 'pencil' : 'plus' }}" class="w-6 h-6 text-blue-700" />
+                class="flex items-center justify-between px-4 pt-4 pb-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white rounded-t-xl">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-blue-200 rounded-lg flex items-center justify-center shadow">
+                        <flux:icon name="{{ $isEditing ? 'pencil' : 'plus' }}" class="w-5 h-5 text-blue-700" />
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold text-blue-900">
+                        <h3 class="text-lg font-bold text-blue-900 leading-tight">
                             {{ $isEditing ? 'Editar Unidad' : 'Agregar Nueva Unidad' }}</h3>
-                        <p class="text-sm text-gray-500">
+                        <p class="text-xs text-gray-500 leading-tight">
                             {{ $isEditing ? 'Modifica los datos de la unidad seleccionada.' : 'Completa los datos para registrar una nueva unidad en el proyecto.' }}
                         </p>
                     </div>
                 </div>
-                <button type="button" class="text-gray-400 hover:text-gray-600 transition"
-                    @click="closeAddUnitModal">
-                    <flux:icon name="x-mark" class="w-6 h-6" />
-                </button>
             </div>
 
             <form wire:submit.prevent="saveUnit">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-6 py-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4">
                     <!-- Información básica -->
-                    <div class="space-y-6 bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-                        <h4 class="text-lg font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-400" /> Información
+                    <div class="space-y-4 bg-white rounded-lg shadow-sm p-3 border border-gray-100">
+                        <h4 class="text-base font-semibold text-blue-800 border-b pb-1 flex items-center gap-1">
+                            <flux:icon name="information-circle" class="w-4 h-4 text-blue-400" /> Información
                             Básica
                         </h4>
 
-                        <div class="space-y-3">
-                            <flux:input label="Número de Unidad *" size="sm" type="text"
+                        <div class="space-y-2">
+                            <flux:input label="Número de Unidad *" size="xs" type="text"
                                 wire:model="unit_number" placeholder="Ej: A-101">
                             </flux:input>
 
-                            <flux:input label="Manzana" size="sm" type="text" wire:model="unit_manzana"
+                            <flux:input label="Manzana" size="xs" type="text" wire:model="unit_manzana"
                                 placeholder="Ej: Manzana 1, A, B, C">
                             </flux:input>
 
-                            <flux:select label="Tipo de Unidad *" size="sm" wire:model="unit_type">
+                            <flux:select label="Tipo de Unidad *" size="xs" wire:model="unit_type">
                                 <option value="">Seleccionar tipo</option>
                                 <option value="departamento">Departamento</option>
                                 <option value="casa">Casa</option>
@@ -1469,24 +1458,24 @@
                                 <option value="local">Local</option>
                             </flux:select>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <flux:input label="Torre" size="sm" type="text" wire:model="tower"
+                            <div class="grid grid-cols-2 gap-2">
+                                <flux:input label="Torre" size="xs" type="text" wire:model="tower"
                                     placeholder="Ej: A">
                                 </flux:input>
-                                <flux:input label="Bloque" size="sm" type="text" wire:model="block"
+                                <flux:input label="Bloque" size="xs" type="text" wire:model="block"
                                     placeholder="Ej: 1">
                                 </flux:input>
                             </div>
 
-                            <flux:input label="Piso" size="sm" type="number" wire:model="floor"
+                            <flux:input label="Piso" size="xs" type="number" wire:model="floor"
                                 min="0" placeholder="Ej: 5">
                             </flux:input>
 
-                            <flux:input label="Área (m²) *" size="sm" type="number" wire:model="area"
+                            <flux:input label="Área (m²) *" size="xs" type="number" wire:model="area"
                                 step="0.01" min="0.01" placeholder="Ej: 120.50">
                             </flux:input>
 
-                            <flux:select label="Estado *" size="sm" wire:model="status">
+                            <flux:select label="Estado *" size="xs" wire:model="status">
                                 <option value="">Seleccionar estado</option>
                                 <option value="disponible">Disponible</option>
                                 <option value="reservado">Reservado</option>
@@ -1497,38 +1486,38 @@
                         </div>
 
                         <!-- Características -->
-                        <div class="space-y-3 pt-4">
-                            <h4 class="text-base font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-                                <flux:icon name="adjustments-horizontal" class="w-5 h-5 text-blue-400" />
+                        <div class="space-y-2 pt-3">
+                            <h4 class="text-sm font-semibold text-blue-800 border-b pb-1 flex items-center gap-1">
+                                <flux:icon name="adjustments-horizontal" class="w-4 h-4 text-blue-400" />
                                 Características
                             </h4>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <flux:input label="Dormitorios" size="sm" type="number" wire:model="bedrooms"
+                            <div class="grid grid-cols-2 gap-2">
+                                <flux:input label="Dormitorios" size="xs" type="number" wire:model="bedrooms"
                                     min="0" placeholder="Ej: 3">
                                 </flux:input>
-                                <flux:input label="Baños" size="sm" type="number" wire:model="bathrooms"
+                                <flux:input label="Baños" size="xs" type="number" wire:model="bathrooms"
                                     min="0" placeholder="Ej: 2">
                                 </flux:input>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <flux:input label="Estacionamientos" size="sm" type="number"
+                            <div class="grid grid-cols-2 gap-2">
+                                <flux:input label="Estacionamientos" size="xs" type="number"
                                     wire:model="parking_spaces" min="0" placeholder="Ej: 1">
                                 </flux:input>
-                                <flux:input label="Depósitos" size="sm" type="number"
+                                <flux:input label="Depósitos" size="xs" type="number"
                                     wire:model="storage_rooms" min="0" placeholder="Ej: 1">
                                 </flux:input>
                             </div>
 
-                            <div class="grid grid-cols-3 gap-3">
-                                <flux:input label="Balcón (m²)" size="sm" type="number"
+                            <div class="grid grid-cols-3 gap-2">
+                                <flux:input label="Balcón (m²)" size="xs" type="number"
                                     wire:model="balcony_area" step="0.01" min="0" placeholder="Ej: 8.5">
                                 </flux:input>
-                                <flux:input label="Terraza (m²)" size="sm" type="number"
+                                <flux:input label="Terraza (m²)" size="xs" type="number"
                                     wire:model="terrace_area" step="0.01" min="0" placeholder="Ej: 15.0">
                                 </flux:input>
-                                <flux:input label="Jardín (m²)" size="sm" type="number"
+                                <flux:input label="Jardín (m²)" size="xs" type="number"
                                     wire:model="garden_area" step="0.01" min="0" placeholder="Ej: 25.0">
                                 </flux:input>
                             </div>
@@ -1537,44 +1526,44 @@
 
                     <!-- Precios y Comisiones -->
                     <div
-                        class="space-y-6 bg-white rounded-lg shadow-sm p-5 border border-gray-100 flex flex-col justify-between">
+                        class="space-y-4 bg-white rounded-lg shadow-sm p-3 border border-gray-100 flex flex-col justify-between">
                         <div>
-                            <h4 class="text-lg font-semibold text-blue-800 border-b pb-2 flex items-center gap-2">
-                                <flux:icon name="currency-dollar" class="w-5 h-5 text-blue-400" /> Precios y
+                            <h4 class="text-base font-semibold text-blue-800 border-b pb-1 flex items-center gap-1">
+                                <flux:icon name="currency-dollar" class="w-4 h-4 text-blue-400" /> Precios y
                                 Comisiones
                             </h4>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                                <flux:input label="Precio Base por m² *" size="sm" type="number"
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+                                <flux:input label="Precio Base por m² *" size="xs" type="number"
                                     wire:model="base_price" step="0.01" min="0.01" placeholder="Ej: 2500.00">
                                 </flux:input>
-                                <flux:input label="Precio Total *" size="sm" type="number"
+                                <flux:input label="Precio Total *" size="xs" type="number"
                                     wire:model="total_price" step="0.01" min="0.01"
                                     placeholder="Ej: 300000.00">
                                 </flux:input>
-                                <flux:input label="Descuento (%)" size="sm" type="number"
+                                <flux:input label="Descuento (%)" size="xs" type="number"
                                     wire:model="discount_percentage" step="0.01" min="0" max="100"
                                     placeholder="Ej: 5.00">
                                 </flux:input>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                                <flux:input label="Comisión (%)" size="sm" type="number"
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                                <flux:input label="Comisión (%)" size="xs" type="number"
                                     wire:model="commission_percentage" step="0.01" min="0" max="100"
                                     placeholder="Ej: 3.00">
                                 </flux:input>
-                                <flux:textarea label="Notas" wire:model="notes" rows="3"
+                                <flux:textarea label="Notas" size="xs" wire:model="notes" rows="1"
                                     placeholder="Notas adicionales sobre la unidad">
                                 </flux:textarea>
                             </div>
                         </div>
                         <!-- Botones de acción -->
-                        <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
-                            <flux:button icon="x-mark" variant="outline" size="sm"
+                        <div class="flex justify-end space-x-2 mt-4 pt-2 border-t border-gray-100">
+                            <flux:button icon="x-mark" variant="outline" size="xs"
                                 wire:click="closeAddUnitModal">
                                 Cancelar
                             </flux:button>
-                            <flux:button type="submit" color="primary" size="sm"
+                            <flux:button type="submit" color="primary" size="xs"
                                 icon="{{ $isEditing ? 'check' : 'plus' }}">
                                 {{ $isEditing ? 'Actualizar Unidad' : 'Crear Unidad' }}
                             </flux:button>
@@ -1586,13 +1575,10 @@
     </flux:modal>
 
     <!-- Modal compacto para Importar Unidades -->
-    <flux:modal wire:model="showImportUnitsModal" size="md">
+    <flux:modal wire:model.self="showImportUnitsModal">
         <div class="p-4">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-base font-semibold text-gray-900">Importar Unidades</h3>
-                <flux:button icon="x-mark" variant="ghost" wire:click="closeImportUnitsModal" size="xs">
-
-                </flux:button>
             </div>
             <div class="text-xs text-gray-600 mb-2">
                 Sube un archivo <b>CSV</b> con las unidades del proyecto.<br>
@@ -1662,9 +1648,9 @@
                 </flux:button>
                 <flux:button icon="arrow-up-tray" wire:click="processImport"
                     :disabled="!$importFile || $importProgress > 0" variant="primary" size="xs">
+                    Importar
                 </flux:button>
             </div>
         </div>
     </flux:modal>
-
 </div>

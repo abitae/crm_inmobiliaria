@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col p-6 border-2 border-gray-500 gap-6 rounded-xl">
     <x-auth-header :title="__('REGISTRO DATERO')" :description="__('Regístrate como datero para gestionar tus clientes')" />
 
     <!-- Session Status -->

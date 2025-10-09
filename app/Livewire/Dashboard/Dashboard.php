@@ -31,6 +31,15 @@ class Dashboard extends Component
 
     protected $dashboardService;
 
+    // Listeners para eventos de otros componentes
+    protected $listeners = [
+        'opportunity-created' => 'refreshDashboard',
+        'opportunity-updated' => 'refreshDashboard',
+        'opportunity-deleted' => 'refreshDashboard',
+        'opportunity-probability-updated' => 'refreshDashboard',
+        'opportunity-value-updated' => 'refreshDashboard',
+    ];
+
     public function boot(DashboardService $dashboardService)
     {
         $this->dashboardService = $dashboardService;

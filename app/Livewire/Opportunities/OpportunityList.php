@@ -40,6 +40,8 @@ class OpportunityList extends Component
         'opportunity-created' => 'refreshOpportunities',
         'opportunity-updated' => 'refreshOpportunities',
         'opportunity-deleted' => 'refreshOpportunities',
+        'opportunity-probability-updated' => 'refreshOpportunities',
+        'opportunity-value-updated' => 'refreshOpportunities',
     ];
 
     // Form fields
@@ -201,6 +203,11 @@ class OpportunityList extends Component
         $this->clientFilter = '';
         $this->resetPage();
         $this->dispatch('show-info', message: 'Filtros limpiados correctamente.');
+    }
+
+    public function updatedProjectId()
+    {
+        $this->loadUnitsForProject();
     }
 
     public function loadUnitsForProject()
@@ -604,6 +611,14 @@ class OpportunityList extends Component
         $this->dispatch('show-success', message: 'Datos actualizados correctamente.');
     }
 
+    public function refreshOpportunities()
+    {
+        // Este método se llama desde los listeners para refrescar la lista
+        // No necesita hacer nada específico ya que Livewire automáticamente
+        // re-renderiza el componente cuando se disparan los eventos
+        $this->resetPage();
+    }
+
     private function loadInitialData()
     {
         $this->clients = Client::select('id', 'name', 'phone', 'document_number', 'client_type')
@@ -860,7 +875,9 @@ class OpportunityList extends Component
 
             return view('livewire.opportunities.opportunity-list', [
                 'opportunities' => $opportunities,
-                'projects' => $projects
+                'projects' => $projects,
+                'advisors' => $this->advisors,
+                'units' => $this->units
             ]);
         } catch (Exception $e) {
             Log::error('Error al cargar oportunidades en render', [
@@ -873,7 +890,9 @@ class OpportunityList extends Component
 
             return view('livewire.opportunities.opportunity-list', [
                 'opportunities' => $this->getEmptyPaginator(),
-                'projects' => collect()
+                'projects' => collect(),
+                'advisors' => collect(),
+                'units' => collect()
             ]);
         }
     }

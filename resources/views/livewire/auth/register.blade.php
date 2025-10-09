@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col p-6 border-2 border-gray-500 gap-6 rounded-xl">
     <x-auth-header :title="__('REGISTRO CAZADOR')" :description="__('Registrate como cazador para gestionar tus clientes')" />
 
     <!-- Session Status -->
