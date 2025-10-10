@@ -337,9 +337,9 @@ class ClientRegistroDatero extends Component
     {
         $url = url('clients/registro-datero/'.$this->assigned_advisor_id);
         $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)
-                            ->color(0, 0, 255)
+                            ->color(0, 0, 0)
                             ->margin(2)
-                            ->backgroundColor(0, 255, 0)
+                            ->backgroundColor(255, 255, 255)
                             ->generate($url);
         return view('livewire.clients.client-registro-datero',compact('qrcode'));
     }

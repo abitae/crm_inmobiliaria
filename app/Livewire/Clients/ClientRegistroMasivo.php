@@ -368,9 +368,9 @@ class ClientRegistroMasivo extends Component
         if ($this->cachedQRCode === null) {
             $url = url('clients/registro-masivo/' . Auth::id());
             $this->cachedQRCode = QrCode::size(self::QR_SIZE)
-                ->color(0, 0, 255)
+                ->color(0, 0, 0)
                 ->margin(2)
-                ->backgroundColor(0, 255, 0)
+                ->backgroundColor(255, 255, 255)
                 ->generate($url);
         }
         
