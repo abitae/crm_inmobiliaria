@@ -491,9 +491,9 @@ class UserList extends Component
         if ($this->cachedQRCode === null) {
             $url = url('clients/registro-datero/' . $this->selectedUser->id);
             $this->cachedQRCode = QrCode::size(150)
-                ->color(0, 0, 255)
+                ->color(0, 0, 0)
                 ->margin(2)
-                ->backgroundColor(0, 255, 0)
+                ->backgroundColor(255, 255, 255)
                 ->generate($url);
         }
         return $this->cachedQRCode;
