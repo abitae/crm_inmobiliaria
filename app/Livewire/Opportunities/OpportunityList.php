@@ -99,8 +99,8 @@ class OpportunityList extends Component
         'status' => 'required|in:registrado,reservado,cuotas,pagado,transferido,cancelado',
         'probability' => 'required|integer|min:0|max:100',
         'expected_value' => 'required|numeric|min:0',
-        'expected_close_date' => 'required|date|after:today',
-        'close_value' => 'required|numeric|min:0',
+        'expected_close_date' => 'required|date|after_or_equal:today',
+        'close_value' => 'nullable|numeric|min:0',
         'close_reason' => 'nullable|string|max:255',
         'lost_reason' => 'nullable|string|max:255',
         'notes' => 'nullable|string',
@@ -129,7 +129,7 @@ class OpportunityList extends Component
         'expected_value.min' => 'El valor esperado debe ser mayor a 0.',
         'expected_close_date.required' => 'La fecha de cierre es obligatoria.',
         'expected_close_date.date' => 'La fecha de cierre debe ser una fecha válida.',
-        'expected_close_date.after' => 'La fecha de cierre debe ser posterior a hoy.',
+        'expected_close_date.after_or_equal' => 'La fecha de cierre debe ser hoy o posterior.',
         'notes.string' => 'Las notas deben ser texto.',
         'source.max' => 'El origen no puede exceder 255 caracteres.',
         'campaign.max' => 'La campaña no puede exceder 255 caracteres.'
@@ -208,6 +208,22 @@ class OpportunityList extends Component
     public function updatedProjectId()
     {
         $this->loadUnitsForProject();
+        $this->unit_id = ''; // Resetear unidad cuando se cambia el proyecto
+    }
+
+    public function updatedUnitId()
+    {
+        // Validar que la unidad seleccionada pertenezca al proyecto actual
+        if ($this->unit_id && $this->project_id) {
+            $unit = Unit::where('id', $this->unit_id)
+                ->where('project_id', $this->project_id)
+                ->first();
+            
+            if (!$unit) {
+                $this->addError('unit_id', 'La unidad seleccionada no pertenece al proyecto actual.');
+                $this->unit_id = '';
+            }
+        }
     }
 
     public function loadUnitsForProject()
@@ -221,7 +237,6 @@ class OpportunityList extends Component
             } else {
                 $this->units = collect();
             }
-            $this->unit_id = '';
         } catch (Exception $e) {
             Log::error('Error al cargar unidades para proyecto', [
                 'project_id' => $this->project_id,
@@ -230,7 +245,6 @@ class OpportunityList extends Component
                 'trace' => $e->getTraceAsString()
             ]);
             $this->units = collect();
-            // Los errores se muestran en el campo correspondiente, no en toast
         }
     }
 
@@ -287,6 +301,9 @@ class OpportunityList extends Component
         $this->resetForm();
         $this->selectedOpportunity = null;
         $this->isEditing = false;
+        
+        // Limpiar errores de validación
+        $this->resetErrorBag();
     }
 
     public function resetForm()
@@ -329,9 +346,14 @@ class OpportunityList extends Component
 
     public function fillFormFromOpportunity($opportunity)
     {
-        $this->client_id = $opportunity->client_id;
+        // Primero asignar el project_id para cargar las unidades correctas
         $this->project_id = $opportunity->project_id;
-        $this->unit_id = $opportunity->unit_id;
+        
+        // Cargar las unidades del proyecto
+        $this->loadUnitsForProject();
+        
+        // Luego asignar todos los demás campos
+        $this->client_id = $opportunity->client_id;
         $this->advisor_id = $opportunity->advisor_id;
         $this->stage = $opportunity->stage;
         $this->status = $opportunity->status;
@@ -344,13 +366,37 @@ class OpportunityList extends Component
         $this->notes = $opportunity->notes;
         $this->source = $opportunity->source;
         $this->campaign = $opportunity->campaign;
-
-        $this->loadUnitsForProject();
+        
+        // Asignar unit_id solo si la unidad existe y está disponible
+        if ($opportunity->unit_id) {
+            $unitExists = false;
+            foreach ($this->units as $unit) {
+                if ($unit->id == $opportunity->unit_id) {
+                    $unitExists = true;
+                    break;
+                }
+            }
+            
+            if ($unitExists) {
+                $this->unit_id = $opportunity->unit_id;
+            } else {
+                // Si la unidad no está disponible, mostrar un mensaje informativo
+                $this->addError('unit_id', 'La unidad original no está disponible. Por favor selecciona otra unidad.');
+                $this->unit_id = '';
+            }
+        }
     }
 
     public function saveOpportunity()
     {
         try {
+            // Log de datos antes de validar para debugging
+            Log::info('Intentando guardar oportunidad', [
+                'is_editing' => $this->isEditing,
+                'form_data' => $this->getFormData(),
+                'user_id' => Auth::id()
+            ]);
+
             $this->validate($this->rules_opportunity, $this->messages_opportunity);
 
             $data = [
@@ -363,33 +409,45 @@ class OpportunityList extends Component
                 'probability' => $this->probability,
                 'expected_value' => $this->expected_value,
                 'expected_close_date' => $this->expected_close_date,
+                'close_value' => $this->close_value,
+                'close_reason' => $this->close_reason,
+                'lost_reason' => $this->lost_reason,
                 'notes' => $this->notes,
                 'source' => $this->source,
                 'campaign' => $this->campaign,
             ];
 
             if ($this->isEditing && $this->selectedOpportunity) {
-                $this->opportunityService->updateOpportunity($this->selectedOpportunity->id, $data);
-                Log::info('Oportunidad actualizada exitosamente', [
-                    'opportunity_id' => $this->selectedOpportunity->id,
-                    'user_id' => Auth::id(),
-                    'form_data' => $data
-                ]);
-                $this->dispatch('opportunity-updated');
-                $message = 'Oportunidad actualizada exitosamente.';
+                $result = $this->opportunityService->updateOpportunity($this->selectedOpportunity->id, $data);
+                
+                if ($result) {
+                    Log::info('Oportunidad actualizada exitosamente', [
+                        'opportunity_id' => $this->selectedOpportunity->id,
+                        'user_id' => Auth::id(),
+                        'form_data' => $data
+                    ]);
+                    $this->dispatch('opportunity-updated');
+                    $this->closeModals();
+                    $this->dispatch('show-success', message: 'Oportunidad actualizada exitosamente.');
+                } else {
+                    throw new Exception('No se pudo actualizar la oportunidad');
+                }
             } else {
                 $opportunity = $this->opportunityService->createOpportunity($data);
-                Log::info('Oportunidad creada exitosamente', [
-                    'opportunity_id' => $opportunity->id ?? 'unknown',
-                    'user_id' => Auth::id(),
-                    'form_data' => $data
-                ]);
-                $this->dispatch('opportunity-created');
-                $message = 'Oportunidad creada exitosamente.';
+                
+                if ($opportunity) {
+                    Log::info('Oportunidad creada exitosamente', [
+                        'opportunity_id' => $opportunity->id ?? 'unknown',
+                        'user_id' => Auth::id(),
+                        'form_data' => $data
+                    ]);
+                    $this->dispatch('opportunity-created');
+                    $this->closeModals();
+                    $this->dispatch('show-success', message: 'Oportunidad creada exitosamente.');
+                } else {
+                    throw new Exception('No se pudo crear la oportunidad');
+                }
             }
-
-            $this->closeModals();
-            $this->dispatch('show-success', message: $message);
         } catch (ValidationException $e) {
             Log::warning('Error de validación al guardar oportunidad', [
                 'is_editing' => $this->isEditing,
@@ -398,7 +456,7 @@ class OpportunityList extends Component
                 'errors' => $e->errors(),
                 'form_data' => $this->getFormData()
             ]);
-            // Los errores de validación se muestran en los campos correspondientes
+            $this->dispatch('show-error', message: 'Por favor corrige los errores en el formulario.');
         } catch (Exception $e) {
             $action = $this->isEditing ? 'actualizar' : 'crear';
             Log::error("Error al {$action} oportunidad", [
@@ -409,7 +467,7 @@ class OpportunityList extends Component
                 'trace' => $e->getTraceAsString(),
                 'form_data' => $this->getFormData()
             ]);
-            // Los errores se muestran en el campo correspondiente
+            $this->dispatch('show-error', message: "Error al {$action} la oportunidad: " . $e->getMessage());
         }
     }
 
@@ -932,9 +990,14 @@ class OpportunityList extends Component
             'probability' => $this->probability,
             'expected_value' => $this->expected_value,
             'expected_close_date' => $this->expected_close_date,
+            'close_value' => $this->close_value,
+            'close_reason' => $this->close_reason,
+            'lost_reason' => $this->lost_reason,
             'notes' => $this->notes,
             'source' => $this->source,
-            'campaign' => $this->campaign
+            'campaign' => $this->campaign,
+            'is_editing' => $this->isEditing,
+            'selected_opportunity_id' => $this->selectedOpportunity->id ?? null
         ];
     }
 
