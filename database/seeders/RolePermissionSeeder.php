@@ -92,6 +92,17 @@ class RolePermissionSeeder extends Seeder
             // Configuración
             'view_settings',
             'edit_settings',
+
+            // Logs
+            'view_logs',
+
+            // Permisos jerárquicos específicos
+            'view_team_metrics',
+            'manage_team_members',
+            'view_subordinates',
+            'assign_tasks_team',
+            'view_team_reports',
+            'approve_team_actions',
         ];
 
         foreach ($permissions as $permission) {
@@ -107,7 +118,7 @@ class RolePermissionSeeder extends Seeder
         // Asignar todos los permisos al admin
         $adminRole->givePermissionTo(Permission::all());
 
-        // Asignar permisos al lider (supervisor de vendedores)
+        // Asignar permisos al lider (supervisor de vendedores y dateros)
         $liderRole->givePermissionTo([
             'view_dashboard',
             'view_clients',
@@ -136,15 +147,20 @@ class RolePermissionSeeder extends Seeder
             'view_reports',
             'export_reports',
             'view_users',
-            'create_users', // Para crear nuevos vendedores
-            'edit_users',   // Para gestionar vendedores
+            'create_users', // Para crear vendedores y dateros de su equipo
+            'edit_users',   // Para gestionar su equipo
             'view_settings',
-            'manage_roles',
-            'manage_users',
-            'manage_permissions',
+            'view_logs',    // Para ver logs del sistema
+            // Permisos específicos de liderazgo
+            'view_team_metrics',
+            'manage_team_members',
+            'view_subordinates',
+            'assign_tasks_team',
+            'view_team_reports',
+            'approve_team_actions',
         ]);
 
-        // Asignar permisos al vendedor
+        // Asignar permisos al vendedor (supervisor de dateros)
         $vendedorRole->givePermissionTo([
             'view_dashboard',
             'view_clients',
@@ -171,12 +187,19 @@ class RolePermissionSeeder extends Seeder
             'create_documents',
             'edit_documents',
             'view_reports',
-            'manage_roles',
-            'manage_users',
-            'manage_permissions',
+            'view_users',
+            'create_users', // Para crear dateros de su equipo
+            'edit_users',   // Para gestionar sus dateros
+            'view_settings',
+            // Permisos específicos de vendedor
+            'view_team_metrics',
+            'manage_team_members',
+            'view_subordinates',
+            'assign_tasks_team',
+            'view_team_reports',
         ]);
 
-        // Asignar permisos al datero (captador de datos)
+        // Asignar permisos al datero (captador de datos - nivel más bajo)
         $dateroRole->givePermissionTo([
             'view_dashboard',
             'view_clients',
@@ -194,6 +217,7 @@ class RolePermissionSeeder extends Seeder
             'view_tasks',
             'create_tasks',
             'view_reports',
+            // Sin permisos de gestión de usuarios ni equipos
         ]);
     }
 }

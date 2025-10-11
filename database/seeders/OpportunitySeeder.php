@@ -31,17 +31,37 @@ class OpportunitySeeder extends Seeder
         $projects = Project::all();
         $units = Unit::where('status', 'disponible')->get();
 
+        // Verificar que existan proyectos y unidades
+        if ($projects->isEmpty()) {
+            throw new \Exception('No se encontraron proyectos en la base de datos. Asegúrate de ejecutar ProjectSeeder primero.');
+        }
+
+        if ($units->isEmpty()) {
+            throw new \Exception('No se encontraron unidades disponibles en la base de datos. Asegúrate de ejecutar UnitSeeder primero.');
+        }
+
         $stages = ['calificado', 'visita', 'cierre'];
         $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $campaigns = ['Campaña Q1 2024', 'Campaña Q2 2024', 'Campaña Q3 2024', 'Campaña Q4 2024'];
 
         // Crear oportunidades realistas
+        $project1 = $projects->first();
+        $project2 = $projects->skip(1)->first();
+        $project3 = $projects->skip(2)->first();
+        $project4 = $projects->skip(3)->first();
+        $project5 = $projects->skip(4)->first();
+        $project6 = $projects->skip(5)->first();
+        
+        $unit1 = $units->where('project_id', $project1->id)->first();
+        $unit3 = $units->where('project_id', $project3->id)->first();
+        $unit6 = $units->where('project_id', $project6->id)->first();
+
         $opportunities = [
             [
                 'client_id' => $clients->where('name', 'Juan Carlos Vargas Mendoza')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes Miraflores Park')->first()->id,
-                'unit_id' => $units->where('project_id', $projects->where('name', 'Lotes Miraflores Park')->first()->id)->first()->id,
+                'project_id' => $project1->id,
+                'unit_id' => $unit1 ? $unit1->id : null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'visita',
                 'status' => 'registrado',
@@ -54,7 +74,7 @@ class OpportunitySeeder extends Seeder
             ],
             [
                 'client_id' => $clients->where('name', 'María Elena Torres Ríos')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes San Isidro Business')->first()->id,
+                'project_id' => $project2->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'calificado',
@@ -68,8 +88,8 @@ class OpportunitySeeder extends Seeder
             ],
             [
                 'client_id' => $clients->where('name', 'Carmen Flores Díaz')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes Surco Family')->first()->id,
-                'unit_id' => $units->where('project_id', $projects->where('name', 'Lotes Surco Family')->first()->id)->first()->id,
+                'project_id' => $project3->id,
+                'unit_id' => $unit3 ? $unit3->id : null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'visita',
                 'status' => 'reservado',
@@ -82,7 +102,7 @@ class OpportunitySeeder extends Seeder
             ],
             [
                 'client_id' => $clients->where('name', 'Roberto Silva Castro')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes San Borja Center')->first()->id,
+                'project_id' => $project4->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'calificado',
@@ -96,7 +116,7 @@ class OpportunitySeeder extends Seeder
             ],
             [
                 'client_id' => $clients->where('name', 'Fernando Mendoza Ruiz')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes Barranco Golf')->first()->id,
+                'project_id' => $project5->id,
                 'unit_id' => null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'calificado',
@@ -110,8 +130,8 @@ class OpportunitySeeder extends Seeder
             ],
             [
                 'client_id' => $clients->where('name', 'Alberto García Paredes')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes Miraflores Park')->first()->id,
-                'unit_id' => $units->where('project_id', $projects->where('name', 'Lotes Miraflores Park')->first()->id)->first()->id,
+                'project_id' => $project1->id,
+                'unit_id' => $unit1 ? $unit1->id : null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'cierre',
                 'status' => 'pagado',
@@ -126,8 +146,8 @@ class OpportunitySeeder extends Seeder
             ],
             [
                 'client_id' => $clients->where('name', 'Patricia Ríos Morales')->first()->id,
-                'project_id' => $projects->where('name', 'Lotes Chorrillos Plaza')->first()->id,
-                'unit_id' => null,
+                'project_id' => $project6->id,
+                'unit_id' => $unit6 ? $unit6->id : null,
                 'advisor_id' => $advisors->random()->id,
                 'stage' => 'calificado',
                 'status' => 'registrado',
@@ -148,8 +168,14 @@ class OpportunitySeeder extends Seeder
             ]);
         }
 
-        // Crear oportunidades adicionales aleatorias
+        // Crear oportunidades adicionales aleatorias (muchas más)
         $this->createRandomOpportunities($clients, $projects, $units, $advisors, $admin);
+        
+        // Crear oportunidades por etapa para mejor visualización en dashboard
+        $this->createOpportunitiesByStage($clients, $projects, $units, $advisors, $admin);
+        
+        // Crear oportunidades masivas para vendedores y líderes
+        $this->createMassiveOpportunities($clients, $projects, $units, $advisors, $admin);
 
         $this->command->info('Oportunidades creadas exitosamente');
     }
@@ -160,7 +186,7 @@ class OpportunitySeeder extends Seeder
         $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
 
-        for ($i = 0; $i < 25; $i++) {
+        for ($i = 0; $i < 200; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();
@@ -205,5 +231,140 @@ class OpportunitySeeder extends Seeder
 
             Opportunity::create($opportunityData);
         }
+    }
+
+    private function createOpportunitiesByStage($clients, $projects, $units, $advisors, $admin): void
+    {
+        $stages = ['calificado', 'visita', 'cierre'];
+        $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
+        $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
+
+        // Crear oportunidades específicas por etapa para mejor visualización
+        foreach ($stages as $stage) {
+            $stageCount = match($stage) {
+                'calificado' => 50,
+                'visita' => 40,
+                'cierre' => 30,
+                default => 10
+            };
+
+            for ($i = 0; $i < $stageCount; $i++) {
+                $client = $clients->random();
+                $project = $projects->random();
+                $unit = $units->where('project_id', $project->id)->first();
+                $advisor = $advisors->random();
+                $status = $statuses[array_rand($statuses)];
+                
+                $expectedValue = rand(200000, 1500000);
+                $probability = match($stage) {
+                    'calificado' => rand(30, 50),
+                    'visita' => rand(85, 95),
+                    'cierre' => 100,
+                    default => 50
+                };
+
+                $opportunityData = [
+                    'client_id' => $client->id,
+                    'project_id' => $project->id,
+                    'unit_id' => $unit ? $unit->id : null,
+                    'advisor_id' => $advisor->id,
+                    'stage' => $stage,
+                    'status' => $status,
+                    'probability' => $probability,
+                    'expected_value' => $expectedValue,
+                    'expected_close_date' => now()->addDays(rand(7, 180)),
+                    'source' => $sources[array_rand($sources)],
+                    'campaign' => 'Campaña Q' . rand(1, 4) . ' 2024',
+                    'notes' => "Oportunidad en etapa {$stage} - Generada para pruebas de dashboard",
+                    'created_by' => $admin->id,
+                    'updated_by' => $admin->id,
+                ];
+
+                // Si la oportunidad está pagada, agregar datos de cierre
+                if ($status === 'pagado') {
+                    $opportunityData['close_value'] = $expectedValue * (rand(90, 110) / 100);
+                    $opportunityData['actual_close_date'] = now()->subDays(rand(1, 60));
+                    $opportunityData['close_reason'] = 'Venta exitosa en etapa ' . $stage;
+                    $opportunityData['probability'] = 100;
+                }
+
+                // Si la oportunidad está cancelada, agregar razón
+                if ($status === 'cancelado') {
+                    $opportunityData['lost_reason'] = 'Cliente no interesado en etapa ' . $stage;
+                    $opportunityData['actual_close_date'] = now()->subDays(rand(1, 30));
+                    $opportunityData['probability'] = 0;
+                }
+
+                Opportunity::create($opportunityData);
+            }
+        }
+    }
+
+    private function createMassiveOpportunities($clients, $projects, $units, $advisors, $admin): void
+    {
+        $stages = ['calificado', 'visita', 'cierre'];
+        $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
+        $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
+        
+        // Obtener todos los vendedores y líderes
+        $vendedores = User::whereHas('roles', function($query) {
+            $query->where('name', 'vendedor');
+        })->get();
+        
+        $lideres = User::whereHas('roles', function($query) {
+            $query->where('name', 'lider');
+        })->get();
+
+        // Crear 500 oportunidades adicionales distribuidas entre vendedores y líderes
+        for ($i = 0; $i < 500; $i++) {
+            $client = $clients->random();
+            $project = $projects->random();
+            $unit = $units->where('project_id', $project->id)->first();
+            
+            // Asignar a vendedor o líder aleatoriamente
+            $advisor = (rand(0, 1) == 0) ? $vendedores->random() : $lideres->random();
+            
+            $stage = $stages[array_rand($stages)];
+            $status = $statuses[array_rand($statuses)];
+
+            $expectedValue = rand(150000, 2000000);
+            $probability = rand(10, 100);
+
+            $opportunityData = [
+                'client_id' => $client->id,
+                'project_id' => $project->id,
+                'unit_id' => $unit ? $unit->id : null,
+                'advisor_id' => $advisor->id,
+                'stage' => $stage,
+                'status' => $status,
+                'probability' => $probability,
+                'expected_value' => $expectedValue,
+                'expected_close_date' => now()->addDays(rand(1, 365)),
+                'source' => $sources[array_rand($sources)],
+                'campaign' => 'Campaña Q' . rand(1, 4) . ' 2024',
+                'notes' => 'Oportunidad masiva generada para pruebas de rendimiento del dashboard.',
+                'created_by' => $admin->id,
+                'updated_by' => $admin->id,
+            ];
+
+            // Si la oportunidad está pagada, agregar datos de cierre
+            if ($status === 'pagado') {
+                $opportunityData['close_value'] = $expectedValue * (rand(85, 115) / 100);
+                $opportunityData['actual_close_date'] = now()->subDays(rand(1, 120));
+                $opportunityData['close_reason'] = 'Venta exitosa - Oportunidad masiva';
+                $opportunityData['probability'] = 100;
+            }
+
+            // Si la oportunidad está cancelada, agregar razón
+            if ($status === 'cancelado') {
+                $opportunityData['lost_reason'] = 'Cliente no interesado - Oportunidad masiva';
+                $opportunityData['actual_close_date'] = now()->subDays(rand(1, 60));
+                $opportunityData['probability'] = 0;
+            }
+
+            Opportunity::create($opportunityData);
+        }
+
+        $this->command->info('500 oportunidades masivas creadas para vendedores y líderes');
     }
 }

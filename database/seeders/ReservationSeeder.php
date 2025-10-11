@@ -31,6 +31,15 @@ class ReservationSeeder extends Seeder
         $projects = Project::all();
         $units = Unit::where('status', 'disponible')->get();
 
+        // Verificar que existan las entidades necesarias
+        if ($projects->isEmpty()) {
+            throw new \Exception('No se encontraron proyectos en la base de datos. Asegúrate de ejecutar ProjectSeeder primero.');
+        }
+
+        if ($units->isEmpty()) {
+            throw new \Exception('No se encontraron unidades disponibles en la base de datos. Asegúrate de ejecutar UnitSeeder primero.');
+        }
+
         $reservationTypes = ['pre_reserva', 'reserva_firmada', 'reserva_confirmada'];
         $statuses = ['activa', 'confirmada', 'cancelada', 'vencida', 'convertida_venta'];
         $paymentMethods = ['efectivo', 'transferencia', 'tarjeta', 'cheque'];
@@ -161,6 +170,10 @@ class ReservationSeeder extends Seeder
         $paymentMethods = ['efectivo', 'transferencia', 'tarjeta', 'cheque'];
         $paymentStatuses = ['pendiente', 'pagado', 'parcial'];
 
+        // Obtener el último número de reserva para evitar duplicados
+        $lastReservation = Reservation::orderBy('id', 'desc')->first();
+        $lastNumber = $lastReservation ? (int) substr($lastReservation->reservation_number, -6) : 5;
+
         for ($i = 0; $i < 20; $i++) {
             $client = $clients->random();
             $project = $projects->random();
@@ -177,12 +190,16 @@ class ReservationSeeder extends Seeder
             $reservationDate = now()->subDays(rand(1, 30));
             $expirationDate = $reservationDate->copy()->addDays(30);
 
+            // Generar número de reserva único
+            $lastNumber++;
+            $reservationNumber = 'RES-2024-' . str_pad($lastNumber, 6, '0', STR_PAD_LEFT);
+
             $reservationData = [
                 'client_id' => $client->id,
                 'project_id' => $project->id,
                 'unit_id' => $unit->id,
                 'advisor_id' => $advisor->id,
-                'reservation_number' => 'RES-2024-' . str_pad(rand(6, 999), 6, '0', STR_PAD_LEFT),
+                'reservation_number' => $reservationNumber,
                 'reservation_type' => $reservationType,
                 'status' => $status,
                 'reservation_date' => $reservationDate,

@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Usuario administrador
+        // Usuario administrador (sin líder)
         $admin = User::create([
             'name' => 'Abel Arana',
             'email' => 'abel.arana@hotmail.com',
@@ -21,141 +21,120 @@ class UserSeeder extends Seeder
             'password' => Hash::make('lobomalo123'),
             'email_verified_at' => now(),
             'is_active' => true,
+            'lider_id' => null, // Admin no tiene líder
         ]);
         $admin->setRole('admin');
 
-       /*  // Líderes de ventas
-        $lideres = [
-            [
-                'name' => 'María González',
-                'email' => 'maria.gonzalez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Carlos Rodríguez',
-                'email' => 'carlos.rodriguez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
+        // Crear 15 líderes de ventas (reportan al admin)
+        $lideres = [];
+        $nombresLideres = [
+            'María González', 'Carlos Rodríguez', 'Ana Patricia López', 'Roberto Silva',
+            'Carmen García', 'Diego Morales', 'Laura Jiménez', 'Miguel Torres',
+            'Sofia Ramírez', 'Pedro Martínez', 'Elena Vargas', 'Fernando Castro',
+            'Isabel Moreno', 'Antonio Ruiz', 'Valentina Herrera'
         ];
 
-        foreach ($lideres as $lider) {
-            $user = User::create($lider);
-            $user->setRole('lider');
+        for ($i = 0; $i < 15; $i++) {
+            $lider = User::create([
+                'name' => $nombresLideres[$i],
+                'email' => strtolower(str_replace(' ', '.', $nombresLideres[$i])) . '@crm.com',
+                'phone' => '999' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+                'lider_id' => $admin->id, // Reportan al admin
+            ]);
+            $lider->setRole('lider');
+            $lideres[] = $lider;
         }
 
-        // Vendedores
-        $vendedores = [
-            [
-                'name' => 'Ana Martínez',
-                'email' => 'ana.martinez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Luis Pérez',
-                'email' => 'luis.perez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Sofia López',
-                'email' => 'sofia.lopez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Roberto Silva',
-                'email' => 'roberto.silva@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
+        // Crear 60 vendedores (4 por cada líder)
+        $vendedores = [];
+        $nombresVendedores = [
+            'Ana Martínez', 'Luis Pérez', 'Sofia López', 'Roberto Silva', 'Miguel Torres',
+            'Elena Vargas', 'Carlos Mendoza', 'Patricia Ruiz', 'Fernando Castro', 'Isabel Moreno',
+            'Antonio Herrera', 'Valentina Ramírez', 'Diego Morales', 'Carmen García', 'Pedro Martínez',
+            'Laura Jiménez', 'Roberto Silva', 'Sofia Ramírez', 'Miguel Torres', 'Elena Vargas',
+            'Fernando Castro', 'Isabel Moreno', 'Antonio Ruiz', 'Valentina Herrera', 'Diego Morales',
+            'Carmen García', 'Pedro Martínez', 'Laura Jiménez', 'Roberto Silva', 'Sofia Ramírez',
+            'Miguel Torres', 'Elena Vargas', 'Fernando Castro', 'Isabel Moreno', 'Antonio Ruiz',
+            'Valentina Herrera', 'Diego Morales', 'Carmen García', 'Pedro Martínez', 'Laura Jiménez',
+            'Roberto Silva', 'Sofia Ramírez', 'Miguel Torres', 'Elena Vargas', 'Fernando Castro',
+            'Isabel Moreno', 'Antonio Ruiz', 'Valentina Herrera', 'Diego Morales', 'Carmen García',
+            'Pedro Martínez', 'Laura Jiménez', 'Roberto Silva', 'Sofia Ramírez', 'Miguel Torres',
+            'Elena Vargas', 'Fernando Castro', 'Isabel Moreno', 'Antonio Ruiz', 'Valentina Herrera'
         ];
 
-        foreach ($vendedores as $vendedor) {
-            $user = User::create($vendedor);
-            $user->setRole('vendedor');
+        for ($i = 0; $i < 60; $i++) {
+            $liderAsignado = $lideres[$i % 15]; // Distribuir entre los 15 líderes
+            $vendedor = User::create([
+                'name' => $nombresVendedores[$i],
+                'email' => strtolower(str_replace(' ', '.', $nombresVendedores[$i])) . ($i + 1) . '@crm.com',
+                'phone' => '998' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+                'lider_id' => $liderAsignado->id,
+            ]);
+            $vendedor->setRole('vendedor');
+            $vendedores[] = $vendedor;
         }
 
-        // Dateros (captadores de datos)
-        $dateros = [
-            [
-                'name' => 'Pedro Ramírez',
-                'email' => 'pedro.ramirez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Laura Jiménez',
-                'email' => 'laura.jimenez@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Diego Morales',
-                'email' => 'diego.morales@crm.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
+        // Crear 120 dateros (2 por cada vendedor)
+        $dateros = [];
+        $nombresDateros = [
+            'Pedro Ramírez', 'Laura Jiménez', 'Diego Morales', 'Carmen García', 'Juan Pérez',
+            'María López', 'Carlos Silva', 'Ana Martínez', 'Roberto Torres', 'Sofia Vargas',
+            'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez',
+            'Valentina García', 'Diego Morales', 'Carmen Jiménez', 'Pedro López', 'Laura Silva',
+            'Roberto Torres', 'Sofia Vargas', 'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz',
+            'Isabel Herrera', 'Antonio Ramírez', 'Valentina García', 'Diego Morales', 'Carmen Jiménez',
+            'Pedro López', 'Laura Silva', 'Roberto Torres', 'Sofia Vargas', 'Miguel Castro',
+            'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez', 'Valentina García',
+            'Diego Morales', 'Carmen Jiménez', 'Pedro López', 'Laura Silva', 'Roberto Torres',
+            'Sofia Vargas', 'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera',
+            'Antonio Ramírez', 'Valentina García', 'Diego Morales', 'Carmen Jiménez', 'Pedro López',
+            'Laura Silva', 'Roberto Torres', 'Sofia Vargas', 'Miguel Castro', 'Elena Moreno',
+            'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez', 'Valentina García', 'Diego Morales',
+            'Carmen Jiménez', 'Pedro López', 'Laura Silva', 'Roberto Torres', 'Sofia Vargas',
+            'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez',
+            'Valentina García', 'Diego Morales', 'Carmen Jiménez', 'Pedro López', 'Laura Silva',
+            'Roberto Torres', 'Sofia Vargas', 'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz',
+            'Isabel Herrera', 'Antonio Ramírez', 'Valentina García', 'Diego Morales', 'Carmen Jiménez',
+            'Pedro López', 'Laura Silva', 'Roberto Torres', 'Sofia Vargas', 'Miguel Castro',
+            'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez', 'Valentina García',
+            'Diego Morales', 'Carmen Jiménez', 'Pedro López', 'Laura Silva', 'Roberto Torres',
+            'Sofia Vargas', 'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera',
+            'Antonio Ramírez', 'Valentina García', 'Diego Morales', 'Carmen Jiménez', 'Pedro López',
+            'Laura Silva', 'Roberto Torres', 'Sofia Vargas', 'Miguel Castro', 'Elena Moreno',
+            'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez', 'Valentina García', 'Diego Morales',
+            'Carmen Jiménez', 'Pedro López', 'Laura Silva', 'Roberto Torres', 'Sofia Vargas',
+            'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz', 'Isabel Herrera', 'Antonio Ramírez',
+            'Valentina García', 'Diego Morales', 'Carmen Jiménez', 'Pedro López', 'Laura Silva',
+            'Roberto Torres', 'Sofia Vargas', 'Miguel Castro', 'Elena Moreno', 'Fernando Ruiz',
+            'Isabel Herrera', 'Antonio Ramírez', 'Valentina García', 'Diego Morales', 'Carmen Jiménez'
         ];
 
-        foreach ($dateros as $datero) {
-            $user = User::create($datero);
-            $user->setRole('datero');
+        for ($i = 0; $i < 120; $i++) {
+            $vendedorAsignado = $vendedores[$i % 60]; // Distribuir entre los 60 vendedores
+            $datero = User::create([
+                'name' => $nombresDateros[$i],
+                'email' => strtolower(str_replace(' ', '.', $nombresDateros[$i])) . ($i + 1) . '@crm.com',
+                'phone' => '997' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'is_active' => true,
+                'lider_id' => $vendedorAsignado->id,
+            ]);
+            $datero->setRole('datero');
+            $dateros[] = $datero;
         }
 
-        // Clientes
-        $clientes = [
-            [
-                'name' => 'Juan Pérez',
-                'email' => 'juan.perez@cliente.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Carmen García',
-                'email' => 'carmen.garcia@cliente.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Miguel Torres',
-                'email' => 'miguel.torres@cliente.com',
-                'phone' => '999999999',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-        ];
-
-        foreach ($clientes as $cliente) {
-            $user = User::create($cliente);
-            $user->setRole('cliente');
-        } */
-
-        $this->command->info('Usuarios creados exitosamente con los roles: admin, lider, vendedor, datero, cliente');
+        $this->command->info('Usuarios creados exitosamente con jerarquías:');
+        $this->command->info('Admin: Abel Arana');
+        $this->command->info('Líderes: 15 líderes creados');
+        $this->command->info('Vendedores: 60 vendedores creados (4 por cada líder)');
+        $this->command->info('Dateros: 120 dateros creados (2 por cada vendedor)');
+        $this->command->info('Total usuarios: ' . (1 + 15 + 60 + 120) . ' usuarios');
     }
 }

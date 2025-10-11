@@ -15,36 +15,58 @@ class DatabaseSeeder extends Seeder
             // 1. Roles y Permisos (base - sin dependencias)
             RolePermissionSeeder::class,
 
-            // 2. Usuarios (base - sin dependencias)
+            // 2. Usuarios con Jerarquías (base - sin dependencias)
             UserSeeder::class,
 
-            // 3. Entidades Principales (dependen de Users)
-            //ClientSeeder::class,
-            //ProjectSeeder::class,
+            // 3. Jerarquías y Equipos (depende de Users)
+            HierarchySeeder::class,
 
-            // 4. Entidades Secundarias (dependen de Projects y Users)
-            //UnitSeeder::class,
+            // 4. Entidades Principales (dependen de Users)
+            ClientSeeder::class,
+            ProjectSeeder::class,
 
-            // 5. Entidades de Negocio (dependen de Clients, Projects, Units y Users)
-            //OpportunitySeeder::class,
-           // ReservationSeeder::class,
+            // 5. Entidades Secundarias (dependen de Projects y Users)
+            UnitSeeder::class,
 
-            // 6. Entidades de Comisiones (dependen de Users, Projects, Units y Opportunities)
-            //CommissionSeeder::class,
+            // 6. Entidades de Negocio (dependen de Clients, Projects, Units y Users)
+            OpportunitySeeder::class,
+            ReservationSeeder::class,
 
-            // 7. Entidades de Seguimiento (dependen de múltiples entidades)
-            //ActivitySeeder::class,
+            // 7. Entidades de Comisiones (dependen de Users, Projects, Units y Opportunities)
+            CommissionSeeder::class,
 
-            // 8. Relaciones Many-to-Many y Precios (dependen de todas las entidades anteriores)
-            //RelationshipSeeder::class,
+            // 8. Entidades de Seguimiento (dependen de múltiples entidades)
+            ActivitySeeder::class,
+            TaskSeeder::class,
+
+            // 9. Relaciones Many-to-Many y Precios (dependen de todas las entidades anteriores)
+            RelationshipSeeder::class,
+
+            // 10. Métricas de Equipo (depende de todas las entidades anteriores)
+            TeamMetricsSeeder::class,
         ]);
 
-        $this->command->info('¡Base de datos poblada exitosamente!');
-        $this->command->info('Usuarios de prueba creados:');
-        $this->command->info('- Admin: abel.arana@hotmail.com / lobomalo123');
-        $this->command->info('- Líderes: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
-        $this->command->info('- Vendedores: ana.martinez@crm.com, luis.perez@crm.com, sofia.lopez@crm.com, roberto.silva@crm.com / password');
-        $this->command->info('- Dateros: pedro.ramirez@crm.com, laura.jimenez@crm.com, diego.morales@crm.com / password');
-        $this->command->info('- Clientes: juan.perez@cliente.com, carmen.garcia@cliente.com, miguel.torres@cliente.com / password');
+        $this->command->info('¡Base de datos poblada exitosamente con jerarquías!');
+        $this->command->info('');
+        $this->command->info('🔐 USUARIOS DE PRUEBA:');
+        $this->command->info('👑 Admin: abel.arana@hotmail.com / lobomalo123');
+        $this->command->info('👥 Líderes: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
+        $this->command->info('💼 Vendedores: ana.martinez@crm.com, luis.perez@crm.com, sofia.lopez@crm.com, roberto.silva@crm.com, miguel.torres@crm.com / password');
+        $this->command->info('📊 Dateros: pedro.ramirez@crm.com, laura.jimenez@crm.com, diego.morales@crm.com, carmen.garcia@crm.com, juan.perez@crm.com / password');
+        $this->command->info('');
+        $this->command->info('🏢 JERARQUÍAS ESTABLECIDAS:');
+        $this->command->info('├── Admin (Abel Arana)');
+        $this->command->info('│   ├── Líder 1 (María González)');
+        $this->command->info('│   │   ├── Vendedor 1 (Ana Martínez)');
+        $this->command->info('│   │   │   └── Datero 1 (Pedro Ramírez)');
+        $this->command->info('│   │   └── Vendedor 2 (Luis Pérez)');
+        $this->command->info('│   │       └── Datero 2 (Laura Jiménez)');
+        $this->command->info('│   └── Líder 2 (Carlos Rodríguez)');
+        $this->command->info('│       ├── Vendedor 3 (Sofia López)');
+        $this->command->info('│       │   └── Datero 3 (Diego Morales)');
+        $this->command->info('│       └── Vendedor 4 (Roberto Silva)');
+        $this->command->info('├── Vendedor 5 (Miguel Torres) - Sin líder');
+        $this->command->info('│   └── Datero 4 (Carmen García)');
+        $this->command->info('└── Datero 5 (Juan Pérez) - Sin vendedor');
     }
 }

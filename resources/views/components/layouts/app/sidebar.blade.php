@@ -117,9 +117,11 @@
                     :current="request()->routeIs('users-datero')" wire:navigate>{{ __('Datero') }}
                 </flux:navlist.item>
 
-                <flux:navlist.item icon="document-text" :href="route('logs.index')"
-                    :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
-                </flux:navlist.item>
+                @can('view_logs')
+                    <flux:navlist.item icon="document-text" :href="route('logs.index')"
+                        :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
+                    </flux:navlist.item>
+                @endcan
 
             </flux:navlist.group>
 

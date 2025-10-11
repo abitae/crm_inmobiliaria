@@ -5,26 +5,57 @@
             <div class="flex justify-between items-center py-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Dashboard CRM Inmobiliario</h1>
-                    <p class="text-sm text-gray-600">Vista general de tu negocio inmobiliario</p>
+                    <p class="text-sm text-gray-600">
+                        Vista general de tu negocio inmobiliario
+                        @auth
+                            - {{ auth()->user()->getRoleName() ? ucfirst(auth()->user()->getRoleName()) : 'Usuario' }}
+                        @endauth
+                    </p>
                 </div>
-                
+                @auth
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-gray-500">{{ $this->getUserRoleDescription() }}</p>
+                    </div>
+                @endauth
             </div>
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Mensajes de notificación -->
+        @if (session()->has('message'))
+            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                {{ session('message') }}
+            </div>
+        @endif
+        
+        @if (session()->has('error'))
+            <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
+        
         <!-- Filtros -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                 <div>
-                    <flux:input size="xs" type="date" label="Fecha inicio" wire:model.live="startDate" />
+                    <flux:input 
+                        size="xs" 
+                        type="date" 
+                        label="Fecha inicio" 
+                        wire:model.live="startDate"
+                        placeholder="Selecciona fecha de inicio"
+                    />
                 </div>
                 <div>
-                    <flux:input size="xs" type="date" label="Fecha fin" wire:model.live="endDate" />
-                </div>
-                <div class="md:col-span-2 flex gap-2 justify-end">
-                    <flux:button size="xs" variant="outline" icon="x-mark" wire:click="clearFilters" wire:loading.attr="disabled">Limpiar</flux:button>
-                    <flux:button size="xs" icon="magnifying-glass" wire:click="refreshDashboard" wire:loading.attr="disabled">Aplicar</flux:button>
+                    <flux:input 
+                        size="xs" 
+                        type="date" 
+                        label="Fecha fin" 
+                        wire:model.live="endDate"
+                        placeholder="Selecciona fecha de fin"
+                    />
                 </div>
             </div>
         </div>
@@ -181,7 +212,35 @@
                 </div>
             </div>
 
-            <!-- Fila 3: Actividad y Tareas -->
+            <!-- Fila 3: Gráfico de Rendimiento de Asesores a ancho completo -->
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Gráfico de Rendimiento de Asesores -->
+                <div class="bg-white shadow-lg rounded-xl border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900">Rendimiento de Asesores</h3>
+                        <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    </div>
+                    <div class="h-80">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 4: Gráfico de Rendimiento de Líderes a ancho completo -->
+            <div class="grid grid-cols-1 gap-8">
+                <!-- Gráfico de Rendimiento de Líderes -->
+                <div class="bg-white shadow-lg rounded-xl border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900">Rendimiento de Líderes</h3>
+                        <div class="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                    </div>
+                    <div class="h-80">
+                        <canvas id="leadersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila 5: Actividad y Tareas -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Actividad Reciente -->
                 <div class="bg-white shadow-lg rounded-xl border border-gray-100 p-6">
@@ -190,7 +249,7 @@
                         <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
                     </div>
                     <div class="space-y-4 max-h-80 overflow-y-auto">
-                        @forelse($recentActivities as $activity)
+                        @forelse($listData['recentActivities'] as $activity)
                         <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -222,7 +281,7 @@
                         <a href="{{ route('tasks.index') }}" class="text-sm text-indigo-600 hover:text-indigo-500 font-medium">Ver todas</a>
                     </div>
                     <div class="space-y-3 max-h-80 overflow-y-auto">
-                        @forelse($pendingTasks as $task)
+                        @forelse($listData['pendingTasks'] as $task)
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="flex items-center space-x-3">
                                 <div class="w-3 h-3 bg-{{ $task['priority'] === 'urgente' ? 'red' : ($task['priority'] === 'alta' ? 'orange' : 'blue') }}-500 rounded-full"></div>
@@ -253,7 +312,7 @@
                         <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                     </div>
                     <div class="space-y-3 max-h-80 overflow-y-auto">
-                        @forelse($upcomingClosings as $closing)
+                        @forelse($listData['upcomingClosings'] as $closing)
                         <div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="flex items-center justify-between mb-2">
                                 <p class="text-sm font-medium text-gray-900">{{ $closing['client']['name'] ?? 'Cliente' }}</p>
@@ -277,390 +336,73 @@
     </div>
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Incluir el archivo JavaScript de gráficos -->
+<script src="{{ asset('js/dashboard-charts-simple.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Instancias persistentes de gráficos
-    const charts = { opportunities: null, clients: null, sellers: null, performance: null };
-    // Debounce de recarga cuando cambian fechas
-    let refreshTimer = null;
-    window.addEventListener('dashboard-schedule-refresh', () => {
-        if (refreshTimer) clearTimeout(refreshTimer);
-        refreshTimer = setTimeout(() => {
-            window.Livewire.find(document.querySelector('[wire\\:id]')?.getAttribute('wire:id'))?.call('loadDashboardData');
-        }, 400);
+    console.log('🚀 Dashboard cargado, inicializando gráficos...');
+    
+    // Datos de gráficos desde Livewire
+    const chartData = {
+        opportunitiesByStage: @json($chartData['opportunitiesByStage']),
+        clientsByStatus: @json($chartData['clientsByStatus']),
+        closedOpportunitiesBySeller: @json($chartData['closedOpportunitiesBySeller']),
+        advisorPerformance: @json($chartData['advisorPerformance']),
+        leaderPerformance: @json($chartData['leaderPerformance'])
+    };
+    
+    console.log('📊 Datos de gráficos:', chartData);
+    
+    // Función simple para inicializar gráficos
+    function initCharts() {
+        console.log('🚀 Inicializando gráficos...');
+        console.log('Chart disponible:', typeof Chart !== 'undefined');
+        console.log('DashboardChartsSimple disponible:', typeof window.DashboardChartsSimple !== 'undefined');
+        
+        if (typeof Chart !== 'undefined' && window.DashboardChartsSimple) {
+            console.log('✅ Chart.js y DashboardChartsSimple disponibles, inicializando gráficos...');
+            try {
+                window.DashboardChartsSimple.initChartsSimple(chartData);
+                console.log('✅ Gráficos inicializados correctamente');
+            } catch (error) {
+                console.error('❌ Error al inicializar gráficos:', error);
+            }
+        } else {
+            console.error('❌ Chart.js o DashboardChartsSimple no están disponibles');
+            console.log('Chart disponible:', typeof Chart !== 'undefined');
+            console.log('DashboardChartsSimple disponible:', typeof window.DashboardChartsSimple !== 'undefined');
+        }
+    }
+    
+    // Event listeners para actualizaciones
+    window.addEventListener('dashboard-data-updated', (event) => {
+        console.log('🔄 Actualizando gráficos desde evento...');
+        if (window.DashboardChartsSimple) {
+            window.DashboardChartsSimple.initChartsSimple(event.detail || chartData);
+        }
     });
 
-    // Indicadores de carga global
+    document.addEventListener('livewire:updated', (event) => {
+        console.log('🔄 Livewire actualizado, refrescando gráficos...');
+        setTimeout(() => {
+            if (window.DashboardChartsSimple) {
+                window.DashboardChartsSimple.initChartsSimple(chartData);
+            }
+        }, 200);
+    });
+    
+    // Manejar indicadores de carga
     window.addEventListener('dashboard-loading', (e) => {
         const isLoading = e.detail === true;
-        const buttons = document.querySelectorAll('button[wire\\:click="refreshDashboard"], button[wire\\:click="clearFilters"]');
-        buttons.forEach(btn => {
-            if (isLoading) btn.setAttribute('disabled', 'disabled'); else btn.removeAttribute('disabled');
-        });
-    });
-    // Gráfico de Oportunidades por Etapa
-    const opportunitiesCtx = document.getElementById('opportunitiesChart');
-    if (opportunitiesCtx) {
-        const opportunitiesData = @json($opportunitiesByStage);
-        charts.opportunities = new Chart(opportunitiesCtx, {
-            type: 'doughnut',
-            data: {
-                labels: opportunitiesData.map(item => item.stage),
-                datasets: [{
-                    data: opportunitiesData.map(item => item.count),
-                    backgroundColor: [
-                        '#3B82F6', // blue
-                        '#10B981', // green
-                        '#F59E0B', // yellow
-                        '#EF4444', // red
-                        '#8B5CF6', // purple
-                        '#F97316', // orange
-                        '#06B6D4'  // cyan
-                    ],
-                    borderWidth: 3,
-                    borderColor: '#ffffff',
-                    hoverBorderWidth: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#ffffff',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + ' oportunidades';
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    animateRotate: true,
-                    animateScale: true
-                }
-            }
-        });
-    }
-
-    // Gráfico de Clientes por Estado
-    const clientsCtx = document.getElementById('clientsChart');
-    if (clientsCtx) {
-        const clientsData = @json($clientsByStatus);
-        charts.clients = new Chart(clientsCtx, {
-            type: 'pie',
-            data: {
-                labels: clientsData.map(item => item.status),
-                datasets: [{
-                    data: clientsData.map(item => item.count),
-                    backgroundColor: [
-                        '#3B82F6', // blue
-                        '#10B981', // green
-                        '#F59E0B', // yellow
-                        '#EF4444', // red
-                        '#8B5CF6'  // purple
-                    ],
-                    borderWidth: 3,
-                    borderColor: '#ffffff',
-                    hoverBorderWidth: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#ffffff',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + ' clientes';
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    animateRotate: true,
-                    animateScale: true
-                }
-            }
-        });
-    }
-
-    // Gráfico de Oportunidades Cerradas por Vendedor
-    const sellersCtx = document.getElementById('sellersChart');
-    if (sellersCtx) {
-        const sellersData = @json($closedOpportunitiesBySeller);
-        charts.sellers = new Chart(sellersCtx, {
-            type: 'bar',
-            data: {
-                labels: sellersData.map(item => item.name),
-                datasets: [{
-                    label: 'Ventas Totales (S/)',
-                    data: sellersData.map(item => item.total_sales),
-                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                    borderColor: 'rgba(34, 197, 94, 1)',
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    borderSkipped: false,
-                    hoverBackgroundColor: 'rgba(34, 197, 94, 1)'
-                }, {
-                    label: 'Oportunidades Cerradas',
-                    data: sellersData.map(item => item.closed_opportunities),
-                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    borderSkipped: false,
-                    yAxisID: 'y1',
-                    hoverBackgroundColor: 'rgba(59, 130, 246, 1)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Ventas Totales (S/)',
-                            font: {
-                                weight: '600'
-                            }
-                        },
-                        grid: {
-                            drawOnChartArea: true,
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return 'S/ ' + value.toLocaleString();
-                            }
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Oportunidades Cerradas',
-                            font: {
-                                weight: '600'
-                            }
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Vendedores',
-                            font: {
-                                weight: '600'
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: {
-                                weight: '600'
-                            },
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#ffffff',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                if (context.datasetIndex === 0) {
-                                    return 'Ventas: S/ ' + context.parsed.y.toLocaleString();
-                                } else {
-                                    return 'Oportunidades: ' + context.parsed.y;
-                                }
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuart'
-                }
-            }
-        });
-    }
-
-    // Gráfico de Rendimiento por Asesor
-    const performanceCtx = document.getElementById('performanceChart');
-    if (performanceCtx) {
-        const performanceData = @json($advisorPerformance);
-        charts.performance = new Chart(performanceCtx, {
-            type: 'radar',
-            data: {
-                labels: performanceData.map(item => item.name),
-                datasets: [{
-                    label: 'Oportunidades Totales',
-                    data: performanceData.map(item => item.total_opportunities),
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    borderWidth: 3,
-                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                    pointBorderColor: '#ffffff',
-                    pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }, {
-                    label: 'Oportunidades Ganadas',
-                    data: performanceData.map(item => item.won_opportunities),
-                    backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                    borderColor: 'rgba(34, 197, 94, 1)',
-                    borderWidth: 3,
-                    pointBackgroundColor: 'rgba(34, 197, 94, 1)',
-                    pointBorderColor: '#ffffff',
-                    pointHoverBackgroundColor: '#ffffff',
-                    pointHoverBorderColor: 'rgba(34, 197, 94, 1)',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: {
-                                size: 10
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        },
-                        pointLabels: {
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            }
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: {
-                                weight: '600'
-                            },
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#ffffff',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.r;
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuart'
-                }
-            }
-        });
-    }
-    // Actualizar gráficos cuando Livewire informe nuevos datos
-    window.addEventListener('dashboard-data-updated', (event) => {
-        const data = event.detail || {};
-        if (charts.opportunities && Array.isArray(data.opportunitiesByStage)) {
-            charts.opportunities.data.labels = data.opportunitiesByStage.map(i => i.stage);
-            charts.opportunities.data.datasets[0].data = data.opportunitiesByStage.map(i => i.count);
-            charts.opportunities.update();
-        }
-        if (charts.clients && Array.isArray(data.clientsByStatus)) {
-            charts.clients.data.labels = data.clientsByStatus.map(i => i.status);
-            charts.clients.data.datasets[0].data = data.clientsByStatus.map(i => i.count);
-            charts.clients.update();
-        }
-        if (charts.sellers && Array.isArray(data.closedOpportunitiesBySeller)) {
-            const sellers = data.closedOpportunitiesBySeller;
-            charts.sellers.data.labels = sellers.map(i => i.name);
-            charts.sellers.data.datasets[0].data = sellers.map(i => i.total_sales);
-            charts.sellers.data.datasets[1].data = sellers.map(i => i.closed_opportunities);
-            charts.sellers.update();
-        }
-        if (charts.performance && Array.isArray(data.advisorPerformance)) {
-            const perf = data.advisorPerformance;
-            charts.performance.data.labels = perf.map(i => i.name);
-            charts.performance.data.datasets[0].data = perf.map(i => i.total_opportunities);
-            charts.performance.data.datasets[1].data = perf.map(i => i.won_opportunities);
-            charts.performance.update();
+        const loadingIndicator = document.querySelector('.loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = isLoading ? 'block' : 'none';
         }
     });
+    
+    // Inicializar gráficos inmediatamente
+    console.log('🚀 Iniciando proceso de carga de gráficos...');
+    setTimeout(() => initCharts(), 100);
 });
 </script>

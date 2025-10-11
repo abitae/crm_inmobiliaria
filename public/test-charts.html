@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .chart-container { width: 400px; height: 300px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Test de Gráficos Chart.js</h1>
+    
+    <div class="chart-container">
+        <canvas id="testChart"></canvas>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado');
+            console.log('Chart disponible:', typeof Chart !== 'undefined');
+            
+            if (typeof Chart !== 'undefined') {
+                const ctx = document.getElementById('testChart');
+                if (ctx) {
+                    console.log('Canvas encontrado');
+                    
+                    const chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Enero', 'Febrero', 'Marzo'],
+                            datasets: [{
+                                label: 'Ventas',
+                                data: [12, 19, 3],
+                                backgroundColor: '#3B82F6'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    
+                    console.log('Gráfico creado:', chart);
+                } else {
+                    console.error('Canvas no encontrado');
+                }
+            } else {
+                console.error('Chart.js no está disponible');
+            }
+        });
+    </script>
+</body>
+</html>
