@@ -9,8 +9,9 @@ use App\Services\UserManagementService;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
 
-class UserList extends Component
+class UserDatero extends Component
 {
+
     use WithPagination;
 
     // Propiedades de filtrado y búsqueda
@@ -61,7 +62,7 @@ class UserList extends Component
     protected $cachedQRCode = null;
     
     // Roles permitidos para este componente
-    protected $allowedRoles = ['admin', 'lider', 'vendedor'];
+    protected $allowedRoles = ['datero'];
     
     /**
      * Obtiene el servicio de gestión de usuarios
@@ -425,7 +426,7 @@ class UserList extends Component
      */
     public function render()
     {
-        return view('livewire.settings.user-list', [
+        return view('livewire.settings.user-datero', [
             'users' => $this->users,
             'roles' => $this->roles,
             'leaders' => $this->leaders,

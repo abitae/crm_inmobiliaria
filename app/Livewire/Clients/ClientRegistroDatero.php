@@ -128,8 +128,11 @@ class ClientRegistroDatero extends Component
         if (!$user->isDatero()) {
             abort(404);
         }else{
-        // Asignar automáticamente el usuario autenticado como asesor
+        // Asignar automáticamente el usuario como asesor
         $this->assigned_advisor_id = $user->id;
+        // Inicializar campos de auditoría con el assigned_advisor_id
+        $this->created_by = $user->id;
+        $this->updated_by = $user->id;
         }
     }
 
@@ -222,9 +225,9 @@ class ClientRegistroDatero extends Component
         $this->source = 'formulario_web';
         $this->status = 'nuevo';
         $this->score = 50;
+        // Mantener los campos de auditoría con el assigned_advisor_id
         $this->created_by = $this->assigned_advisor_id;
         $this->updated_by = $this->assigned_advisor_id;
-        // Mantener el asesor asignado como el usuario autenticado
     }
 
     public function closeMessages()
@@ -266,7 +269,8 @@ class ClientRegistroDatero extends Component
             ->first();
             
         if ($client) {
-            $this->handleError('Cliente ya existe en la base de datos, asesor asignado: ' . $client->assignedAdvisor->name);
+            $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
+            $this->handleError('Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
             return true;
         }
         

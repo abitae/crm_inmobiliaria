@@ -14,8 +14,8 @@
                 wire:navigate>
                 {{ __('Dashboard') }}
             </flux:navbar.item>
-            <flux:navbar.item icon="layout-grid" :href="route('clients.registro-masivo')" :current="request()->routeIs('clients.registro-masivo')"
-                wire:navigate>
+            <flux:navbar.item icon="layout-grid" :href="route('clients.registro-masivo')"
+                :current="request()->routeIs('clients.registro-masivo')" wire:navigate>
                 {{ __('Registro Masivo') }}
             </flux:navbar.item>
         </flux:navbar>
@@ -41,6 +41,12 @@
                 @can('view_clients')
                     <flux:navlist.item icon="users" :href="route('clients.index')"
                         :current="request()->routeIs('clients.index')" wire:navigate>{{ __('Clientes') }}
+                    </flux:navlist.item>
+                @endcan
+
+                @can('view_clients')
+                    <flux:navlist.item icon="users" :href="route('clients.index-datero')"
+                        :current="request()->routeIs('clients.index-datero')" wire:navigate>{{ __('Clientes Datero') }}
                     </flux:navlist.item>
                 @endcan
 
@@ -106,11 +112,15 @@
                         :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
                     </flux:navlist.item>
                 @endcan
-                @can('view_logs')
-                    <flux:navlist.item icon="document-text" :href="route('logs.index')"
-                        :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
-                    </flux:navlist.item>
-                @endcan
+
+                <flux:navlist.item icon="users" :href="route('users-datero')"
+                    :current="request()->routeIs('users-datero')" wire:navigate>{{ __('Datero') }}
+                </flux:navlist.item>
+
+                <flux:navlist.item icon="document-text" :href="route('logs.index')"
+                    :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
+                </flux:navlist.item>
+
             </flux:navlist.group>
 
 

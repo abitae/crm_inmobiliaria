@@ -716,7 +716,8 @@ class OpportunityList extends Component
 
             $this->isEditing = false;
             $this->showFormModal = true;
-            $this->dispatch('show-info', message: 'Formulario preparado para duplicar oportunidad de ' . $originalOpportunity->client->name . '.');
+            $clientName = $originalOpportunity->client ? $originalOpportunity->client->name : 'Cliente desconocido';
+            $this->dispatch('show-info', message: 'Formulario preparado para duplicar oportunidad de ' . $clientName . '.');
         } catch (Exception $e) {
             Log::error('Error al duplicar oportunidad', [
                 'opportunity_id' => $opportunityId,

@@ -124,8 +124,9 @@ class ProjectService
      */
     public function createProject(array $data): Project
     {
-        $data['created_by'] = Auth::user()->id;
-        $data['updated_by'] = Auth::user()->id;
+        $userId = Auth::id();
+        $data['created_by'] = $userId;
+        $data['updated_by'] = $userId;
 
         return Project::create($data);
     }
@@ -140,7 +141,7 @@ class ProjectService
             return false;
         }
 
-        $data['updated_by'] = Auth::user()->id;
+        $data['updated_by'] = Auth::id();
         return $project->update($data);
     }
 
@@ -354,6 +355,6 @@ class ProjectService
      */
     public function getCurrentUserId(): int
     {
-        return Auth::user()->id;
+        return Auth::id();
     }
 }

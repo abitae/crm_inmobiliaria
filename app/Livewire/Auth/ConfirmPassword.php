@@ -21,8 +21,9 @@ class ConfirmPassword extends Component
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::guard('web')->validate([
-            'email' => Auth::user()->email,
+        $user = Auth::user();
+        if (! $user || ! Auth::guard('web')->validate([
+            'email' => $user->email,
             'password' => $this->password,
         ])) {
             throw ValidationException::withMessages([

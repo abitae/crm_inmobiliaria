@@ -11,10 +11,11 @@ use Livewire\WithPagination;
 use App\Traits\SearchDocument;
 use Carbon\Carbon;
 
-class ClientList extends Component
+class ClientListDatero extends Component
 {
     use WithPagination;
     use SearchDocument;
+    
     // Filtros
     public $search = '';
     public $statusFilter = '';
@@ -57,6 +58,7 @@ class ClientList extends Component
         'notes' => 'nullable|string',
         'assigned_advisor_id' => 'nullable|exists:users,id'
     ];
+    
     protected $messages = [
         'document_number.unique' => 'El número de documento ya está en uso.',
         'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
@@ -142,7 +144,6 @@ class ClientList extends Component
         $this->showFormModal = true;
     }
 
-
     public function closeModals()
     {
         $this->reset(['showFormModal', 'editingClient']);
@@ -211,7 +212,6 @@ class ClientList extends Component
         $this->dispatch('show-success', message: 'Cliente actualizado exitosamente.');
     }
 
-
     public function changeStatus($clientId, $newStatus)
     {
         $this->clientService->changeStatus($clientId, $newStatus);
@@ -241,6 +241,7 @@ class ClientList extends Component
             'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
         ];
     }
+    
     public function buscarDocumento()
     {
         $tipo = strtolower($this->document_type);
@@ -257,6 +258,7 @@ class ClientList extends Component
             $this->dispatch('show-error', message: 'Ingrese un número de documento válido');
         }
     }
+    
     private function clientExists(string $tipo, string $num_doc): bool
     {
         $client = $this->clientService->clientExists($tipo, $num_doc);
@@ -269,6 +271,7 @@ class ClientList extends Component
         
         return false;
     }
+    
     private function searchClientData(string $tipo, string $num_doc): void
     {
         $result = $this->searchComplete($tipo, $num_doc);
@@ -308,9 +311,10 @@ class ClientList extends Component
             'advisor_id' => $this->advisorFilter,
         ];
 
-        $clients = $this->clientService->getAllClients(15, $filters);
+        // Usar el nuevo método para obtener solo clientes de dateros
+        $clients = $this->clientService->getClientsByDateros(15, $filters);
 
-        return view('livewire.clients.client-list', [
+        return view('livewire.clients.client-list-datero', [
             'clients' => $clients
         ]);
     }

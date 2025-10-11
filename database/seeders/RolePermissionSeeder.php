@@ -103,7 +103,6 @@ class RolePermissionSeeder extends Seeder
         $liderRole = Role::firstOrCreate(['name' => 'lider']);
         $vendedorRole = Role::firstOrCreate(['name' => 'vendedor']);
         $dateroRole = Role::firstOrCreate(['name' => 'datero']);
-        $clienteRole = Role::firstOrCreate(['name' => 'cliente']);
 
         // Asignar todos los permisos al admin
         $adminRole->givePermissionTo(Permission::all());
@@ -195,24 +194,6 @@ class RolePermissionSeeder extends Seeder
             'view_tasks',
             'create_tasks',
             'view_reports',
-        ]);
-
-        // Asignar permisos básicos al cliente
-        $clienteRole->givePermissionTo([
-            'view_dashboard',
-            'view_projects',
-            'view_units',
-            'view_opportunities',
-            'view_reservations',
-            'view_commissions',
-            'view_tasks',
-            'view_activities',
-            'view_documents',
-            'create_documents',
-            'edit_documents',
-            'manage_roles',
-            'manage_users',
-            'manage_permissions',
         ]);
     }
 }

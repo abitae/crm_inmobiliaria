@@ -32,9 +32,12 @@ class Password extends Component
             throw $e;
         }
 
-        Auth::user()->update([
-            'password' => Hash::make($validated['password']),
-        ]);
+        $user = Auth::user();
+        if ($user) {
+            $user->update([
+                'password' => Hash::make($validated['password']),
+            ]);
+        }
 
         $this->reset('current_password', 'password', 'password_confirmation');
 

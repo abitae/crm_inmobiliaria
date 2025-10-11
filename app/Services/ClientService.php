@@ -15,19 +15,47 @@ use Illuminate\Validation\ValidationException;
 class ClientService
 {
     /**
-     * Obtener todos los clientes con paginación y filtros
+     * Obtener todos los clientes con paginación y filtros (excluyendo clientes creados por usuarios datero)
      */
     public function getAllClients(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         try {
             $query = Client::with(['assignedAdvisor', 'createdBy'])
-                ->withCount(['opportunities', 'activities', 'tasks']);
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->whereDoesntHave('createdBy', function ($q) {
+                    $q->whereHas('roles', function ($roleQuery) {
+                        $roleQuery->where('name', 'datero');
+                    });
+                });
             $this->applyFilters($query, $filters);
 
             return $query->orderBy('created_at', 'desc')->paginate($perPage);
         } catch (\Exception $e) {
             Log::error('Error al obtener clientes: ' . $e->getMessage());
             throw new \Exception('Error al obtener la lista de clientes');
+        }
+    }
+
+    /**
+     * Obtener clientes creados por usuarios datero
+     */
+    public function getClientsByDateros(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    {
+        try {
+            $query = Client::with(['assignedAdvisor', 'createdBy'])
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->whereHas('createdBy', function ($q) {
+                    $q->whereHas('roles', function ($roleQuery) {
+                        $roleQuery->where('name', 'datero');
+                    });
+                });
+            
+            $this->applyFilters($query, $filters);
+
+            return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener clientes de dateros: ' . $e->getMessage());
+            throw new \Exception('Error al obtener la lista de clientes de dateros');
         }
     }
 
@@ -88,12 +116,11 @@ class ClientService
     /**
      * Crear nuevo cliente
      */
-    public function createClient(array $data): Client
+    public function createClient(array $formData): Client
     {
         try {
+            $data = $this->prepareFormData($formData);
             $this->validateClientData($data);
-            $data['created_by'] = $data['created_by'] ?? Auth::id();
-            $data['updated_by'] = $data['updated_by'] ?? Auth::id();
 
             $client = Client::create($data);
 
@@ -108,7 +135,7 @@ class ClientService
     /**
      * Actualizar cliente existente
      */
-    public function updateClient(int $id, array $data): bool
+    public function updateClient(int $id, array $formData): bool
     {
         try {
             if ($id <= 0) {
@@ -120,9 +147,9 @@ class ClientService
                 throw new \Exception('Cliente no encontrado');
             }
 
+            $data = $this->prepareFormData($formData, $client);
             $this->validateClientData($data, $id);
 
-            $data['updated_by'] = Auth::id();
             $updated = $client->update($data);
 
             if ($updated) {
@@ -198,9 +225,175 @@ class ClientService
     }
 
     /**
-     * Validar datos del cliente
+     * Verificar si un cliente ya existe por documento
      */
-    private function validateClientData(array $data, ?int $clientId = null): void
+    public function clientExists(string $documentType, string $documentNumber): ?Client
+    {
+        return Client::where('document_number', $documentNumber)
+            ->where('document_type', $documentType)
+            ->first();
+    }
+
+    /**
+     * Obtener estadísticas de clientes
+     */
+    public function getClientStats(): array
+    {
+        try {
+            $totalClients = Client::count();
+            $clientsByStatus = Client::selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status')
+                ->toArray();
+            
+            $clientsByType = Client::selectRaw('client_type, COUNT(*) as count')
+                ->groupBy('client_type')
+                ->pluck('count', 'client_type')
+                ->toArray();
+            
+            $clientsBySource = Client::selectRaw('source, COUNT(*) as count')
+                ->groupBy('source')
+                ->pluck('count', 'source')
+                ->toArray();
+
+            return [
+                'total' => $totalClients,
+                'by_status' => $clientsByStatus,
+                'by_type' => $clientsByType,
+                'by_source' => $clientsBySource,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error al obtener estadísticas de clientes: ' . $e->getMessage());
+            return [
+                'total' => 0,
+                'by_status' => [],
+                'by_type' => [],
+                'by_source' => [],
+            ];
+        }
+    }
+
+    /**
+     * Obtener clientes recientes
+     */
+    public function getRecentClients(int $limit = 10): Collection
+    {
+        try {
+            return Client::with(['assignedAdvisor', 'createdBy'])
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+        } catch (\Exception $e) {
+            Log::error('Error al obtener clientes recientes: ' . $e->getMessage());
+            return collect();
+        }
+    }
+
+    /**
+     * Buscar clientes por término de búsqueda
+     */
+    public function searchClients(string $searchTerm, int $perPage = 15): LengthAwarePaginator
+    {
+        try {
+            $query = Client::with(['assignedAdvisor', 'createdBy'])
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->where(function ($q) use ($searchTerm) {
+                    $q->where('name', 'like', "%{$searchTerm}%")
+                        ->orWhere('phone', 'like', "%{$searchTerm}%")
+                        ->orWhere('document_number', 'like', "%{$searchTerm}%")
+                        ->orWhere('address', 'like', "%{$searchTerm}%");
+                });
+
+            return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        } catch (\Exception $e) {
+            Log::error('Error al buscar clientes: ' . $e->getMessage());
+            throw new \Exception('Error al buscar clientes');
+        }
+    }
+
+    /**
+     * Obtener clientes por asesor
+     */
+    public function getClientsByAdvisor(int $advisorId, int $perPage = 15): LengthAwarePaginator
+    {
+        try {
+            return Client::with(['assignedAdvisor', 'createdBy'])
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->where('assigned_advisor_id', $advisorId)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener clientes del asesor {$advisorId}: " . $e->getMessage());
+            throw new \Exception('Error al obtener clientes del asesor');
+        }
+    }
+
+    /**
+     * Eliminar cliente
+     */
+    public function deleteClient(int $id): bool
+    {
+        try {
+            if ($id <= 0) {
+                throw new \Exception('ID de cliente inválido');
+            }
+
+            $client = Client::find($id);
+            if (!$client) {
+                throw new \Exception('Cliente no encontrado');
+            }
+
+            $deleted = $client->delete();
+
+            if ($deleted) {
+                Log::info("Cliente eliminado exitosamente ID: {$id}");
+                return true;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Error al eliminar cliente ID {$id}: " . $e->getMessage());
+            throw new \Exception('Error al eliminar el cliente: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Preparar datos del formulario para crear/actualizar cliente
+     */
+    public function prepareFormData(array $formData, ?Client $editingClient = null): array
+    {
+        $data = [
+            'name' => $formData['name'],
+            'phone' => $formData['phone'],
+            'document_type' => $formData['document_type'],
+            'document_number' => $formData['document_number'],
+            'address' => $formData['address'],
+            'birth_date' => $formData['birth_date'] ?: null,
+            'client_type' => $formData['client_type'],
+            'source' => $formData['source'],
+            'status' => $formData['status'],
+            'score' => $formData['score'],
+            'notes' => $formData['notes'],
+            'assigned_advisor_id' => $formData['assigned_advisor_id'] ?: null,
+        ];
+
+        // Agregar campos de auditoría
+        if (!$editingClient) {
+            // Al crear un nuevo cliente
+            $data['created_by'] = Auth::id();
+            $data['updated_by'] = Auth::id();
+        } else {
+            // Al actualizar un cliente existente
+            $data['updated_by'] = Auth::id();
+        }
+
+        return $data;
+    }
+
+    /**
+     * Obtener reglas de validación centralizadas
+     */
+    public function getValidationRules(?int $clientId = null): array
     {
         $rules = [
             'name' => 'required|string|max:255',
@@ -224,7 +417,88 @@ class ClientService
             $rules['document_number'] = 'required|string|max:20|unique:clients,document_number';
         }
 
-        $validator = Validator::make($data, $rules);
+        return $rules;
+    }
+
+    /**
+     * Obtener mensajes de validación centralizados
+     */
+    public function getValidationMessages(): array
+    {
+        return [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'name.max' => 'El nombre no puede exceder 255 caracteres.',
+            'phone.string' => 'El teléfono debe ser una cadena de texto.',
+            'phone.max' => 'El teléfono no puede exceder 20 caracteres.',
+            'document_type.required' => 'El tipo de documento es obligatorio.',
+            'document_type.in' => 'El tipo de documento seleccionado no es válido.',
+            'document_number.required' => 'El número de documento es obligatorio.',
+            'document_number.string' => 'El número de documento debe ser una cadena de texto.',
+            'document_number.max' => 'El número de documento no puede exceder 20 caracteres.',
+            'document_number.unique' => 'El número de documento ya está en uso.',
+            'address.string' => 'La dirección debe ser una cadena de texto.',
+            'address.max' => 'La dirección no puede exceder 500 caracteres.',
+            'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
+            'client_type.required' => 'El tipo de cliente es obligatorio.',
+            'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
+            'source.required' => 'El origen es obligatorio.',
+            'source.in' => 'El origen seleccionado no es válido.',
+            'status.required' => 'El estado es obligatorio.',
+            'status.in' => 'El estado seleccionado no es válido.',
+            'score.required' => 'La puntuación es obligatoria.',
+            'score.integer' => 'La puntuación debe ser un número entero.',
+            'score.min' => 'La puntuación debe ser al menos 0.',
+            'score.max' => 'La puntuación no puede exceder 100.',
+            'notes.string' => 'Las notas deben ser una cadena de texto.',
+            'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
+        ];
+    }
+
+    /**
+     * Obtener opciones para formularios
+     */
+    public function getFormOptions(): array
+    {
+        return [
+            'document_types' => [
+                'DNI' => 'DNI',
+                'RUC' => 'RUC',
+                'CE' => 'Carné de Extranjería',
+                'PASAPORTE' => 'Pasaporte'
+            ],
+            'client_types' => [
+                'inversor' => 'Inversor',
+                'comprador' => 'Comprador',
+                'empresa' => 'Empresa',
+                'constructor' => 'Constructor'
+            ],
+            'sources' => [
+                'redes_sociales' => 'Redes Sociales',
+                'ferias' => 'Ferias',
+                'referidos' => 'Referidos',
+                'formulario_web' => 'Formulario Web',
+                'publicidad' => 'Publicidad'
+            ],
+            'statuses' => [
+                'nuevo' => 'Nuevo',
+                'contacto_inicial' => 'Contacto Inicial',
+                'en_seguimiento' => 'En Seguimiento',
+                'cierre' => 'Cierre',
+                'perdido' => 'Perdido'
+            ]
+        ];
+    }
+
+    /**
+     * Validar datos del cliente
+     */
+    private function validateClientData(array $data, ?int $clientId = null): void
+    {
+        $rules = $this->getValidationRules($clientId);
+        $messages = $this->getValidationMessages();
+
+        $validator = Validator::make($data, $rules, $messages);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);

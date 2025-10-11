@@ -4,7 +4,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div>
-                    <h1 class="text-xl font-semibold text-gray-900">Clientes</h1>
+                    <h1 class="text-xl font-semibold text-gray-900">Clientes Datero</h1>
                     <p class="text-sm text-gray-600">Gestión de clientes del CRM</p>
                 </div>
                 <div class="flex space-x-2">
@@ -160,7 +160,7 @@
                                     {{ optional($client->activities->last())->title ?? 'Sin actividad' }}
                                     <br>
                                     {{ optional(optional($client->activities->last())->start_date)->format('d/m/Y') }}
-
+                                    
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap font-medium">
                                     <div class="flex space-x-1">
@@ -240,6 +240,7 @@
                     <div class="col-span-2">
                         <flux:input mask="999999999" label="Teléfono" wire:model="phone" size="xs" placeholder="Teléfono"
                             class="w-full" />
+
                     </div>
 
                     <!-- Tipo de Cliente -->
