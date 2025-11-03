@@ -15,7 +15,8 @@
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <flux:button size="xs" icon="arrow-down-tray" variant="outline" wire:click="exportOpportunities">
+                    <flux:button size="xs" icon="arrow-down-tray" variant="outline"
+                        wire:click="exportOpportunities">
                         Exportar
                     </flux:button>
                     <flux:button icon="plus" size="xs" color="primary" wire:click="openFormModal">
@@ -62,7 +63,9 @@
                 </div>
                 <div>
                     <flux:select size="xs" wire:model.live="advisorFilter">
-                        <option value="">Todos los asesores</option>
+                        @if (Auth::user()->isAdmin() || Auth::user()->isLider())
+                            <option value="">Todos los asesores</option>
+                        @endif
                         @foreach ($advisors as $advisor)
                             <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
                         @endforeach

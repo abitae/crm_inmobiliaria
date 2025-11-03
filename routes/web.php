@@ -20,7 +20,7 @@ use App\Livewire\Auth\RegisterDatero;
 use App\Livewire\Clients\ClientListDatero;
 use App\Livewire\Logs\LogViewer;
 use App\Livewire\Settings\UserDatero;
-
+use App\Livewire\Dateros\DaterosList;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -51,9 +51,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Clientes
     Route::get('/clients', ClientList::class)->middleware('permission:view_clients')->name('clients.index');
+
     Route::get('/clients-datero', ClientListDatero::class)->middleware('permission:view_clients')->name('clients.index-datero');
     Route::get('/clients/registro-masivo/{id?}', ClientRegistroMasivo::class)->name('clients.registro-masivo');
-
+    // Gestión de Dateros
+    Route::get('/dateros', DaterosList::class)->name('dateros.index');
     // Gestión de Proyectos
     Route::get('/projects', ProjectList::class)->middleware('permission:view_projects')->name('projects.index');
     // Vista de Proyecto
@@ -72,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Logs del Sistema
     Route::get('/logs', LogViewer::class)->middleware('permission:view_logs')->name('logs.index');
+    
 
     // Gestión de Roles y Usuarios
     Route::get('/roles', RoleList::class)->name('roles.index');

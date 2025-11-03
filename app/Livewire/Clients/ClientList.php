@@ -232,13 +232,13 @@ class ClientList extends Component
             'document_type' => $this->document_type,
             'document_number' => $this->document_number,
             'address' => $this->address,
-            'birth_date' => $this->birth_date ?: null,
+            'birth_date' => $this->birth_date ?: Carbon::now()->format('Y-m-d'),
             'client_type' => $this->client_type,
             'source' => $this->source,
             'status' => $this->status,
             'score' => $this->score,
             'notes' => $this->notes,
-            'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
+            'assigned_advisor_id' => $this->assigned_advisor_id ?: Auth::user()->id,
         ];
     }
     public function buscarDocumento()

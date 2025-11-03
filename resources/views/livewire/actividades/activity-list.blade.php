@@ -5,7 +5,7 @@
                 <flux:input size="xs" icon="magnifying-glass" type="search" label="Buscar" placeholder="Título o descripción" wire:model.debounce.400ms="search" />
             </div>
             <div>
-                <flux:select size="xs" icon="users" label="Cliente" wire:model="clientFilter">
+                <flux:select size="xs" icon="users" label="Cliente" wire:model.live="clientFilter">
                     <option value="">Todos</option>
                     @foreach($clients as $client)
                         <option value="{{ $client->id }}">{{ $client->name }}</option>
@@ -13,7 +13,7 @@
                 </flux:select>
             </div>
             <div>
-                <flux:select size="xs" label="Estado" wire:model="statusFilter">
+                <flux:select size="xs" label="Estado" wire:model.live="statusFilter">
                     <option value="">Todos</option>
                     <option value="programada">Programada</option>
                     <option value="en_progreso">En progreso</option>
@@ -22,7 +22,7 @@
                 </flux:select>
             </div>
             <div>
-                <flux:select size="xs" label="Tipo" wire:model="typeFilter">
+                <flux:select size="xs" label="Tipo" wire:model.live="typeFilter">
                     <option value="">Todos</option>
                     <option value="llamada">Llamada</option>
                     <option value="reunion">Reunión</option>

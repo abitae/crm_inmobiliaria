@@ -690,6 +690,8 @@ class OpportunityList extends Component
             ->get();
 
         $this->advisors = User::getAvailableAdvisors(Auth::user());
+        $user = Auth::user();
+        $this->advisorFilter = ($user->isAdmin() || $user->isLider()) ? '' : $user->id;
     }
 
     public function duplicateOpportunity($opportunityId)

@@ -31,116 +31,85 @@
 
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Dashboard')" class="grid">
-                @can('view_dashboard')
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                        wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                    wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
             </flux:navlist.group>
 
             <flux:navlist.group :heading="__('Gestión')" class="grid">
-                @can('view_clients')
-                    <flux:navlist.item icon="users" :href="route('clients.index')"
-                        :current="request()->routeIs('clients.index')" wire:navigate>{{ __('Clientes') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="users" :href="route('clients.index')"
+                    :current="request()->routeIs('clients.index')" wire:navigate>{{ __('Clientes') }}
+                </flux:navlist.item>
 
-                @can('view_clients')
-                    <flux:navlist.item icon="users" :href="route('clients.index-datero')"
-                        :current="request()->routeIs('clients.index-datero')" wire:navigate>{{ __('Clientes Datero') }}
+                
+                    <flux:navlist.item icon="users" :href="route('dateros.index')"
+                        :current="request()->routeIs('dateros.index')" wire:navigate>{{ __('Dateros') }}
                     </flux:navlist.item>
-                @endcan
+                
+                <flux:navlist.item icon="building-office" :href="route('projects.index')"
+                    :current="request()->routeIs('projects.index')" wire:navigate>{{ __('Proyectos') }}
+                </flux:navlist.item>
 
-                @can('view_projects')
-                    <flux:navlist.item icon="building-office" :href="route('projects.index')"
-                        :current="request()->routeIs('projects.index')" wire:navigate>{{ __('Proyectos') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="chart-bar" :href="route('opportunities.index')"
+                    :current="request()->routeIs('opportunities.index')" wire:navigate>{{ __('Oportunidades') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="clock" :href="route('activities.index')"
+                    :current="request()->routeIs('activities.index')" wire:navigate>{{ __('Actividades') }}
+                </flux:navlist.item>
 
-                @can('view_opportunities')
-                    <flux:navlist.item icon="chart-bar" :href="route('opportunities.index')"
-                        :current="request()->routeIs('opportunities.index')" wire:navigate>{{ __('Oportunidades') }}
-                    </flux:navlist.item>
-                @endcan
-                @can('view_activities')
-                    <flux:navlist.item icon="clock" :href="route('activities.index')"
-                        :current="request()->routeIs('activities.index')" wire:navigate>{{ __('Actividades') }}
-                    </flux:navlist.item>
-                @endcan
-
-                @can('view_tasks')
-                    <flux:navlist.item icon="check-circle" :href="route('tasks.index')"
-                        :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="check-circle" :href="route('tasks.index')"
+                    :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}
+                </flux:navlist.item>
             </flux:navlist.group>
 
             {{-- <flux:navlist.group :heading="__('CRM')" class="grid">
-                @can('view_reservations')
-                    <flux:navlist.item icon="calendar" :href="route('crm.reservations.index')"
-                        :current="request()->routeIs('crm.reservations.index')" wire:navigate>{{ __('Reservas') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="calendar" :href="route('crm.reservations.index')"
+                    :current="request()->routeIs('crm.reservations.index')" wire:navigate>{{ __('Reservas') }}
+                </flux:navlist.item>
 
-                @can('view_commissions')
-                    <flux:navlist.item icon="currency-dollar" :href="route('crm.commissions.index')"
-                        :current="request()->routeIs('crm.commissions.index')" wire:navigate>{{ __('Comisiones') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="currency-dollar" :href="route('crm.commissions.index')"
+                    :current="request()->routeIs('crm.commissions.index')" wire:navigate>{{ __('Comisiones') }}
+                </flux:navlist.item>
 
-                @can('view_documents')
-                    <flux:navlist.item icon="document" :href="route('crm.documents.index')"
-                        :current="request()->routeIs('crm.documents.index')" wire:navigate>{{ __('Documentos') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="document" :href="route('crm.documents.index')"
+                    :current="request()->routeIs('crm.documents.index')" wire:navigate>{{ __('Documentos') }}
+                </flux:navlist.item>
 
-                @can('view_activities')
-                    <flux:navlist.item icon="clock" :href="route('crm.activities.index')"
-                        :current="request()->routeIs('crm.activities.index')" wire:navigate>{{ __('Actividades') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="clock" :href="route('crm.activities.index')"
+                    :current="request()->routeIs('crm.activities.index')" wire:navigate>{{ __('Actividades') }}
+                </flux:navlist.item>
 
             </flux:navlist.group> --}}
 
             <flux:navlist.group :heading="__('Administración')" class="grid">
-                @can('manage_roles')
-                    <flux:navlist.item icon="cog" :href="route('roles.index')"
-                        :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Roles') }}
-                    </flux:navlist.item>
-                @endcan
-                @can('manage_users')
-                    <flux:navlist.item icon="users" :href="route('users.index')"
-                        :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="cog" :href="route('roles.index')"
+                    :current="request()->routeIs('roles.index')" wire:navigate>{{ __('Roles') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="users" :href="route('users.index')"
+                    :current="request()->routeIs('users.index')" wire:navigate>{{ __('Usuarios') }}
+                </flux:navlist.item>
 
                 <flux:navlist.item icon="users" :href="route('users-datero')"
                     :current="request()->routeIs('users-datero')" wire:navigate>{{ __('Datero') }}
                 </flux:navlist.item>
 
-                @can('view_logs')
-                    <flux:navlist.item icon="document-text" :href="route('logs.index')"
-                        :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
-                    </flux:navlist.item>
-                @endcan
+                <flux:navlist.item icon="document-text" :href="route('logs.index')"
+                    :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
+                </flux:navlist.item>
 
             </flux:navlist.group>
 
 
-            @can('view_reports')
-                <flux:navlist.group :heading="__('Reportes')" class="grid">
-                    <flux:navlist.item icon="chart-pie" :href="route('reports.sales')"
-                        :current="request()->routeIs('reports.sales')" wire:navigate>{{ __('Ventas') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
-            @endcan
+            <flux:navlist.group :heading="__('Reportes')" class="grid">
+                <flux:navlist.item icon="chart-pie" :href="route('reports.sales')"
+                    :current="request()->routeIs('reports.sales')" wire:navigate>{{ __('Ventas') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
 
-            @can('manage_roles')
-                <flux:navlist.group :heading="__('Administración')" class="grid">
-                    <flux:navlist.item icon="cog" :href="route('settings.profile')"
-                        :current="request()->routeIs('settings.*')" wire:navigate>{{ __('Configuración') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
-            @endcan
+            <flux:navlist.group :heading="__('Administración')" class="grid">
+                <flux:navlist.item icon="cog" :href="route('settings.profile')"
+                    :current="request()->routeIs('settings.*')" wire:navigate>{{ __('Configuración') }}
+                </flux:navlist.item>
+            </flux:navlist.group>
         </flux:navlist>
 
         <flux:spacer />
