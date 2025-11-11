@@ -37,7 +37,7 @@
                 <p class="text-sm text-gray-600">Refina los resultados según tus necesidades</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Búsqueda</label>
                     <flux:input size="xs" wire:model.live="search" placeholder="Buscar proyectos..."
@@ -46,7 +46,7 @@
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Estado</label>
                     <flux:select size="xs" wire:model.live="statusFilter" class="w-full">
-                        <option value="">Todos los estados</option>
+                        <option value="">Todos</option>
                         <option value="activo">Activo</option>
                         <option value="inactivo">Inactivo</option>
                         <option value="suspendido">Suspendido</option>
@@ -54,55 +54,41 @@
                     </flux:select>
                 </div>
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                    <flux:select size="xs" wire:model.live="typeFilter" class="w-full">
-                        <option value="">Todos los tipos</option>
-                        <option value="lotes">Lotes</option>
-                        <option value="casas">Casas</option>
-                        <option value="departamentos">Departamentos</option>
-                        <option value="oficinas">Oficinas</option>
-                        <option value="mixto">Mixto</option>
+                    <label class="block text-sm font-medium text-gray-700">Publicado</label>
+                    <flux:select size="xs" wire:model.live="isPublishedFilter" class="w-full">
+                        <option value="">Todos</option>
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+                    </flux:select>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Tipo Lote</label>
+                    <flux:select size="xs" wire:model.live="loteTypeFilter" class="w-full">
+                        <option value="">Todos</option>
+                        <option value="normal">Normal</option>
+                        <option value="express">Express</option>
                     </flux:select>
                 </div>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Etapa</label>
                     <flux:select size="xs" wire:model.live="stageFilter" class="w-full">
-                        <option value="">Todas las etapas</option>
+                        <option value="">Todas</option>
                         <option value="preventa">Preventa</option>
                         <option value="lanzamiento">Lanzamiento</option>
                         <option value="venta_activa">Venta Activa</option>
                         <option value="cierre">Cierre</option>
                     </flux:select>
                 </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Ubicación</label>
                     <flux:select size="xs" wire:model.live="locationFilter" class="w-full">
-                        <option value="">Todas las ubicaciones</option>
+                        <option value="">Todas</option>
                         <option value="lima">Lima</option>
                         <option value="arequipa">Arequipa</option>
                         <option value="trujillo">Trujillo</option>
                         <option value="piura">Piura</option>
                         <option value="chiclayo">Chiclayo</option>
                         <option value="cusco">Cusco</option>
-                    </flux:select>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Ordenar por</label>
-                    <flux:select size="xs" wire:model.live="orderBy" class="w-full">
-                        <option value="created_at">Fecha de creación</option>
-                        <option value="name">Nombre</option>
-                        <option value="start_date">Fecha de inicio</option>
-                        <option value="status">Estado</option>
-                    </flux:select>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Dirección</label>
-                    <flux:select size="xs" wire:model.live="orderDirection" class="w-full">
-                        <option value="desc">Descendente</option>
-                        <option value="asc">Ascendente</option>
                     </flux:select>
                 </div>
             </div>
@@ -376,13 +362,8 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             <span class="text-red-500">*</span> Tipo
                                         </label>
-                                        <flux:select wire:model="project_type" size="xs" class="w-full">
-                                            <option value="">Seleccionar tipo</option>
+                                        <flux:select wire:model="project_type" size="xs" class="w-full" disabled>
                                             <option value="lotes">Lotes</option>
-                                            <option value="casas">Casas</option>
-                                            <option value="departamentos">Departamentos</option>
-                                            <option value="oficinas">Oficinas</option>
-                                            <option value="mixto">Mixto</option>
                                         </flux:select>
                                     </div>
 
@@ -396,6 +377,30 @@
                                             <option value="lanzamiento">Lanzamiento</option>
                                             <option value="venta_activa">Venta Activa</option>
                                             <option value="cierre">Cierre</option>
+                                        </flux:select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Publicar en Web
+                                        </label>
+                                        <div class="flex items-center">
+                                            <flux:checkbox wire:model="is_published" id="is_published" />
+                                            <label for="is_published" class="ml-2 text-sm text-gray-700">
+                                                Publicar en la página web
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <span class="text-red-500">*</span> Tipo de Lote
+                                        </label>
+                                        <flux:select wire:model="lote_type" size="xs" class="w-full">
+                                            <option value="normal">Normal</option>
+                                            <option value="express">Express</option>
                                         </flux:select>
                                     </div>
                                 </div>

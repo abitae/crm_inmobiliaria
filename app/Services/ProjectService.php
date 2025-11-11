@@ -17,7 +17,7 @@ class ProjectService
      * @param int $perPage Número de proyectos por página (por defecto: 15)
      * @param array $filters Filtros disponibles:
      *   - status: Estado del proyecto (activo, inactivo, suspendido, finalizado)
-     *   - type: Tipo de proyecto (lotes, casas, departamentos, oficinas, mixto)
+     *   - type: Tipo de proyecto (lotes)
      *   - stage: Etapa del proyecto (preventa, lanzamiento, venta_activa, cierre)
      *   - location: Array con district, province, region
      *   - with_available_units: Boolean para filtrar solo proyectos con unidades disponibles
@@ -40,6 +40,15 @@ class ProjectService
 
             if (isset($filters['type']) && !empty($filters['type'])) {
                 $query->byType($filters['type']);
+            }
+
+            if (isset($filters['is_published']) && $filters['is_published'] !== '') {
+                $isPublished = filter_var($filters['is_published'], FILTER_VALIDATE_BOOLEAN);
+                $query->where('is_published', $isPublished);
+            }
+
+            if (isset($filters['lote_type']) && !empty($filters['lote_type'])) {
+                $query->where('lote_type', $filters['lote_type']);
             }
 
             if (isset($filters['stage']) && !empty($filters['stage'])) {
@@ -300,8 +309,18 @@ class ProjectService
         }
 
         // Validar type
-        if (isset($filters['type']) && in_array($filters['type'], ['lotes', 'casas', 'departamentos', 'oficinas', 'mixto'])) {
+        if (isset($filters['type']) && $filters['type'] === 'lotes') {
             $validated['type'] = $filters['type'];
+        }
+
+        // Validar is_published
+        if (isset($filters['is_published']) && $filters['is_published'] !== '') {
+            $validated['is_published'] = $filters['is_published'];
+        }
+
+        // Validar lote_type
+        if (isset($filters['lote_type']) && in_array($filters['lote_type'], ['normal', 'express'])) {
+            $validated['lote_type'] = $filters['lote_type'];
         }
 
         // Validar stage

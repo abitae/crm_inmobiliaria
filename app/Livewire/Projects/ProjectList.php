@@ -15,7 +15,8 @@ class ProjectList extends Component
     // ==================== FILTROS Y BÚSQUEDA ====================
     public $search = '';
     public $statusFilter = '';
-    public $typeFilter = '';
+    public $isPublishedFilter = '';
+    public $loteTypeFilter = '';
     public $stageFilter = '';
     public $locationFilter = '';
     public $withAvailableUnits = false;
@@ -34,7 +35,9 @@ class ProjectList extends Component
     // ==================== CAMPOS DEL FORMULARIO ====================
     public $name = '';
     public $description = '';
-    public $project_type = '';
+    public $project_type = 'lotes';
+    public $is_published = false;
+    public $lote_type = 'normal';
     public $stage = '';
     public $legal_status = '';
     public $address = '';
@@ -76,7 +79,9 @@ class ProjectList extends Component
     protected $rules = [
         'name' => 'required|string|max:255',
         'description' => 'nullable|string',
-        'project_type' => 'required|in:lotes,casas,departamentos,oficinas,mixto',
+        'project_type' => 'required|in:lotes',
+        'is_published' => 'boolean',
+        'lote_type' => 'required|in:normal,express',
         'stage' => 'required|in:preventa,lanzamiento,venta_activa,cierre',
         'legal_status' => 'required|in:con_titulo,en_tramite,habilitado',
         'address' => 'required|string|max:500',
@@ -119,7 +124,11 @@ class ProjectList extends Component
     {
         $this->resetPage();
     }
-    public function updatedTypeFilter()
+    public function updatedIsPublishedFilter()
+    {
+        $this->resetPage();
+    }
+    public function updatedLoteTypeFilter()
     {
         $this->resetPage();
     }
@@ -149,7 +158,8 @@ class ProjectList extends Component
         $this->reset([
             'search',
             'statusFilter',
-            'typeFilter',
+            'isPublishedFilter',
+            'loteTypeFilter',
             'stageFilter',
             'locationFilter',
             'withAvailableUnits',
@@ -217,6 +227,8 @@ class ProjectList extends Component
             'name',
             'description',
             'project_type',
+            'is_published',
+            'lote_type',
             'stage',
             'legal_status',
             'address',
@@ -241,6 +253,9 @@ class ProjectList extends Component
             'documentFiles'
         ]);
         $this->status = 'activo';
+        $this->project_type = 'lotes';
+        $this->is_published = false;
+        $this->lote_type = 'normal';
     }
 
     public function fillFormFromProject($project)
@@ -248,6 +263,8 @@ class ProjectList extends Component
         $this->name = $project->name;
         $this->description = $project->description;
         $this->project_type = $project->project_type;
+        $this->is_published = $project->is_published ?? false;
+        $this->lote_type = $project->lote_type ?? 'normal';
         $this->stage = $project->stage;
         $this->legal_status = $project->legal_status;
         $this->address = $project->address;
@@ -467,6 +484,8 @@ class ProjectList extends Component
             'name' => $this->name,
             'description' => $this->description,
             'project_type' => $this->project_type,
+            'is_published' => $this->is_published,
+            'lote_type' => $this->lote_type,
             'stage' => $this->stage,
             'legal_status' => $this->legal_status,
             'address' => $this->address,
@@ -563,7 +582,8 @@ class ProjectList extends Component
         $filters = [
             'search' => $this->search,
             'status' => $this->statusFilter,
-            'type' => $this->typeFilter,
+            'is_published' => $this->isPublishedFilter,
+            'lote_type' => $this->loteTypeFilter,
             'stage' => $this->stageFilter,
             'order_by' => $this->orderBy,
             'order_direction' => $this->orderDirection,

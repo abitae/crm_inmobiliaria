@@ -16,7 +16,9 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
-        'project_type', // lotes, casas, departamentos, oficinas, mixto
+        'project_type', // lotes
+        'is_published', // publicar o no en la página web
+        'lote_type', // normal, express
         'stage', // preventa, lanzamiento, venta_activa, cierre
         'legal_status', // con_titulo, en_tramite, habilitado
         'address', // dirección del proyecto
@@ -44,6 +46,7 @@ class Project extends Model
     ];
 
     protected $casts = [
+        'is_published' => 'boolean',
         'total_units' => 'integer',
         'available_units' => 'integer',
         'reserved_units' => 'integer',

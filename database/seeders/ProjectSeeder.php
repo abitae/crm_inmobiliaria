@@ -25,6 +25,8 @@ class ProjectSeeder extends Seeder
                 'name' => 'Lotes Miraflores Park',
                 'description' => 'Exclusivos lotes residenciales en el corazón de Miraflores, con ubicación privilegiada y amenidades premium.',
                 'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'normal',
                 'stage' => 'venta_activa',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Arequipa 1234',
@@ -95,6 +97,8 @@ class ProjectSeeder extends Seeder
                 'name' => 'Lotes San Isidro Business',
                 'description' => 'Exclusivos lotes comerciales en San Isidro, ideales para construir oficinas corporativas y edificios empresariales.',
                 'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'express',
                 'stage' => 'lanzamiento',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Javier Prado 2345',
@@ -160,6 +164,8 @@ class ProjectSeeder extends Seeder
                 'name' => 'Lotes Barranco Golf',
                 'description' => 'Exclusivos lotes residenciales con vista al mar en Barranco, perfectos para construir casas de lujo.',
                 'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'normal',
                 'stage' => 'preventa',
                 'legal_status' => 'con_titulo',
                 'address' => 'Av. Costanera 3456',
@@ -225,6 +231,8 @@ class ProjectSeeder extends Seeder
                 'name' => 'Lotes Surco Family',
                 'description' => 'Lotes familiares en Surco, con amplios espacios y excelente conectividad para construir casas familiares.',
                 'project_type' => 'lotes',
+                'is_published' => false,
+                'lote_type' => 'normal',
                 'stage' => 'venta_activa',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Benavides 4567',
@@ -290,6 +298,8 @@ class ProjectSeeder extends Seeder
                 'name' => 'Lotes Chorrillos Plaza',
                 'description' => 'Lotes mixtos en Chorrillos, ideales para construir proyectos residenciales, comerciales o mixtos.',
                 'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'express',
                 'stage' => 'lanzamiento',
                 'legal_status' => 'en_tramite',
                 'address' => 'Av. Primavera 5678',
@@ -355,6 +365,8 @@ class ProjectSeeder extends Seeder
                 'name' => 'Lotes San Borja Center',
                 'description' => 'Lotes comerciales en San Borja, perfectos para construir edificios empresariales y centros de negocios.',
                 'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'normal',
                 'stage' => 'venta_activa',
                 'legal_status' => 'habilitado',
                 'address' => 'Av. Aviación 6789',
@@ -413,6 +425,167 @@ class ProjectSeeder extends Seeder
                         'title' => 'Servicios Incluidos',
                         'path' => '/storage/projects/san-borja-center/servicios-incluidos.pdf',
                         'descripcion' => 'Lista de servicios incluidos'
+                    ]
+                ],
+            ],
+            [
+                'name' => 'Lotes Express La Molina',
+                'description' => 'Lotes express en La Molina con entrega inmediata y documentación lista. Ideal para inversión rápida.',
+                'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'express',
+                'stage' => 'venta_activa',
+                'legal_status' => 'habilitado',
+                'address' => 'Av. La Molina 7890',
+                'district' => 'La Molina',
+                'province' => 'Lima',
+                'region' => 'Lima Metropolitana',
+                'country' => 'Perú',
+                'ubicacion' => 'https://maps.google.com/?q=-12.0750,-76.9500',
+                'total_units' => 40,
+                'available_units' => 15,
+                'reserved_units' => 10,
+                'sold_units' => 15,
+                'blocked_units' => 0,
+                'start_date' => '2024-01-01',
+                'end_date' => '2025-12-31',
+                'delivery_date' => '2025-06-30',
+                'status' => 'activo',
+                'path_image_portada' => '/storage/projects/la-molina-express/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/la-molina-express/video-lotes.mp4',
+                'path_images' => [
+                    [
+                        'title' => 'Vista de Lotes Express',
+                        'path' => '/storage/projects/la-molina-express/vista-lotes.jpg',
+                        'descripcion' => 'Vista de los lotes express disponibles'
+                    ],
+                    [
+                        'title' => 'Plano de Lotes Express',
+                        'path' => '/storage/projects/la-molina-express/plano-lotes.jpg',
+                        'descripcion' => 'Plano detallado de lotes express'
+                    ]
+                ],
+                'path_videos' => [
+                    [
+                        'title' => 'Video de Lotes Express',
+                        'path' => '/storage/projects/la-molina-express/video-lotes.mp4',
+                        'descripcion' => 'Tour por los lotes express'
+                    ]
+                ],
+                'path_documents' => [
+                    [
+                        'title' => 'Brochure Lotes Express La Molina',
+                        'path' => '/storage/projects/la-molina-express/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes express'
+                    ],
+                    [
+                        'title' => 'Documentación Lista',
+                        'path' => '/storage/projects/la-molina-express/documentacion.pdf',
+                        'descripcion' => 'Documentación lista para entrega inmediata'
+                    ]
+                ],
+            ],
+            [
+                'name' => 'Lotes Express Surco Premium',
+                'description' => 'Lotes express premium en Surco con ubicación estratégica y documentación completa. Entrega inmediata.',
+                'project_type' => 'lotes',
+                'is_published' => true,
+                'lote_type' => 'express',
+                'stage' => 'lanzamiento',
+                'legal_status' => 'habilitado',
+                'address' => 'Av. Caminos del Inca 8901',
+                'district' => 'Surco',
+                'province' => 'Lima',
+                'region' => 'Lima Metropolitana',
+                'country' => 'Perú',
+                'ubicacion' => 'https://maps.google.com/?q=-12.1400,-76.9900',
+                'total_units' => 30,
+                'available_units' => 25,
+                'reserved_units' => 3,
+                'sold_units' => 2,
+                'blocked_units' => 0,
+                'start_date' => '2024-03-15',
+                'end_date' => '2026-03-31',
+                'delivery_date' => '2025-09-30',
+                'status' => 'activo',
+                'path_image_portada' => '/storage/projects/surco-express/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/surco-express/video-lotes.mp4',
+                'path_images' => [
+                    [
+                        'title' => 'Vista Aérea Lotes Express',
+                        'path' => '/storage/projects/surco-express/vista-aerea.jpg',
+                        'descripcion' => 'Vista aérea de los lotes express'
+                    ],
+                    [
+                        'title' => 'Plano de Lotes Premium',
+                        'path' => '/storage/projects/surco-express/plano-lotes.jpg',
+                        'descripcion' => 'Plano de lotes express premium'
+                    ]
+                ],
+                'path_videos' => [
+                    [
+                        'title' => 'Video Promocional Express',
+                        'path' => '/storage/projects/surco-express/video-promo.mp4',
+                        'descripcion' => 'Video promocional de lotes express'
+                    ]
+                ],
+                'path_documents' => [
+                    [
+                        'title' => 'Brochure Lotes Express Surco',
+                        'path' => '/storage/projects/surco-express/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes express premium'
+                    ],
+                    [
+                        'title' => 'Documentación Completa',
+                        'path' => '/storage/projects/surco-express/documentacion.pdf',
+                        'descripcion' => 'Documentación completa lista'
+                    ]
+                ],
+            ],
+            [
+                'name' => 'Lotes Express San Isidro Business',
+                'description' => 'Lotes express comerciales en San Isidro, documentación lista y entrega inmediata para proyectos empresariales.',
+                'project_type' => 'lotes',
+                'is_published' => false,
+                'lote_type' => 'express',
+                'stage' => 'preventa',
+                'legal_status' => 'habilitado',
+                'address' => 'Av. Las Begonias 9012',
+                'district' => 'San Isidro',
+                'province' => 'Lima',
+                'region' => 'Lima Metropolitana',
+                'country' => 'Perú',
+                'ubicacion' => 'https://maps.google.com/?q=-12.1000,-77.0300',
+                'total_units' => 25,
+                'available_units' => 20,
+                'reserved_units' => 3,
+                'sold_units' => 2,
+                'blocked_units' => 0,
+                'start_date' => '2024-05-01',
+                'end_date' => '2026-12-31',
+                'delivery_date' => '2025-12-31',
+                'status' => 'activo',
+                'path_image_portada' => '/storage/projects/san-isidro-express/portada-lotes.jpg',
+                'path_video_portada' => '/storage/projects/san-isidro-express/video-lotes.mp4',
+                'path_images' => [
+                    [
+                        'title' => 'Vista de Lotes Comerciales Express',
+                        'path' => '/storage/projects/san-isidro-express/vista-lotes.jpg',
+                        'descripcion' => 'Vista de lotes comerciales express'
+                    ]
+                ],
+                'path_videos' => [
+                    [
+                        'title' => 'Video de Lotes Express',
+                        'path' => '/storage/projects/san-isidro-express/video-lotes.mp4',
+                        'descripcion' => 'Video de lotes express comerciales'
+                    ]
+                ],
+                'path_documents' => [
+                    [
+                        'title' => 'Brochure Lotes Express San Isidro',
+                        'path' => '/storage/projects/san-isidro-express/brochure-lotes.pdf',
+                        'descripcion' => 'Catálogo de lotes express comerciales'
                     ]
                 ],
             ],
