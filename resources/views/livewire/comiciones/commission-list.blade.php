@@ -101,15 +101,15 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
-                                        <flux:button size="xs" wire:click="openDetailModal({{ $commission->id }})">Ver</flux:button>
+                                        <flux:button size="xs" wire:click="openDetailModal({{ $commission->id }})" icon="eye"/>
                                         @if($commission->status === 'pendiente')
-                                            <flux:button size="xs" color="success" wire:click="openApproveModal({{ $commission->id }})">Aprobar</flux:button>
+                                            <flux:button size="xs" color="success" wire:click="openApproveModal({{ $commission->id }})" icon="check"/>
                                         @endif
                                         @if($commission->status === 'aprobada')
-                                            <flux:button size="xs" color="primary" wire:click="openPayModal({{ $commission->id }})">Pagar</flux:button>
+                                            <flux:button size="xs" color="primary" wire:click="openPayModal({{ $commission->id }})" icon="plus"/>
                                         @endif
                                         @if(in_array($commission->status, ['pendiente', 'aprobada']))
-                                            <flux:button size="xs" color="danger" wire:click="cancelCommission({{ $commission->id }})">Cancelar</flux:button>
+                                            <flux:button size="xs" color="danger" wire:click="cancelCommission({{ $commission->id }})" icon="trash"/>
                                         @endif
                                     </div>
                                 </td>

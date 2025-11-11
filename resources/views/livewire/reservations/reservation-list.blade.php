@@ -109,11 +109,11 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
-                                        <flux:button size="xs" wire:click="openDetailModal({{ $reservation->id }})">Ver</flux:button>
-                                        <flux:button size="xs" color="primary" wire:click="openCreateModal({{ $reservation->id }})">Editar</flux:button>
+                                        <flux:button size="xs" wire:click="openDetailModal({{ $reservation->id }})" icon="eye"/>
+                                        <flux:button size="xs" color="primary" wire:click="openCreateModal({{ $reservation->id }})" icon="plus"/>
                                         @if($reservation->status === 'activa')
-                                            <flux:button size="xs" color="success" wire:click="confirmReservation({{ $reservation->id }})">Confirmar</flux:button>
-                                            <flux:button size="xs" color="danger" wire:click="cancelReservation({{ $reservation->id }})">Cancelar</flux:button>
+                                            <flux:button size="xs" color="success" wire:click="confirmReservation({{ $reservation->id }})" icon="check"/>
+                                            <flux:button size="xs" color="danger" wire:click="cancelReservation({{ $reservation->id }})" icon="trash"/>
                                         @endif
                                     </div>
                                 </td>
