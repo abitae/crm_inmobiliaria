@@ -155,6 +155,12 @@ class CommissionSeeder extends Seeder
         // Crear comisiones adicionales aleatorias
         $this->createRandomCommissions($advisors, $projects, $units, $opportunities, $admin);
 
+        // Crear comisiones para dateros
+        $dateros = User::role('datero')->get();
+        if ($dateros->isNotEmpty()) {
+            $this->createDateroCommissions($dateros, $projects, $units, $opportunities, $admin);
+        }
+
         $this->command->info('Comisiones creadas exitosamente');
     }
 
@@ -204,5 +210,80 @@ class CommissionSeeder extends Seeder
 
             Commission::create($commissionData);
         }
+    }
+
+    /**
+     * Crear comisiones específicas para dateros
+     * Los dateros reciben comisiones más pequeñas por captación de clientes
+     */
+    private function createDateroCommissions($dateros, $projects, $units, $opportunities, $admin): void
+    {
+        $commissionTypes = ['seguimiento', 'bono']; // Dateros principalmente reciben comisiones de seguimiento y bonos
+        $statuses = ['pendiente', 'aprobada', 'pagada'];
+        $paymentMethods = ['transferencia', 'efectivo', 'depósito'];
+
+        // Crear comisiones para cada datero (entre 1 y 3 comisiones por datero)
+        foreach ($dateros as $datero) {
+            $numCommissions = rand(1, 3);
+            
+            for ($i = 0; $i < $numCommissions; $i++) {
+                $project = $projects->random();
+                $unit = $units->where('project_id', $project->id)->first();
+                
+                // Buscar oportunidades creadas por este datero o relacionadas con sus clientes
+                $dateroOpportunities = $opportunities->filter(function($opp) use ($datero) {
+                    // Oportunidades donde el cliente fue creado por el datero
+                    return $opp->client && $opp->client->created_by === $datero->id;
+                });
+                
+                $opportunity = $dateroOpportunities->isNotEmpty() 
+                    ? $dateroOpportunities->random() 
+                    : null;
+
+                $commissionType = $commissionTypes[array_rand($commissionTypes)];
+                $status = $statuses[array_rand($statuses)];
+
+                // Montos más pequeños para dateros (entre 5,000 y 50,000)
+                $baseAmount = rand(5000, 50000);
+                
+                // Porcentajes más bajos para dateros (1% a 3%)
+                $commissionPercentage = $commissionType === 'bono' ? 0 : rand(1, 3);
+                $commissionAmount = ($baseAmount * $commissionPercentage) / 100;
+                
+                // Bonos más pequeños (500 a 3000)
+                $bonusAmount = $commissionType === 'bono' ? rand(500, 3000) : rand(0, 2000);
+                $totalCommission = $commissionAmount + $bonusAmount;
+
+                $commissionData = [
+                    'advisor_id' => $datero->id,
+                    'project_id' => $project->id,
+                    'unit_id' => $unit ? $unit->id : null,
+                    'opportunity_id' => $opportunity ? $opportunity->id : null,
+                    'commission_type' => $commissionType,
+                    'base_amount' => $baseAmount,
+                    'commission_percentage' => $commissionPercentage,
+                    'commission_amount' => $commissionAmount,
+                    'bonus_amount' => $bonusAmount,
+                    'total_commission' => $totalCommission,
+                    'status' => $status,
+                    'payment_date' => $status === 'pagada' ? now()->subDays(rand(1, 90)) : null,
+                    'payment_method' => $status === 'pagada' ? $paymentMethods[array_rand($paymentMethods)] : null,
+                    'payment_reference' => $status === 'pagada' ? 'COM-DAT-' . str_pad($datero->id, 3, '0', STR_PAD_LEFT) . '-' . rand(100, 999) : null,
+                    'notes' => $commissionType === 'bono' 
+                        ? "Bono por captación de cliente y excelente seguimiento. Datero: {$datero->name}"
+                        : "Comisión por seguimiento y captación de cliente. Datero: {$datero->name}",
+                    'approved_by' => in_array($status, ['aprobada', 'pagada']) ? $admin->id : null,
+                    'approved_at' => in_array($status, ['aprobada', 'pagada']) ? now()->subDays(rand(1, 60)) : null,
+                    'paid_by' => $status === 'pagada' ? $admin->id : null,
+                    'paid_at' => $status === 'pagada' ? now()->subDays(rand(1, 90)) : null,
+                    'created_by' => $admin->id,
+                    'updated_by' => $admin->id,
+                ];
+
+                Commission::create($commissionData);
+            }
+        }
+
+        $this->command->info('Comisiones de dateros creadas exitosamente');
     }
 }

@@ -14,9 +14,18 @@
                 wire:navigate>
                 {{ __('Dashboard') }}
             </flux:navbar.item>
+            <flux:navbar.item icon="layout-grid" :href="route('register-datero')"
+                :current="request()->routeIs('register-datero')" wire:navigate>
+                {{ __('Registro Datero') }}
+            </flux:navbar.item>
             <flux:navbar.item icon="layout-grid" :href="route('clients.registro-masivo')"
                 :current="request()->routeIs('clients.registro-masivo')" wire:navigate>
-                {{ __('Registro Masivo') }}
+                {{ __('Registro Cliente Masivo') }}
+            </flux:navbar.item>
+            
+            <flux:navbar.item icon="layout-grid" :href="route('clients.registro-datero', ['id' => auth()->user()->id])"
+                :current="request()->routeIs('clients.registro-datero', ['id' => auth()->user()->id])" wire:navigate>
+                {{ __('Registro Cliente Datero') }}
             </flux:navbar.item>
         </flux:navbar>
 
@@ -58,6 +67,15 @@
 
                 <flux:navlist.item icon="check-circle" :href="route('tasks.index')"
                     :current="request()->routeIs('tasks.index')" wire:navigate>{{ __('Tareas') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="calendar" :href="route('reservations.index')"
+                    :current="request()->routeIs('reservations.index')" wire:navigate>{{ __('Reservas') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="calendar" :href="route('commissions.index')"
+                    :current="request()->routeIs('commissions.index')" wire:navigate>{{ __('Comisiones') }}
+                </flux:navlist.item>
+                <flux:navlist.item icon="calendar" :href="route('commissions.index-datero')"
+                    :current="request()->routeIs('commissions.index-datero')" wire:navigate>{{ __('Comisiones Datero') }}
                 </flux:navlist.item>
             </flux:navlist.group>
 

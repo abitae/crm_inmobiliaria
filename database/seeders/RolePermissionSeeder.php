@@ -34,11 +34,12 @@ class RolePermissionSeeder extends Seeder
             'edit_projects',
             'delete_projects',
 
-            // Unidades
-            'view_units',
-            'create_units',
-            'edit_units',
-            'delete_units',
+            // Unidades (Solo Lotes)
+            // Nota: Las unidades en este sistema son exclusivamente lotes
+            'view_units',      // Ver lotes disponibles
+            'create_units',    // Crear nuevos lotes (solo admin)
+            'edit_units',      // Editar lotes (solo admin)
+            'delete_units',    // Eliminar lotes (solo admin)
 
             // Oportunidades
             'view_opportunities',
@@ -103,6 +104,9 @@ class RolePermissionSeeder extends Seeder
             'assign_tasks_team',
             'view_team_reports',
             'approve_team_actions',
+
+            // Gestión de Dateros
+            'view_dateros',
         ];
 
         foreach ($permissions as $permission) {
@@ -125,16 +129,18 @@ class RolePermissionSeeder extends Seeder
             'create_clients',
             'edit_clients',
             'view_projects',
-            'view_units',
+            'view_units',      // Ver lotes disponibles
             'view_opportunities',
             'create_opportunities',
             'edit_opportunities',
             'view_reservations',
             'create_reservations',
             'edit_reservations',
+            'delete_reservations', // Puede eliminar reservas
             'view_commissions',
             'create_commissions',
             'edit_commissions',
+            'delete_commissions', // Puede eliminar comisiones
             'view_tasks',
             'create_tasks',
             'edit_tasks',
@@ -158,6 +164,7 @@ class RolePermissionSeeder extends Seeder
             'assign_tasks_team',
             'view_team_reports',
             'approve_team_actions',
+            'view_dateros', // Para ver lista de dateros
         ]);
 
         // Asignar permisos al vendedor (supervisor de dateros)
@@ -167,16 +174,18 @@ class RolePermissionSeeder extends Seeder
             'create_clients',
             'edit_clients',
             'view_projects',
-            'view_units',
+            'view_units',      // Ver lotes disponibles
             'view_opportunities',
             'create_opportunities',
             'edit_opportunities',
             'view_reservations',
             'create_reservations',
             'edit_reservations',
+            // Nota: vendedor no puede eliminar reservas, solo cancelarlas
             'view_commissions',
             'create_commissions',
             'edit_commissions',
+            // Nota: vendedor no puede eliminar comisiones
             'view_tasks',
             'create_tasks',
             'edit_tasks',
@@ -197,6 +206,7 @@ class RolePermissionSeeder extends Seeder
             'view_subordinates',
             'assign_tasks_team',
             'view_team_reports',
+            'view_dateros', // Para ver lista de dateros
         ]);
 
         // Asignar permisos al datero (captador de datos - nivel más bajo)
@@ -206,14 +216,18 @@ class RolePermissionSeeder extends Seeder
             'create_clients',
             'edit_clients',
             'view_projects',
-            'view_units',
+            'view_units',      // Ver lotes disponibles (solo lectura)
             'view_opportunities',
             'create_opportunities',
+            // Nota: datero no puede editar oportunidades
+            'view_commissions', // Puede ver sus propias comisiones (solo lectura)
+            // Nota: datero no puede crear/editar/eliminar comisiones
+            // Nota: datero no tiene acceso a reservas
             'view_activities',
             'create_activities',
             'view_documents',
             'create_documents',
-            'edit_documents',
+            // Nota: edit_documents removido - dateros solo crean documentos
             'view_tasks',
             'create_tasks',
             'view_reports',
