@@ -67,6 +67,12 @@ class TaskList extends Component
         $this->taskToDeleteId = null;
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'clientFilter', 'statusFilter', 'priorityFilter']);
+        $this->resetPage();
+    }
+
     public function render()
     {
         $tasks = Task::with(['client'])

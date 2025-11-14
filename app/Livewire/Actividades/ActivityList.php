@@ -71,6 +71,12 @@ class ActivityList extends Component
         $this->activityToDeleteId = null;
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset(['search', 'clientFilter', 'statusFilter', 'typeFilter']);
+        $this->resetPage();
+    }
+
     public function render()
     {
         $user = Auth::user();
