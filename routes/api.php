@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ProjectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,5 +61,20 @@ Route::middleware(['auth:api', 'datero', 'throttle:60,1'])->prefix('clients')->g
     // Actualizar un cliente
     Route::match(['put', 'patch'], '/{id}', [ClientController::class, 'update'])
         ->name('api.clients.update');
+});
+
+// Rutas de proyectos publicados (públicas, sin autenticación)
+Route::middleware(['throttle:120,1'])->prefix('projects')->group(function () {
+    // Listar proyectos publicados
+    Route::get('/', [ProjectController::class, 'index'])
+        ->name('api.projects.index');
+    
+    // Obtener unidades de un proyecto publicado
+    Route::get('/{id}/units', [ProjectController::class, 'units'])
+        ->name('api.projects.units');
+    
+    // Ver un proyecto publicado específico
+    Route::get('/{id}', [ProjectController::class, 'show'])
+        ->name('api.projects.show');
 });
 

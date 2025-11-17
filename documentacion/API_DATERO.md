@@ -17,11 +17,12 @@ API REST optimizada para aplicaciones móviles Flutter, que permite a usuarios c
 1. [Configuración Base](#configuración-base)
 2. [Autenticación](#autenticación)
 3. [Gestión de Clientes](#gestión-de-clientes)
-4. [Modelos de Datos](#modelos-de-datos)
-5. [Manejo de Errores](#manejo-de-errores)
-6. [Implementación Flutter](#implementación-flutter)
-7. [Rate Limiting](#rate-limiting)
-8. [Mejores Prácticas](#mejores-prácticas)
+4. [Gestión de Proyectos Publicados](#gestión-de-proyectos-publicados)
+5. [Modelos de Datos](#modelos-de-datos)
+6. [Manejo de Errores](#manejo-de-errores)
+7. [Implementación Flutter](#implementación-flutter)
+8. [Rate Limiting](#rate-limiting)
+9. [Mejores Prácticas](#mejores-prácticas)
 
 ---
 
@@ -578,6 +579,184 @@ Obtener las opciones disponibles para los campos de selección.
 
 ---
 
+## 🏗️ Gestión de Proyectos Publicados
+
+### Características
+
+- ✅ **Rutas públicas** - No requieren autenticación
+- ✅ Solo muestra proyectos con `is_published = true`
+- ✅ Filtros avanzados por tipo, ubicación, etapa, etc.
+- ✅ Búsqueda por nombre, descripción o ubicación
+- ✅ Paginación eficiente
+- ✅ Rate limit: 120 solicitudes por minuto
+
+### 1. Listar Proyectos Publicados (GET)
+
+Obtener lista paginada de proyectos publicados.
+
+**Endpoint:** `GET /projects`
+
+**Rate Limit:** 120 solicitudes por minuto
+
+**Query Parameters (todos opcionales):**
+
+| Parámetro | Tipo | Descripción | Valores |
+|-----------|------|-------------|---------|
+| `per_page` | integer | Elementos por página | 1-100 (default: 15) |
+| `search` | string | Búsqueda en nombre, descripción o ubicación | Cualquier texto |
+| `project_type` | string | Filtrar por tipo de proyecto | Ver [Tipos de Proyecto](#tipos-de-proyecto) |
+| `lote_type` | string | Filtrar por tipo de lote | `normal`, `express` |
+| `stage` | string | Filtrar por etapa | Ver [Etapas](#etapas) |
+| `legal_status` | string | Filtrar por estado legal | Ver [Estados Legales](#estados-legales) |
+| `status` | string | Filtrar por estado | Ver [Estados](#estados-proyecto) |
+| `district` | string | Filtrar por distrito | Nombre del distrito |
+| `province` | string | Filtrar por provincia | Nombre de la provincia |
+| `region` | string | Filtrar por región | Nombre de la región |
+| `has_available_units` | boolean | Solo proyectos con unidades disponibles | `true`, `false` (default: `false`) |
+
+**Ejemplo de Request:**
+```
+GET /projects?per_page=20&search=Lima&stage=venta_activa&has_available_units=true
+```
+
+**Response 200:**
+```json
+{
+    "success": true,
+    "message": "Proyectos obtenidos exitosamente",
+    "data": {
+        "projects": [
+            {
+                "id": 1,
+                "name": "Residencial Los Olivos",
+                "description": "Moderno proyecto residencial en zona exclusiva",
+                "project_type": "lotes",
+                "lote_type": "normal",
+                "stage": "venta_activa",
+                "legal_status": "con_titulo",
+                "address": "Av. Principal 123",
+                "district": "San Isidro",
+                "province": "Lima",
+                "region": "Lima",
+                "country": "Perú",
+                "ubicacion": "https://maps.google.com/?q=-12.0969,-77.0338",
+                "full_address": "Av. Principal 123, San Isidro, Lima, Lima, Perú",
+                "coordinates": {
+                    "lat": -12.0969,
+                    "lng": -77.0338
+                },
+                "total_units": 50,
+                "available_units": 15,
+                "reserved_units": 10,
+                "sold_units": 20,
+                "blocked_units": 5,
+                "progress_percentage": 60.0,
+                "start_date": "2024-01-01",
+                "end_date": "2025-12-31",
+                "delivery_date": "2026-06-30",
+                "status": "activo",
+                "path_image_portada": "/storage/projects/1/portada.jpg",
+                "path_video_portada": "/storage/projects/1/video.mp4",
+                "path_images": [
+                    "/storage/projects/1/image1.jpg",
+                    "/storage/projects/1/image2.jpg"
+                ],
+                "path_videos": [
+                    "/storage/projects/1/video1.mp4"
+                ],
+                "path_documents": [
+                    "/storage/projects/1/documento1.pdf"
+                ],
+                "created_at": "2024-01-15 10:30:00",
+                "updated_at": "2024-01-15 10:30:00"
+            }
+        ],
+        "pagination": {
+            "current_page": 1,
+            "per_page": 20,
+            "total": 45,
+            "last_page": 3,
+            "from": 1,
+            "to": 20
+        }
+    }
+}
+```
+
+---
+
+### 2. Ver Proyecto Publicado Específico (GET)
+
+Obtener información detallada de un proyecto publicado.
+
+**Endpoint:** `GET /projects/{id}`
+
+**Response 200:**
+```json
+{
+    "success": true,
+    "message": "Proyecto obtenido exitosamente",
+    "data": {
+        "project": {
+            "id": 1,
+            "name": "Residencial Los Olivos",
+            "description": "Moderno proyecto residencial en zona exclusiva",
+            "project_type": "lotes",
+            "lote_type": "normal",
+            "stage": "venta_activa",
+            "legal_status": "con_titulo",
+            "address": "Av. Principal 123",
+            "district": "San Isidro",
+            "province": "Lima",
+            "region": "Lima",
+            "country": "Perú",
+            "ubicacion": "https://maps.google.com/?q=-12.0969,-77.0338",
+            "full_address": "Av. Principal 123, San Isidro, Lima, Lima, Perú",
+            "coordinates": {
+                "lat": -12.0969,
+                "lng": -77.0338
+            },
+            "total_units": 50,
+            "available_units": 15,
+            "reserved_units": 10,
+            "sold_units": 20,
+            "blocked_units": 5,
+            "progress_percentage": 60.0,
+            "start_date": "2024-01-01",
+            "end_date": "2025-12-31",
+            "delivery_date": "2026-06-30",
+            "status": "activo",
+            "path_image_portada": "/storage/projects/1/portada.jpg",
+            "path_video_portada": "/storage/projects/1/video.mp4",
+            "path_images": [
+                "/storage/projects/1/image1.jpg",
+                "/storage/projects/1/image2.jpg"
+            ],
+            "path_videos": [
+                "/storage/projects/1/video1.mp4"
+            ],
+            "path_documents": [
+                "/storage/projects/1/documento1.pdf"
+            ],
+            "created_at": "2024-01-15 10:30:00",
+            "updated_at": "2024-01-15 10:30:00"
+        }
+    }
+}
+```
+
+**Response 404:**
+```json
+{
+    "success": false,
+    "message": "Proyecto no encontrado"
+}
+```
+
+**Nota:** Si el proyecto existe pero no está publicado (`is_published = false`), también retornará 404.
+
+---
+
 ## 📊 Modelos de Datos
 
 ### Tipos de Documento
@@ -617,6 +796,45 @@ Obtener las opciones disponibles para los campos de selección.
 | `en_seguimiento` | En Seguimiento |
 | `cierre` | Cierre |
 | `perdido` | Perdido |
+
+### Tipos de Proyecto
+
+| Valor | Descripción |
+|-------|-------------|
+| `lotes` | Lotes |
+
+### Tipos de Lote
+
+| Valor | Descripción |
+|-------|-------------|
+| `normal` | Normal |
+| `express` | Express |
+
+### Etapas
+
+| Valor | Descripción |
+|-------|-------------|
+| `preventa` | Preventa |
+| `lanzamiento` | Lanzamiento |
+| `venta_activa` | Venta Activa |
+| `cierre` | Cierre |
+
+### Estados Legales
+
+| Valor | Descripción |
+|-------|-------------|
+| `con_titulo` | Con Título |
+| `en_tramite` | En Trámite |
+| `habilitado` | Habilitado |
+
+### Estados (Proyecto)
+
+| Valor | Descripción |
+|-------|-------------|
+| `activo` | Activo |
+| `inactivo` | Inactivo |
+| `suspendido` | Suspendido |
+| `finalizado` | Finalizado |
 
 ---
 
@@ -1410,6 +1628,7 @@ La API implementa rate limiting para proteger el servidor:
 | `/auth/login` | 5 solicitudes por minuto |
 | `/clients/*` (general) | 60 solicitudes por minuto |
 | `/clients/options` | 120 solicitudes por minuto |
+| `/projects/*` | 120 solicitudes por minuto |
 
 **Respuesta 429 (Too Many Requests):**
 ```json
