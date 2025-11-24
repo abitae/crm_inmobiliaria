@@ -50,6 +50,12 @@ class ProjectList extends Component
     public $end_date = '';
     public $delivery_date = '';
     public $status = 'activo';
+    public $estado_legal = '';
+    public $tipo_proyecto = '';
+    public $tipo_financiamiento = '';
+    public $banco = '';
+    public $tipo_cuenta = '';
+    public $cuenta_bancaria = '';
 
     // ==================== CAMPOS MULTIMEDIA ====================
     public $path_images = [];
@@ -94,6 +100,12 @@ class ProjectList extends Component
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'delivery_date' => 'nullable|date|after_or_equal:start_date',
         'status' => 'required|in:activo,inactivo,suspendido,finalizado',
+        'estado_legal' => 'nullable|in:Derecho Posesorio,Compra y Venta,Juez de Paz,Titulo de propiedad',
+        'tipo_proyecto' => 'nullable|in:propio,tercero',
+        'tipo_financiamiento' => 'nullable|in:contado,financiado',
+        'banco' => 'nullable|string|max:255',
+        'tipo_cuenta' => 'nullable|in:cuenta corriente,cuenta vista,cuenta ahorro',
+        'cuenta_bancaria' => 'nullable|string|max:255',
         'imagePortadaFile' => 'nullable|image|max:2048',
         'videoPortadaFile' => 'nullable|mimes:mp4,avi,mov,wmv|max:10240',
         'path_images.*.title' => 'required|string|max:255',
@@ -241,6 +253,12 @@ class ProjectList extends Component
             'end_date',
             'delivery_date',
             'status',
+            'estado_legal',
+            'tipo_proyecto',
+            'tipo_financiamiento',
+            'banco',
+            'tipo_cuenta',
+            'cuenta_bancaria',
             'path_image_portada',
             'path_video_portada',
             'imagePortadaFile',
@@ -277,6 +295,12 @@ class ProjectList extends Component
         $this->end_date = $project->end_date?->format('Y-m-d') ?? '';
         $this->delivery_date = $project->delivery_date?->format('Y-m-d') ?? '';
         $this->status = $project->status;
+        $this->estado_legal = $project->estado_legal ?? '';
+        $this->tipo_proyecto = $project->tipo_proyecto ?? '';
+        $this->tipo_financiamiento = $project->tipo_financiamiento ?? '';
+        $this->banco = $project->banco ?? '';
+        $this->tipo_cuenta = $project->tipo_cuenta ?? '';
+        $this->cuenta_bancaria = $project->cuenta_bancaria ?? '';
         $this->path_image_portada = $project->path_image_portada ?? '';
         $this->path_video_portada = $project->path_video_portada ?? '';
 
@@ -498,6 +522,12 @@ class ProjectList extends Component
             'end_date' => $this->end_date,
             'delivery_date' => $this->delivery_date,
             'status' => $this->status,
+            'estado_legal' => $this->estado_legal,
+            'tipo_proyecto' => $this->tipo_proyecto,
+            'tipo_financiamiento' => $this->tipo_financiamiento,
+            'banco' => $this->banco,
+            'tipo_cuenta' => $this->tipo_cuenta,
+            'cuenta_bancaria' => $this->cuenta_bancaria,
             'path_image_portada' => $this->path_image_portada,
             'path_video_portada' => $this->path_video_portada,
             'path_images' => $this->path_images,

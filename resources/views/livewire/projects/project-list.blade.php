@@ -509,6 +509,89 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Información Legal y Financiera -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 p-6">
+                            <div class="flex items-center space-x-3 mb-6">
+                                <div class="p-2 bg-yellow-100 rounded-lg">
+                                    <flux:icon name="document-text" class="w-5 h-5 text-yellow-600" />
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">Información Legal y Financiera</h4>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Estado Legal
+                                        </label>
+                                        <flux:select wire:model="estado_legal" size="xs" class="w-full">
+                                            <option value="">Seleccionar estado legal</option>
+                                            <option value="Derecho Posesorio">Derecho Posesorio</option>
+                                            <option value="Compra y Venta">Compra y Venta</option>
+                                            <option value="Juez de Paz">Juez de Paz</option>
+                                            <option value="Titulo de propiedad">Titulo de propiedad</option>
+                                        </flux:select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Tipo de Proyecto
+                                        </label>
+                                        <flux:select wire:model="tipo_proyecto" size="xs" class="w-full">
+                                            <option value="">Seleccionar tipo</option>
+                                            <option value="propio">Propio</option>
+                                            <option value="tercero">Tercero</option>
+                                        </flux:select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Tipo de Financiamiento
+                                        </label>
+                                        <flux:select wire:model="tipo_financiamiento" size="xs" class="w-full">
+                                            <option value="">Seleccionar financiamiento</option>
+                                            <option value="contado">Contado</option>
+                                            <option value="financiado">Financiado</option>
+                                        </flux:select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Banco
+                                        </label>
+                                        <flux:input wire:model="banco" placeholder="Nombre del banco" size="xs"
+                                            class="w-full" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Tipo de Cuenta
+                                        </label>
+                                        <flux:select wire:model="tipo_cuenta" size="xs" class="w-full">
+                                            <option value="">Seleccionar tipo de cuenta</option>
+                                            <option value="cuenta corriente">Cuenta Corriente</option>
+                                            <option value="cuenta vista">Cuenta Vista</option>
+                                            <option value="cuenta ahorro">Cuenta Ahorro</option>
+                                        </flux:select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Cuenta Bancaria
+                                        </label>
+                                        <flux:input wire:model="cuenta_bancaria" placeholder="Número de cuenta bancaria" size="xs"
+                                            class="w-full" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Multimedia de Portada -->

@@ -41,6 +41,12 @@ class Project extends Model
         'path_images', // rutas de las imágenes del proyecto
         'path_videos', // rutas de los videos del proyecto
         'path_documents', // rutas de los documentos del proyecto
+        'estado_legal', // -Derecho Posesorio-Compra y Venta-Juez de Paz-Titulo de propiedad
+        'tipo_proyecto', // propio , tercero
+        'tipo_financiamiento', // contado, financiado
+        'banco', // banco del proyecto
+        'tipo_cuenta', // cuenta corriente, cuenta vista, cuenta ahorro
+        'cuenta_bancaria', // cuenta bancaria del proyecto
         'created_by', // usuario que creó el proyecto
         'updated_by', // usuario que actualizó el proyecto
     ];
