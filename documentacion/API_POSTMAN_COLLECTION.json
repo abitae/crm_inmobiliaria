@@ -1,0 +1,560 @@
+{
+  "info": {
+    "name": "CRM Inmobiliario API",
+    "description": "Colección de endpoints para las aplicaciones móviles Datero y Cazador",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "datero_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cazador_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Aplicación Datero",
+      "item": [
+        {
+          "name": "Autenticación",
+          "item": [
+            {
+              "name": "Login Datero",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"datero@example.com\",\n    \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "auth", "login"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set('datero_token', jsonData.data.token);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Obtener Usuario (Me)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "auth", "me"]
+                }
+              }
+            },
+            {
+              "name": "Refrescar Token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/auth/refresh",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "auth", "refresh"]
+                }
+              }
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/auth/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "auth", "logout"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clientes",
+          "item": [
+            {
+              "name": "Listar Clientes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/clients?per_page=15&page=1",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "clients"],
+                  "query": [
+                    {
+                      "key": "per_page",
+                      "value": "15"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Crear Cliente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"María González\",\n    \"phone\": \"+51987654321\",\n    \"document_type\": \"DNI\",\n    \"document_number\": \"12345678\",\n    \"address\": \"Av. Principal 123\",\n    \"client_type\": \"comprador\",\n    \"source\": \"redes_sociales\",\n    \"status\": \"nuevo\",\n    \"score\": 75\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/clients",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "clients"]
+                }
+              }
+            },
+            {
+              "name": "Ver Cliente",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/clients/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "clients", "1"]
+                }
+              }
+            },
+            {
+              "name": "Actualizar Cliente",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"en_seguimiento\",\n    \"score\": 85\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/clients/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "clients", "1"]
+                }
+              }
+            },
+            {
+              "name": "Opciones Formulario",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/clients/options",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "clients", "options"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comisiones",
+          "item": [
+            {
+              "name": "Listar Comisiones",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/commissions",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "commissions"]
+                }
+              }
+            },
+            {
+              "name": "Estadísticas Comisiones",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/commissions/stats",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "commissions", "stats"]
+                }
+              }
+            },
+            {
+              "name": "Ver Comisión",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/commissions/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "commissions", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Perfil",
+          "item": [
+            {
+              "name": "Ver Perfil",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/datero/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "profile"]
+                }
+              }
+            },
+            {
+              "name": "Actualizar Perfil",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Juan Pérez Actualizado\",\n    \"phone\": \"+51999999999\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "profile"]
+                }
+              }
+            },
+            {
+              "name": "Cambiar Contraseña",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"current_password\": \"password123\",\n    \"new_password\": \"nuevapassword456\",\n    \"new_password_confirmation\": \"nuevapassword456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/profile/change-password",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "profile", "change-password"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Aplicación Cazador",
+      "item": [
+        {
+          "name": "Autenticación",
+          "item": [
+            {
+              "name": "Login Cazador",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"email\": \"cazador@example.com\",\n    \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/cazador/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "auth", "login"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.collectionVariables.set('cazador_token', jsonData.data.token);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Obtener Usuario (Me)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cazador/auth/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "auth", "me"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clientes",
+          "item": [
+            {
+              "name": "Listar Clientes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cazador/clients",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "clients"]
+                }
+              }
+            },
+            {
+              "name": "Crear Cliente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Cliente Nuevo\",\n    \"phone\": \"+51987654321\",\n    \"document_type\": \"DNI\",\n    \"document_number\": \"87654321\",\n    \"address\": \"Av. Principal 456\",\n    \"birth_date\": \"1985-03-20\",\n    \"client_type\": \"comprador\",\n    \"source\": \"referidos\",\n    \"status\": \"nuevo\",\n    \"score\": 80,\n    \"notes\": \"Cliente interesado en departamentos\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/cazador/clients",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "clients"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Proyectos",
+          "item": [
+            {
+              "name": "Listar Proyectos",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cazador/projects",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "projects"]
+                }
+              }
+            },
+            {
+              "name": "Ver Proyecto Completo",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cazador/projects/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "projects", "1"]
+                }
+              }
+            },
+            {
+              "name": "Ver Unidades",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/cazador/projects/1/units",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "projects", "1", "units"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rutas Públicas",
+      "item": [
+        {
+          "name": "Listar Proyectos Publicados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": ["{{base_url}}"],
+              "path": ["projects"]
+            }
+          }
+        },
+        {
+          "name": "Ver Proyecto Publicado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/projects/1",
+              "host": ["{{base_url}}"],
+              "path": ["projects", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

@@ -38,7 +38,7 @@ class ClientRegistroMasivo extends Component
             'document_type' => 'required|in:DNI',
             'document_number' => 'required|string|size:8',
             'address' => 'nullable|string|max:500',
-            'birth_date' => 'nullable|date',
+            'birth_date' => 'required|date',
             'client_type' => 'required|in:inversor,comprador,empresa,constructor',
             'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
             'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',

@@ -49,7 +49,7 @@ class ClientList extends Component
         'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
         'document_number' => 'required|string|max:20',
         'address' => 'nullable|string|max:500',
-        'birth_date' => 'nullable|date',
+        'birth_date' => 'required|date',
         'client_type' => 'required|in:inversor,comprador,empresa,constructor',
         'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
         'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
@@ -59,6 +59,7 @@ class ClientList extends Component
     ];
     protected $messages = [
         'document_number.unique' => 'El número de documento ya está en uso.',
+        'birth_date.required' => 'La fecha de nacimiento es obligatoria.',
         'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
         'client_type.required' => 'El tipo de cliente es obligatorio.',
         'client_type.in' => 'El tipo de cliente seleccionado no es válido.',

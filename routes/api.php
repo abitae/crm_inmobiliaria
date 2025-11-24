@@ -1,8 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\Datero\AuthController as DateroAuthController;
+use App\Http\Controllers\Api\Datero\ClientController as DateroClientController;
+use App\Http\Controllers\Api\Datero\CommissionController as DateroCommissionController;
+use App\Http\Controllers\Api\Datero\ProfileController as DateroProfileController;
+use App\Http\Controllers\Api\Cazador\AuthController as CazadorAuthController;
+use App\Http\Controllers\Api\Cazador\ClientController as CazadorClientController;
+use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectController;
 use App\Http\Controllers\Api\ProjectController;
 
 /*
@@ -16,54 +21,130 @@ use App\Http\Controllers\Api\ProjectController;
 |
 */
 
-// Rutas de autenticación (públicas)
-Route::prefix('auth')->group(function () {
-    // Login solo para dateros - Rate limit más restrictivo para prevenir ataques
-    Route::post('/login', [AuthController::class, 'login'])
-        ->middleware('throttle:5,1')
-        ->name('api.auth.login');
-    
-    // Rutas protegidas con JWT y middleware datero
-    Route::middleware(['auth:api', 'datero'])->group(function () {
-        // Obtener usuario autenticado
-        Route::get('/me', [AuthController::class, 'me'])
-            ->name('api.auth.me');
+// ==================== APLICACIÓN DATERO ====================
+Route::prefix('datero')->group(function () {
+    // Rutas de autenticación (públicas)
+    Route::prefix('auth')->group(function () {
+        // Login para dateros - Rate limit más restrictivo
+        Route::post('/login', [DateroAuthController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('api.datero.auth.login');
         
-        // Cerrar sesión
-        Route::post('/logout', [AuthController::class, 'logout'])
-            ->name('api.auth.logout');
+        // Rutas protegidas con JWT y middleware datero
+        Route::middleware(['auth:api', 'datero'])->group(function () {
+            Route::get('/me', [DateroAuthController::class, 'me'])
+                ->name('api.datero.auth.me');
+            
+            Route::post('/logout', [DateroAuthController::class, 'logout'])
+                ->name('api.datero.auth.logout');
+            
+            Route::post('/refresh', [DateroAuthController::class, 'refresh'])
+                ->name('api.datero.auth.refresh');
+        });
+    });
+
+    // Rutas de clientes (protegidas con JWT y middleware datero)
+    Route::middleware(['auth:api', 'datero', 'throttle:60,1'])->prefix('clients')->group(function () {
+        Route::get('/options', [DateroClientController::class, 'options'])
+            ->middleware('throttle:120,1')
+            ->name('api.datero.clients.options');
         
-        // Refrescar token
-        Route::post('/refresh', [AuthController::class, 'refresh'])
-            ->name('api.auth.refresh');
+        Route::get('/', [DateroClientController::class, 'index'])
+            ->name('api.datero.clients.index');
+        
+        Route::post('/', [DateroClientController::class, 'store'])
+            ->name('api.datero.clients.store');
+        
+        Route::get('/{id}', [DateroClientController::class, 'show'])
+            ->name('api.datero.clients.show');
+        
+        Route::match(['put', 'patch'], '/{id}', [DateroClientController::class, 'update'])
+            ->name('api.datero.clients.update');
+    });
+
+    // Rutas de comisiones (protegidas con JWT y middleware datero)
+    Route::middleware(['auth:api', 'datero', 'throttle:60,1'])->prefix('commissions')->group(function () {
+        Route::get('/', [DateroCommissionController::class, 'index'])
+            ->name('api.datero.commissions.index');
+        
+        Route::get('/stats', [DateroCommissionController::class, 'stats'])
+            ->name('api.datero.commissions.stats');
+        
+        Route::get('/{id}', [DateroCommissionController::class, 'show'])
+            ->name('api.datero.commissions.show');
+    });
+
+    // Rutas de perfil (protegidas con JWT y middleware datero)
+    Route::middleware(['auth:api', 'datero', 'throttle:60,1'])->prefix('profile')->group(function () {
+        Route::get('/', [DateroProfileController::class, 'show'])
+            ->name('api.datero.profile.show');
+        
+        Route::put('/', [DateroProfileController::class, 'update'])
+            ->name('api.datero.profile.update');
+        
+        Route::patch('/', [DateroProfileController::class, 'update'])
+            ->name('api.datero.profile.update');
+        
+        Route::post('/change-password', [DateroProfileController::class, 'changePassword'])
+            ->name('api.datero.profile.change-password');
     });
 });
 
-// Rutas de clientes (protegidas con JWT y middleware datero)
-Route::middleware(['auth:api', 'datero', 'throttle:60,1'])->prefix('clients')->group(function () {
-    // Obtener opciones para formularios (menos restrictivo, puede cachearse)
-    Route::get('/options', [ClientController::class, 'options'])
-        ->middleware('throttle:120,1')
-        ->name('api.clients.options');
-    
-    // Listar clientes del datero
-    Route::get('/', [ClientController::class, 'index'])
-        ->name('api.clients.index');
-    
-    // Crear nuevo cliente
-    Route::post('/', [ClientController::class, 'store'])
-        ->name('api.clients.store');
-    
-    // Ver un cliente específico
-    Route::get('/{id}', [ClientController::class, 'show'])
-        ->name('api.clients.show');
-    
-    // Actualizar un cliente
-    Route::match(['put', 'patch'], '/{id}', [ClientController::class, 'update'])
-        ->name('api.clients.update');
+// ==================== APLICACIÓN CAZADOR ====================
+Route::prefix('cazador')->group(function () {
+    // Rutas de autenticación (públicas)
+    Route::prefix('auth')->group(function () {
+        // Login para cazadores - Rate limit más restrictivo
+        Route::post('/login', [CazadorAuthController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('api.cazador.auth.login');
+        
+        // Rutas protegidas con JWT y middleware cazador
+        Route::middleware(['auth:api', 'cazador'])->group(function () {
+            Route::get('/me', [CazadorAuthController::class, 'me'])
+                ->name('api.cazador.auth.me');
+            
+            Route::post('/logout', [CazadorAuthController::class, 'logout'])
+                ->name('api.cazador.auth.logout');
+            
+            Route::post('/refresh', [CazadorAuthController::class, 'refresh'])
+                ->name('api.cazador.auth.refresh');
+        });
+    });
+
+    // Rutas de clientes (protegidas con JWT y middleware cazador)
+    Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('clients')->group(function () {
+        Route::get('/options', [CazadorClientController::class, 'options'])
+            ->middleware('throttle:120,1')
+            ->name('api.cazador.clients.options');
+        
+        Route::get('/', [CazadorClientController::class, 'index'])
+            ->name('api.cazador.clients.index');
+        
+        Route::post('/', [CazadorClientController::class, 'store'])
+            ->name('api.cazador.clients.store');
+        
+        Route::get('/{id}', [CazadorClientController::class, 'show'])
+            ->name('api.cazador.clients.show');
+        
+        Route::match(['put', 'patch'], '/{id}', [CazadorClientController::class, 'update'])
+            ->name('api.cazador.clients.update');
+    });
+
+    // Rutas de proyectos (protegidas con JWT y middleware cazador)
+    Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('projects')->group(function () {
+        Route::get('/', [CazadorProjectController::class, 'index'])
+            ->name('api.cazador.projects.index');
+        
+        Route::get('/{id}', [CazadorProjectController::class, 'show'])
+            ->name('api.cazador.projects.show');
+        
+        Route::get('/{id}/units', [CazadorProjectController::class, 'units'])
+            ->name('api.cazador.projects.units');
+    });
 });
 
-// Rutas de proyectos publicados (públicas, sin autenticación)
+// ==================== RUTAS PÚBLICAS (Proyectos publicados) ====================
 Route::middleware(['throttle:120,1'])->prefix('projects')->group(function () {
     // Listar proyectos publicados
     Route::get('/', [ProjectController::class, 'index'])
@@ -77,4 +158,3 @@ Route::middleware(['throttle:120,1'])->prefix('projects')->group(function () {
     Route::get('/{id}', [ProjectController::class, 'show'])
         ->name('api.projects.show');
 });
-

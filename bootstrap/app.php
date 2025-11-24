@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'datero' => \App\Http\Middleware\EnsureDateroRole::class,
+            'cazador' => \App\Http\Middleware\EnsureCazadorRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

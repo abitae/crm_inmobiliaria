@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Cazador;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
@@ -13,7 +13,7 @@ class ProjectController extends Controller
     use ApiResponse;
 
     /**
-     * Formatear proyecto para respuesta API
+     * Formatear proyecto para respuesta API (incluye campos financieros)
      */
     protected function formatProject(Project $project): array
     {
@@ -22,6 +22,7 @@ class ProjectController extends Controller
             'name' => $project->name,
             'description' => $project->description,
             'project_type' => $project->project_type,
+            'is_published' => $project->is_published,
             'lote_type' => $project->lote_type,
             'stage' => $project->stage,
             'legal_status' => $project->legal_status,
@@ -58,6 +59,18 @@ class ProjectController extends Controller
             'updated_at' => $project->updated_at->format('Y-m-d H:i:s'),
         ];
 
+        // Incluir asesores asignados si la relación está cargada
+        if ($project->relationLoaded('advisors')) {
+            $data['advisors'] = $project->advisors->map(function ($advisor) {
+                return [
+                    'id' => $advisor->id,
+                    'name' => $advisor->name,
+                    'email' => $advisor->email,
+                    'is_primary' => $advisor->pivot->is_primary ?? false,
+                ];
+            });
+        }
+
         return $data;
     }
 
@@ -66,7 +79,7 @@ class ProjectController extends Controller
      */
     protected function formatUnit(Unit $unit): array
     {
-        $data = [
+        return [
             'id' => $unit->id,
             'project_id' => $unit->project_id,
             'unit_manzana' => $unit->unit_manzana,
@@ -102,12 +115,10 @@ class ProjectController extends Controller
             'created_at' => $unit->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $unit->updated_at->format('Y-m-d H:i:s'),
         ];
-
-        return $data;
     }
 
     /**
-     * Listar proyectos publicados
+     * Listar todos los proyectos (acceso completo para cazadores)
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -115,8 +126,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         try {
-            // Obtener parámetros de paginación y filtros
-            $perPage = min((int) $request->get('per_page', 15), 100); // Máximo 100 por página
+            $perPage = min((int) $request->get('per_page', 15), 100);
             $filters = [
                 'search' => $request->get('search'),
                 'project_type' => $request->get('project_type'),
@@ -130,8 +140,8 @@ class ProjectController extends Controller
                 'has_available_units' => $request->get('has_available_units', false),
             ];
 
-            // Obtener solo proyectos publicados
-            $query = Project::where('is_published', true);
+            // Obtener todos los proyectos (no solo publicados)
+            $query = Project::with(['advisors:id,name,email']);
 
             // Aplicar filtros
             if (!empty($filters['project_type'])) {
@@ -204,7 +214,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Obtener un proyecto publicado específico
+     * Obtener un proyecto específico completo
      * 
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
@@ -212,14 +222,25 @@ class ProjectController extends Controller
     public function show($id)
     {
         try {
-            // Buscar proyecto publicado
-            $project = Project::where('is_published', true)->find($id);
+            // Buscar proyecto con todas sus relaciones
+            $project = Project::with([
+                'advisors:id,name,email',
+                'units',
+                'opportunities.client:id,name',
+            ])->find($id);
 
             if (!$project) {
                 return $this->notFoundResponse('Proyecto');
             }
 
             $projectData = $this->formatProject($project);
+            
+            // Incluir unidades si están cargadas
+            if ($project->relationLoaded('units')) {
+                $projectData['units'] = $project->units->map(function ($unit) {
+                    return $this->formatUnit($unit);
+                });
+            }
 
             return $this->successResponse(['project' => $projectData], 'Proyecto obtenido exitosamente');
 
@@ -229,7 +250,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Obtener unidades de un proyecto publicado
+     * Obtener unidades de un proyecto
      * 
      * @param Request $request
      * @param int $id
@@ -238,15 +259,15 @@ class ProjectController extends Controller
     public function units(Request $request, $id)
     {
         try {
-            // Verificar que el proyecto existe y está publicado
-            $project = Project::where('is_published', true)->find($id);
+            // Verificar que el proyecto existe
+            $project = Project::find($id);
 
             if (!$project) {
                 return $this->notFoundResponse('Proyecto');
             }
 
             // Obtener parámetros de paginación y filtros
-            $perPage = min((int) $request->get('per_page', 15), 100); // Máximo 100 por página
+            $perPage = min((int) $request->get('per_page', 15), 100);
             $filters = [
                 'status' => $request->get('status'),
                 'unit_type' => $request->get('unit_type'),
