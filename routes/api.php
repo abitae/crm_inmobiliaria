@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Cazador\AuthController as CazadorAuthController;
 use App\Http\Controllers\Api\Cazador\ClientController as CazadorClientController;
 use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\DocumentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +89,12 @@ Route::prefix('datero')->group(function () {
         Route::post('/change-password', [DateroProfileController::class, 'changePassword'])
             ->name('api.datero.profile.change-password');
     });
+
+    // Rutas de búsqueda de documentos (protegidas con JWT y middleware datero)
+    Route::middleware(['auth:api', 'datero', 'throttle:30,1'])->prefix('documents')->group(function () {
+        Route::post('/search', [DocumentController::class, 'search'])
+            ->name('api.datero.documents.search');
+    });
 });
 
 // ==================== APLICACIÓN CAZADOR ====================
@@ -141,6 +148,12 @@ Route::prefix('cazador')->group(function () {
         
         Route::get('/{id}/units', [CazadorProjectController::class, 'units'])
             ->name('api.cazador.projects.units');
+    });
+
+    // Rutas de búsqueda de documentos (protegidas con JWT y middleware cazador)
+    Route::middleware(['auth:api', 'cazador', 'throttle:30,1'])->prefix('documents')->group(function () {
+        Route::post('/search', [DocumentController::class, 'search'])
+            ->name('api.cazador.documents.search');
     });
 });
 

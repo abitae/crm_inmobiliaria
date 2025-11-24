@@ -9,6 +9,7 @@ use App\Services\ClientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
@@ -188,7 +189,7 @@ class ClientController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Preparar datos del formulario
+            // Preparar y sanitizar datos del formulario
             $formData = $request->only([
                 'name',
                 'phone',
@@ -203,9 +204,26 @@ class ClientController extends Controller
                 'notes'
             ]);
 
+            // Sanitizar campos de texto
+            if (isset($formData['name'])) {
+                $formData['name'] = trim($formData['name']);
+            }
+            if (isset($formData['phone'])) {
+                $formData['phone'] = preg_replace('/[^0-9+\-() ]/', '', $formData['phone']);
+            }
+            if (isset($formData['document_number'])) {
+                $formData['document_number'] = preg_replace('/[^0-9]/', '', $formData['document_number']);
+            }
+            if (isset($formData['address'])) {
+                $formData['address'] = trim($formData['address']);
+            }
+            if (isset($formData['notes'])) {
+                $formData['notes'] = trim($formData['notes']);
+            }
+
             // Establecer valores por defecto
             $formData['status'] = $formData['status'] ?? 'nuevo';
-            $formData['score'] = $formData['score'] ?? 0;
+            $formData['score'] = isset($formData['score']) ? max(0, min(100, (int) $formData['score'])) : 0;
             // Asignar automáticamente al cazador autenticado
             $formData['assigned_advisor_id'] = Auth::id();
 
@@ -224,6 +242,13 @@ class ClientController extends Controller
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
+            Log::error('Error al crear cliente (Cazador)', [
+                'user_id' => Auth::id(),
+                'data' => $request->except(['password', 'password_confirmation']),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return $this->serverErrorResponse($e, 'Error al crear el cliente');
         }
     }

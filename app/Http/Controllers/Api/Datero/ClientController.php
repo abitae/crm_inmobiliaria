@@ -9,6 +9,7 @@ use App\Services\ClientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
@@ -72,16 +73,22 @@ class ClientController extends Controller
     /**
      * Listar clientes del datero autenticado
      * 
+     * Permite listar y filtrar los clientes creados por el datero autenticado.
+     * Soporta paginación, búsqueda por texto y filtros por estado, tipo y origen.
+     * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
         try {
-            // Obtener parámetros de paginación y filtros
-            $perPage = min((int) $request->get('per_page', 15), 100);
+            // Validar y sanitizar parámetros de paginación
+            $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
+            $page = max((int) $request->get('page', 1), 1);
+            
+            // Sanitizar filtros
             $filters = [
-                'search' => $request->get('search'),
+                'search' => trim($request->get('search', '')),
                 'status' => $request->get('status'),
                 'type' => $request->get('type'),
                 'source' => $request->get('source'),
@@ -107,11 +114,16 @@ class ClientController extends Controller
 
             if (!empty($filters['search'])) {
                 $search = trim($filters['search']);
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('document_number', 'like', "%{$search}%");
-                });
+                // Sanitizar búsqueda para prevenir SQL injection
+                $search = preg_replace('/[^a-zA-Z0-9\s\-]/', '', $search);
+                
+                if (!empty($search)) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('document_number', 'like', "%{$search}%");
+                    });
+                }
             }
 
             // Paginar resultados
@@ -136,6 +148,12 @@ class ClientController extends Controller
             ], 'Clientes obtenidos exitosamente');
 
         } catch (\Exception $e) {
+            Log::error('Error al obtener clientes (Datero)', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return $this->serverErrorResponse($e, 'Error al obtener los clientes');
         }
     }
@@ -197,7 +215,7 @@ class ClientController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Preparar datos del formulario
+            // Preparar y sanitizar datos del formulario
             $formData = $request->only([
                 'name',
                 'phone',
@@ -213,9 +231,26 @@ class ClientController extends Controller
                 'assigned_advisor_id'
             ]);
 
+            // Sanitizar campos de texto
+            if (isset($formData['name'])) {
+                $formData['name'] = trim($formData['name']);
+            }
+            if (isset($formData['phone'])) {
+                $formData['phone'] = preg_replace('/[^0-9+\-() ]/', '', $formData['phone']);
+            }
+            if (isset($formData['document_number'])) {
+                $formData['document_number'] = preg_replace('/[^0-9]/', '', $formData['document_number']);
+            }
+            if (isset($formData['address'])) {
+                $formData['address'] = trim($formData['address']);
+            }
+            if (isset($formData['notes'])) {
+                $formData['notes'] = trim($formData['notes']);
+            }
+
             // Establecer valores por defecto si no se proporcionan
             $formData['status'] = $formData['status'] ?? 'nuevo';
-            $formData['score'] = $formData['score'] ?? 0;
+            $formData['score'] = isset($formData['score']) ? max(0, min(100, (int) $formData['score'])) : 0;
 
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);
@@ -232,6 +267,13 @@ class ClientController extends Controller
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
+            Log::error('Error al crear cliente (Datero)', [
+                'user_id' => Auth::id(),
+                'data' => $request->except(['password', 'password_confirmation']),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return $this->serverErrorResponse($e, 'Error al crear el cliente');
         }
     }

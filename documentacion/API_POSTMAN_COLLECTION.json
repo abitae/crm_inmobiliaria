@@ -359,6 +359,61 @@
               }
             }
           ]
+        },
+        {
+          "name": "Búsqueda de Documentos",
+          "item": [
+            {
+              "name": "Buscar por DNI",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"document_type\": \"dni\",\n    \"document_number\": \"12345678\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/documents/search",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "documents", "search"]
+                }
+              }
+            },
+            {
+              "name": "Buscar por RUC",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{datero_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"document_type\": \"ruc\",\n    \"document_number\": \"20123456789\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/datero/documents/search",
+                  "host": ["{{base_url}}"],
+                  "path": ["datero", "documents", "search"]
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -519,6 +574,61 @@
                   "raw": "{{base_url}}/cazador/projects/1/units",
                   "host": ["{{base_url}}"],
                   "path": ["cazador", "projects", "1", "units"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Búsqueda de Documentos",
+          "item": [
+            {
+              "name": "Buscar por DNI",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"document_type\": \"dni\",\n    \"document_number\": \"12345678\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/cazador/documents/search",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "documents", "search"]
+                }
+              }
+            },
+            {
+              "name": "Buscar por RUC",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{cazador_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"document_type\": \"ruc\",\n    \"document_number\": \"20123456789\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/cazador/documents/search",
+                  "host": ["{{base_url}}"],
+                  "path": ["cazador", "documents", "search"]
                 }
               }
             }

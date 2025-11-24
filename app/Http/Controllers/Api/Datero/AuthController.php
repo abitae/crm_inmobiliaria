@@ -7,6 +7,7 @@ use App\Traits\ApiResponse;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -38,10 +39,20 @@ class AuthController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            $credentials = $request->only('email', 'password');
+            // Sanitizar email
+            $email = strtolower(trim($request->input('email')));
+            $credentials = [
+                'email' => $email,
+                'password' => $request->input('password')
+            ];
 
             // Intentar autenticar
             if (!$token = JWTAuth::attempt($credentials)) {
+                Log::warning('Intento de login fallido (Datero)', [
+                    'email' => $email,
+                    'ip' => $request->ip(),
+                ]);
+                
                 return $this->unauthorizedResponse('Credenciales inválidas');
             }
 
@@ -51,14 +62,34 @@ class AuthController extends Controller
             // Verificar que el usuario tiene rol datero
             if (!$user->isDatero()) {
                 JWTAuth::invalidate($token);
+                Log::warning('Intento de acceso con rol incorrecto (Datero)', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'role' => $user->getRoleName(),
+                    'ip' => $request->ip(),
+                ]);
+                
                 return $this->forbiddenResponse('Acceso denegado. Solo usuarios con rol datero pueden acceder.');
             }
 
             // Verificar que el usuario esté activo
             if (!$user->isActive()) {
                 JWTAuth::invalidate($token);
+                Log::warning('Intento de acceso con cuenta inactiva (Datero)', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'ip' => $request->ip(),
+                ]);
+                
                 return $this->forbiddenResponse('Tu cuenta está desactivada. Contacta al administrador.');
             }
+
+            // Log de login exitoso
+            Log::info('Login exitoso (Datero)', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip' => $request->ip(),
+            ]);
 
             // Retornar respuesta exitosa con token y datos del usuario
             return $this->successResponse([
@@ -76,8 +107,21 @@ class AuthController extends Controller
             ], 'Inicio de sesión exitoso');
 
         } catch (JWTException $e) {
+            Log::error('Error JWT en login (Datero)', [
+                'email' => $request->input('email'),
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+            ]);
+            
             return $this->errorResponse('Error al generar el token', ['error' => 'No se pudo crear el token'], 500);
         } catch (\Exception $e) {
+            Log::error('Error en login (Datero)', [
+                'email' => $request->input('email'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'ip' => $request->ip(),
+            ]);
+            
             return $this->serverErrorResponse($e, 'Error en el servidor');
         }
     }

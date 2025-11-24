@@ -31,8 +31,8 @@ Ambas aplicaciones utilizan autenticación JWT (JSON Web Tokens) para acceder a 
 ### Base URL
 
 ```
-Producción: https://tu-dominio.com/api
-Desarrollo: http://localhost:8000/api
+Producción: https://lotesenremate.pe/api
+Desarrollo: http://crm_inmobiliaria.test/api
 ```
 
 ### Headers Comunes
@@ -100,6 +100,11 @@ Authorization: Bearer {token}
     "password": "password123"
 }
 ```
+
+**Notas de Validación:**
+- El email se normaliza automáticamente (convierte a minúsculas y elimina espacios)
+- Se registran todos los intentos de login en los logs del sistema
+- Los intentos fallidos se registran con información de IP para seguridad
 
 **Response 200 (Success):**
 ```json
@@ -222,12 +227,17 @@ Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
-- `per_page` (opcional): Número de resultados por página (máx. 100, default: 15)
-- `page` (opcional): Número de página
-- `search` (opcional): Búsqueda por nombre, teléfono o documento
+- `per_page` (opcional): Número de resultados por página (máx. 100, default: 15, mínimo: 1)
+- `page` (opcional): Número de página (mínimo: 1)
+- `search` (opcional): Búsqueda por nombre, teléfono o documento (se sanitiza automáticamente para prevenir inyección SQL)
 - `status` (opcional): Filtrar por estado (`nuevo`, `contacto_inicial`, `en_seguimiento`, `cierre`, `perdido`)
 - `type` (opcional): Filtrar por tipo (`inversor`, `comprador`, `empresa`, `constructor`)
 - `source` (opcional): Filtrar por origen (`redes_sociales`, `ferias`, `referidos`, `formulario_web`, `publicidad`)
+
+**Notas:**
+- Los parámetros de paginación se validan automáticamente
+- La búsqueda se sanitiza para prevenir inyección SQL
+- Se registran errores en los logs del sistema para debugging
 
 **Response 200:**
 ```json
@@ -298,14 +308,22 @@ Authorization: Bearer {token}
 ```
 
 **Campos Requeridos:**
-- `name`: Nombre completo
+- `name`: Nombre completo (se eliminan espacios al inicio y final automáticamente)
 - `document_type`: Tipo de documento (`DNI`, `RUC`, `CE`, `PASAPORTE`)
-- `document_number`: Número de documento (único)
-- `birth_date`: Fecha de nacimiento (formato: `YYYY-MM-DD`)
+- `document_number`: Número de documento (único, solo dígitos, se sanitiza automáticamente)
+- `birth_date`: Fecha de nacimiento (formato: `YYYY-MM-DD`) - **OBLIGATORIO**
 - `client_type`: Tipo de cliente (`inversor`, `comprador`, `empresa`, `constructor`)
 - `source`: Origen (`redes_sociales`, `ferias`, `referidos`, `formulario_web`, `publicidad`)
 - `status`: Estado (`nuevo`, `contacto_inicial`, `en_seguimiento`, `cierre`, `perdido`)
-- `score`: Puntuación (0-100)
+- `score`: Puntuación (0-100, se valida y limita automáticamente)
+
+**Sanitización Automática:**
+- `name`: Se eliminan espacios al inicio y final
+- `phone`: Se sanitiza para permitir solo números, guiones, paréntesis y espacios
+- `document_number`: Se eliminan todos los caracteres no numéricos
+- `address`: Se eliminan espacios al inicio y final
+- `notes`: Se eliminan espacios al inicio y final
+- `score`: Se valida que esté entre 0 y 100, se convierte a entero
 
 **Response 201:**
 ```json
@@ -575,6 +593,18 @@ Authorization: Bearer {token}
 }
 ```
 
+### Búsqueda de Documentos
+
+El servicio de búsqueda de documentos permite consultar información completa de personas (DNI) o empresas (RUC) utilizando el servicio externo de Facturalahoy.
+
+**Endpoints:**
+- `POST /api/datero/documents/search` - Para aplicación Datero
+- `POST /api/cazador/documents/search` - Para aplicación Cazador
+
+**Rate Limit:** 30 solicitudes por minuto
+
+**📖 Documentación Completa:** Ver [API_DOCUMENT_SEARCH.md](./API_DOCUMENT_SEARCH.md) para documentación detallada, ejemplos de código en múltiples lenguajes, manejo de errores y mejores prácticas.
+
 ---
 
 ## 🎯 Aplicación Cazador
@@ -816,6 +846,16 @@ Authorization: Bearer {token}
 }
 ```
 
+### Búsqueda de Documentos
+
+El servicio de búsqueda de documentos permite consultar información completa de personas (DNI) o empresas (RUC) utilizando el servicio externo de Facturalahoy.
+
+**Endpoint:** `POST /api/cazador/documents/search`
+
+**Rate Limit:** 30 solicitudes por minuto
+
+**📖 Documentación Completa:** Ver [API_DOCUMENT_SEARCH.md](./API_DOCUMENT_SEARCH.md) para documentación detallada, ejemplos de código en múltiples lenguajes, manejo de errores y mejores prácticas.
+
 ---
 
 ## 🌐 Rutas Públicas
@@ -944,6 +984,8 @@ Estas rutas son públicas y no requieren autenticación:
 
 ## ⚠️ Manejo de Errores
 
+La API implementa un sistema robusto de manejo de errores con logging completo para facilitar el debugging y la auditoría.
+
 ### Errores de Validación (422)
 
 ```json
@@ -996,11 +1038,32 @@ Estas rutas son públicas y no requieren autenticación:
 }
 ```
 
+**Nota:** En modo desarrollo (`APP_DEBUG=true`), los errores incluyen detalles adicionales para debugging. En producción, solo se muestra un mensaje genérico por seguridad.
+
+### Logging de Errores
+
+Todos los errores se registran en los logs del sistema con información completa:
+- **Contexto:** Usuario autenticado, IP, datos de la solicitud
+- **Trazas:** Stack trace completo para debugging
+- **Timestamps:** Fecha y hora exacta del error
+- **Categorización:** Niveles de log (info, warning, error)
+
+**Ejemplo de log:**
+```
+[2025-11-24 15:30:00] ERROR: Error al crear cliente (Datero)
+User ID: 1
+IP: 192.168.1.100
+Data: {...}
+Error: Database connection failed
+Trace: ...
+```
+
 ---
 
 ## 🚦 Rate Limiting
 
-- **Login:** 5 solicitudes por minuto
+- **Login:** 5 solicitudes por minuto (más restrictivo por seguridad)
+- **Búsqueda de documentos:** 30 solicitudes por minuto
 - **Endpoints generales:** 60 solicitudes por minuto
 - **Opciones de formularios:** 120 solicitudes por minuto
 
@@ -1024,7 +1087,7 @@ Con código HTTP `429`.
 ```dart
 // Login
 final response = await http.post(
-  Uri.parse('https://api.example.com/api/datero/auth/login'),
+  Uri.parse('https://lotesenremate.pe/api/datero/auth/login'),
   headers: {'Content-Type': 'application/json'},
   body: jsonEncode({
     'email': 'datero@example.com',
@@ -1037,7 +1100,7 @@ final token = data['data']['token'];
 
 // Obtener clientes
 final clientsResponse = await http.get(
-  Uri.parse('https://api.example.com/api/datero/clients'),
+  Uri.parse('https://lotesenremate.pe/api/datero/clients'),
   headers: {
     'Authorization': 'Bearer $token',
     'Content-Type': 'application/json',
@@ -1050,7 +1113,7 @@ final clientsResponse = await http.get(
 ```javascript
 // Login
 const login = async (email, password) => {
-  const response = await fetch('https://api.example.com/api/datero/auth/login', {
+  const response = await fetch('https://lotesenremate.pe/api/datero/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1064,7 +1127,7 @@ const login = async (email, password) => {
 
 // Obtener clientes
 const getClients = async (token) => {
-  const response = await fetch('https://api.example.com/api/datero/clients', {
+  const response = await fetch('https://lotesenremate.pe/api/datero/clients', {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -1079,7 +1142,7 @@ const getClients = async (token) => {
 
 ```bash
 # Login
-curl -X POST https://api.example.com/api/datero/auth/login \
+curl -X POST https://lotesenremate.pe/api/datero/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "datero@example.com",
@@ -1087,7 +1150,7 @@ curl -X POST https://api.example.com/api/datero/auth/login \
   }'
 
 # Obtener clientes
-curl -X GET https://api.example.com/api/datero/clients \
+curl -X GET https://lotesenremate.pe/api/datero/clients \
   -H "Authorization: Bearer {token}" \
   -H "Content-Type: application/json"
 ```
@@ -1106,18 +1169,64 @@ curl -X GET https://api.example.com/api/datero/clients \
 
 5. **Imágenes:** Las URLs de imágenes son relativas o absolutas según la configuración del servidor
 
-6. **Seguridad:** 
+6. **Sanitización Automática de Datos:**
+   - **Números de documento:** Se eliminan automáticamente todos los caracteres no numéricos
+   - **Teléfonos:** Se sanitizan para permitir solo números, guiones, paréntesis y espacios
+   - **Nombres y direcciones:** Se eliminan espacios al inicio y final (trim)
+   - **Emails:** Se normalizan a minúsculas y se eliminan espacios
+   - **Score:** Se valida y limita al rango 0-100 automáticamente
+   - **Búsquedas:** Se sanitizan para prevenir inyección SQL
+
+7. **Validaciones Mejoradas:**
+   - **Documentos:** Los números de documento solo aceptan dígitos (0-9)
+   - **DNI:** Debe tener exactamente 8 dígitos
+   - **RUC:** Debe tener exactamente 11 dígitos
+   - **Email:** Se valida formato y se normaliza automáticamente
+   - **Paginación:** Se valida que `per_page` esté entre 1 y 100
+
+8. **Logging y Auditoría:**
+   - Se registran todos los intentos de login (exitosos y fallidos)
+   - Se registran accesos con roles incorrectos
+   - Se registran accesos con cuentas inactivas
+   - Se registran búsquedas de documentos
+   - Se registran errores con contexto completo (usuario, IP, datos)
+   - Los logs incluyen información de IP para auditoría de seguridad
+
+9. **Seguridad:** 
    - Siempre usar HTTPS en producción
    - Almacenar tokens de forma segura
    - Implementar refresh token automático
    - No exponer tokens en logs
+   - Sanitización automática de todas las entradas
+   - Validación estricta de formatos
+   - Prevención de inyección SQL en búsquedas
+   - Logging de eventos de seguridad
 
 ---
 
 ## 🔄 Versión
 
-**Versión actual:** 1.0  
+**Versión actual:** 1.1  
 **Última actualización:** 2025-11-24
+
+### Changelog
+
+#### v1.1 (2025-11-24)
+- ✅ Mejoras de seguridad: Sanitización automática de todas las entradas
+- ✅ Validaciones mejoradas: Validación estricta de formatos (documentos, emails, etc.)
+- ✅ Sistema de logging: Registro completo de eventos y errores
+- ✅ Auditoría de seguridad: Logs de intentos de login y accesos
+- ✅ Manejo de errores mejorado: Respuestas consistentes y debugging mejorado
+- ✅ Validación de paginación: Límites y validación de parámetros
+- ✅ Sanitización de búsquedas: Prevención de inyección SQL
+
+#### v1.0 (2025-11-24)
+- ✅ Versión inicial de la API
+- ✅ Autenticación JWT para Datero y Cazador
+- ✅ Gestión de clientes
+- ✅ Gestión de proyectos (Cazador)
+- ✅ Comisiones (Datero)
+- ✅ Búsqueda de documentos por DNI/RUC
 
 ---
 
