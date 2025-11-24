@@ -21,11 +21,21 @@ El servicio de búsqueda de documentos permite consultar información completa d
 
 - ✅ Búsqueda por DNI (8 dígitos)
 - ✅ Búsqueda por RUC (11 dígitos)
+- ✅ Verificación previa en base de datos local
 - ✅ Sanitización automática de números de documento
 - ✅ Validación estricta de formatos
 - ✅ Información completa de la persona/empresa
 - ✅ Información de ubigeo incluida
 - ✅ Logging de todas las búsquedas para auditoría
+
+### Flujo de Búsqueda
+
+1. **Validación y sanitización** de los datos de entrada
+2. **Verificación en base de datos local:** Se verifica si el documento ya está registrado
+   - Si está registrado: Retorna información del cliente y cazador responsable
+   - Si no está registrado: Continúa con la búsqueda externa
+3. **Búsqueda en servicio externo** (Facturalahoy) si no está registrado
+4. **Retorno de resultados** con información completa
 
 ---
 
@@ -190,6 +200,40 @@ Cuando está disponible, se incluye:
 
 ## ❌ Manejo de Errores
 
+### Cliente Ya Registrado (409)
+
+**Causa:** El documento ya está registrado en la base de datos del sistema
+
+```json
+{
+    "success": false,
+    "message": "Cliente registrado por el cazador responsable de ese cliente",
+    "errors": {
+        "client_registered": true,
+        "client_id": 123,
+        "client_name": "Juan Pérez García",
+        "assigned_advisor": {
+            "id": 5,
+            "name": "Carlos Vendedor",
+            "email": "carlos@example.com"
+        },
+        "message": "El cliente ya está registrado. Cazador responsable: Carlos Vendedor"
+    }
+}
+```
+
+**Información Incluida:**
+- `client_registered`: Indica que el cliente ya está registrado (siempre `true`)
+- `client_id`: ID del cliente en el sistema
+- `client_name`: Nombre del cliente registrado
+- `assigned_advisor`: Información del cazador responsable (puede ser `null` si no tiene asignado)
+  - `id`: ID del cazador
+  - `name`: Nombre del cazador
+  - `email`: Email del cazador
+- `message`: Mensaje descriptivo con el nombre del cazador responsable
+
+**Nota:** Este error se retorna **antes** de consultar el servicio externo, evitando costos innecesarios.
+
 ### Error de Validación (422)
 
 **Causa:** Parámetros inválidos o faltantes
@@ -316,6 +360,15 @@ try {
     final data = result['data']['data'];
     print('Nombre: ${data['nombre']}');
     print('Ubigeo: ${result['data']['ubigeo']['text']}');
+  } else {
+    // Verificar si el cliente ya está registrado
+    if (result['errors'] != null && result['errors']['client_registered'] == true) {
+      final advisor = result['errors']['assigned_advisor'];
+      print('Cliente ya registrado');
+      print('Cazador responsable: ${advisor['name']} (${advisor['email']})');
+    } else {
+      print('Error: ${result['message']}');
+    }
   }
 } catch (e) {
   print('Error: $e');
@@ -364,6 +417,15 @@ try {
     const personData = result.data.data;
     console.log('Nombre:', personData.nombre);
     console.log('Ubigeo:', result.data.ubigeo?.text);
+  } else {
+    // Verificar si el cliente ya está registrado
+    if (result.errors?.client_registered) {
+      const advisor = result.errors.assigned_advisor;
+      console.log('Cliente ya registrado');
+      console.log('Cazador responsable:', advisor?.name, `(${advisor?.email})`);
+    } else {
+      console.error('Error:', result.message);
+    }
   }
 } catch (error) {
   console.error('Error al buscar documento:', error.message);
@@ -414,8 +476,12 @@ def search_document(token, document_type, document_number):
     }
     
     response = requests.post(url, json=data, headers=headers)
-    response.raise_for_status()
     
+    # No lanzar excepción para código 409 (cliente registrado)
+    if response.status_code == 409:
+        return response.json()
+    
+    response.raise_for_status()
     return response.json()
 
 # Uso
@@ -428,6 +494,16 @@ try:
         
         if "ubigeo" in result["data"]:
             print(f"Ubigeo: {result['data']['ubigeo']['text']}")
+    else:
+        # Verificar si el cliente ya está registrado
+        errors = result.get("errors", {})
+        if errors.get("client_registered"):
+            advisor = errors.get("assigned_advisor")
+            print("Cliente ya registrado")
+            if advisor:
+                print(f"Cazador responsable: {advisor['name']} ({advisor['email']})")
+        else:
+            print(f"Error: {result['message']}")
 except requests.exceptions.RequestException as e:
     print(f"Error: {e}")
 ```
@@ -482,6 +558,25 @@ IP: 192.168.1.100
 ### Información de Ubigeo
 
 La información de ubigeo se obtiene de la base de datos local cuando está disponible en la respuesta del servicio externo. No todos los documentos tienen información de ubigeo completa.
+
+### Verificación de Cliente Registrado
+
+**Antes de consultar el servicio externo**, el sistema verifica si el documento ya está registrado en la base de datos local:
+
+1. **Búsqueda en base de datos:** Se busca por `document_number` y `document_type`
+2. **Si está registrado:**
+   - Retorna código HTTP `409` (Conflict)
+   - Incluye información del cliente y cazador responsable
+   - **No consulta** el servicio externo (ahorra costos)
+3. **Si no está registrado:**
+   - Continúa con la búsqueda en el servicio externo
+   - Retorna información completa de la persona/empresa
+
+**Ventajas:**
+- ✅ Evita consultas innecesarias al servicio externo
+- ✅ Proporciona información del cazador responsable
+- ✅ Previene duplicación de clientes
+- ✅ Mejora la experiencia del usuario
 
 ### Seguridad
 

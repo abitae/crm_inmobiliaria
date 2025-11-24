@@ -603,6 +603,11 @@ El servicio de búsqueda de documentos permite consultar información completa d
 
 **Rate Limit:** 30 solicitudes por minuto
 
+**Características:**
+- ✅ Verificación previa en base de datos local
+- ✅ Si el documento ya está registrado, retorna información del cliente y cazador responsable
+- ✅ Solo consulta el servicio externo si el documento no está registrado
+
 **📖 Documentación Completa:** Ver [API_DOCUMENT_SEARCH.md](./API_DOCUMENT_SEARCH.md) para documentación detallada, ejemplos de código en múltiples lenguajes, manejo de errores y mejores prácticas.
 
 ---

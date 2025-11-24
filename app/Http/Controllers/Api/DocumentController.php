@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use App\Traits\SearchDocument;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -61,6 +62,47 @@ class DocumentController extends Controller
                         422
                     );
                 }
+            }
+
+            // Verificar si el documento ya está registrado en la base de datos
+            $documentTypeNormalized = strtoupper($tipo); // DNI o RUC
+            $existingClient = Client::where('document_number', $num_doc)
+                ->where('document_type', $documentTypeNormalized)
+                ->with('assignedAdvisor:id,name,email')
+                ->first();
+
+            if ($existingClient) {
+                // Cliente ya registrado
+                $advisorInfo = null;
+                if ($existingClient->assignedAdvisor) {
+                    $advisorInfo = [
+                        'id' => $existingClient->assignedAdvisor->id,
+                        'name' => $existingClient->assignedAdvisor->name,
+                        'email' => $existingClient->assignedAdvisor->email,
+                    ];
+                }
+
+                Log::info('Intento de búsqueda de documento ya registrado', [
+                    'document_type' => $tipo,
+                    'document_number' => $num_doc,
+                    'client_id' => $existingClient->id,
+                    'assigned_advisor_id' => $existingClient->assigned_advisor_id,
+                    'user_id' => auth()->id(),
+                ]);
+
+                return $this->errorResponse(
+                    'Cliente registrado por el cazador responsable de ese cliente',
+                    [
+                        'client_registered' => true,
+                        'client_id' => $existingClient->id,
+                        'client_name' => $existingClient->name,
+                        'assigned_advisor' => $advisorInfo,
+                        'message' => $advisorInfo 
+                            ? "El cliente ya está registrado. Cazador responsable: {$advisorInfo['name']}"
+                            : 'El cliente ya está registrado en el sistema.'
+                    ],
+                    409 // Conflict - recurso ya existe
+                );
             }
 
             // Realizar la búsqueda usando el trait
