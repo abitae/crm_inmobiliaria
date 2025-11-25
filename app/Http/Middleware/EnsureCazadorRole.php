@@ -24,10 +24,13 @@ class EnsureCazadorRole
             ], 401);
         }
 
-        if (!$user->isAdvisor()) {
+        // Verificar que el usuario puede acceder al API de Cazador
+        // Permite: Administrador, Lider y Cazador (vendedor)
+        // NO permite: Dateros
+        if (!$user->canAccessCazadorApi()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Acceso denegado. Solo usuarios con rol vendedor pueden acceder.'
+                'message' => 'Acceso denegado. Solo usuarios Administrador, Lider o Cazador pueden acceder.'
             ], 403);
         }
 

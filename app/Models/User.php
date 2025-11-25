@@ -101,6 +101,16 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * Check if user can access Cazador API
+     * Permite acceso a: Administrador, Lider y Cazador (vendedor)
+     * NO permite acceso a: Dateros
+     */
+    public function canAccessCazadorApi(): bool
+    {
+        return $this->isAdmin() || $this->isLider() || $this->isAdvisor();
+    }
+
+    /**
      * Get the user's single role
      */
     public function getRole(): ?\Spatie\Permission\Models\Role

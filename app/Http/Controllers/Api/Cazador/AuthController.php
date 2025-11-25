@@ -59,17 +59,19 @@ class AuthController extends Controller
             // Obtener el usuario autenticado
             $user = auth()->user();
 
-            // Verificar que el usuario tiene rol Datero (datero)
-            if (!$user->isDatero()) {
+            // Verificar que el usuario puede acceder al API de Cazador
+            // Permite: Administrador, Lider y Cazador (vendedor)
+            // NO permite: Dateros
+            if (!$user->canAccessCazadorApi()) {
                 JWTAuth::invalidate($token);
-                Log::warning('Intento de acceso con rol incorrecto (Datero)', [
+                Log::warning('Intento de acceso con rol incorrecto (Cazador)', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'role' => $user->getRoleName(),
                     'ip' => $request->ip(),
                 ]);
                 
-                return $this->forbiddenResponse('Acceso denegado. Solo usuarios con rol vendedor pueden acceder.');
+                return $this->forbiddenResponse('Acceso denegado. Solo usuarios Administrador, Lider o Cazador pueden acceder.');
             }
 
             // Verificar que el usuario esté activo
