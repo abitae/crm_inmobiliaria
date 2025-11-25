@@ -41,6 +41,9 @@ Route::prefix('datero')->group(function () {
             
             Route::post('/refresh', [DateroAuthController::class, 'refresh'])
                 ->name('api.datero.auth.refresh');
+            
+            Route::post('/change-password', [DateroAuthController::class, 'changePassword'])
+                ->name('api.datero.auth.change-password');
         });
     });
 
@@ -116,6 +119,9 @@ Route::prefix('cazador')->group(function () {
             
             Route::post('/refresh', [CazadorAuthController::class, 'refresh'])
                 ->name('api.cazador.auth.refresh');
+            
+            Route::post('/change-password', [CazadorAuthController::class, 'changePassword'])
+                ->name('api.cazador.auth.change-password');
         });
     });
 
