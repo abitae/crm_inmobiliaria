@@ -162,4 +162,98 @@
             </div>
         </div>
     </flux:modal>
+
+    <!-- Notificaciones - Parte superior derecha -->
+    <div id="notification-container" class="fixed top-4 right-4 z-[9999] hidden">
+        <div id="notification-content" class="bg-white rounded-lg shadow-2xl max-w-md w-full transform transition-all duration-300 translate-x-full opacity-0">
+            <div class="p-6 border-l-4" id="notification-border">
+                <div class="flex items-start space-x-4">
+                    <div id="notification-icon" class="flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"></div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 id="notification-title" class="text-lg font-semibold mb-1"></h3>
+                        <p id="notification-message" class="text-gray-600 text-sm"></p>
+                    </div>
+                    <button id="notification-close" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para notificaciones -->
+    <script>
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            const content = document.getElementById('notification-content');
+            const icon = document.getElementById('notification-icon').querySelector('div');
+            const title = document.getElementById('notification-title');
+            const messageEl = document.getElementById('notification-message');
+            const closeBtn = document.getElementById('notification-close');
+            const border = document.getElementById('notification-border');
+
+            let iconClass, iconText, titleText, borderColor, titleColor;
+            if (type === 'success') {
+                iconClass = 'bg-green-100 text-green-600';
+                iconText = '✓';
+                titleText = '¡Éxito!';
+                borderColor = 'border-green-500';
+                titleColor = 'text-green-700';
+            } else if (type === 'error') {
+                iconClass = 'bg-red-100 text-red-600';
+                iconText = '✕';
+                titleText = 'Error';
+                borderColor = 'border-red-500';
+                titleColor = 'text-red-700';
+            } else {
+                iconClass = 'bg-blue-100 text-blue-600';
+                iconText = 'ℹ';
+                titleText = 'Información';
+                borderColor = 'border-blue-500';
+                titleColor = 'text-blue-700';
+            }
+
+            icon.className = `w-12 h-12 rounded-full flex items-center justify-center text-2xl ${iconClass}`;
+            icon.textContent = iconText;
+            title.textContent = titleText;
+            title.className = `text-lg font-semibold mb-1 ${titleColor}`;
+            messageEl.textContent = message;
+            border.className = `p-6 border-l-4 ${borderColor}`;
+
+            container.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('translate-x-full', 'opacity-0');
+                content.classList.add('translate-x-0', 'opacity-100');
+            }, 10);
+
+            const closeNotification = () => {
+                content.classList.remove('translate-x-0', 'opacity-100');
+                content.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 300);
+            };
+
+            closeBtn.onclick = closeNotification;
+            setTimeout(closeNotification, 5000);
+        }
+
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('show-success', (event) => {
+                showNotification(event.message, 'success');
+            });
+
+            Livewire.on('show-error', (event) => {
+                showNotification(event.message, 'error');
+            });
+
+            Livewire.on('show-info', (event) => {
+                showNotification(event.message, 'info');
+            });
+        });
+    </script>
 </div>

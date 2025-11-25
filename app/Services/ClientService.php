@@ -229,7 +229,8 @@ class ClientService
      */
     public function clientExists(string $documentType, string $documentNumber): ?Client
     {
-        return Client::where('document_number', $documentNumber)
+        return Client::with('assignedAdvisor')
+            ->where('document_number', $documentNumber)
             ->where('document_type', $documentType)
             ->first();
     }
@@ -397,7 +398,7 @@ class ClientService
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['required', 'string', 'regex:/^9[0-9]{8}$/'],
             'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
             'document_number' => 'required|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -429,8 +430,9 @@ class ClientService
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser una cadena de texto.',
             'name.max' => 'El nombre no puede exceder 255 caracteres.',
+            'phone.required' => 'El teléfono es obligatorio.',
             'phone.string' => 'El teléfono debe ser una cadena de texto.',
-            'phone.max' => 'El teléfono no puede exceder 20 caracteres.',
+            'phone.regex' => 'El teléfono debe tener 9 dígitos y comenzar con el número 9 (ejemplo: 912345678).',
             'document_type.required' => 'El tipo de documento es obligatorio.',
             'document_type.in' => 'El tipo de documento seleccionado no es válido.',
             'document_number.required' => 'El número de documento es obligatorio.',

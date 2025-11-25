@@ -21,8 +21,6 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- SweetAlert2 se maneja a través de JavaScript -->
-
         <!-- Filtros y Búsqueda -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -84,7 +82,6 @@
                         <tr>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Cliente</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Contacto</th>
-                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Doc.</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Tipo/Score</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Estado/Fuente</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor</th>
@@ -104,7 +101,12 @@
                                         </div>
                                         <div>
                                             <div class="font-medium text-gray-900">{{ $client->name }}</div>
-                                            <div class="text-[10px] text-gray-400">ID: {{ $client->id }}</div>
+                                            <div class="text-[10px] text-gray-400">
+                                                ID: {{ $client->id }}
+                                                @if ($client->document_type && $client->document_number)
+                                                    | {{ $client->document_type }}: {{ $client->document_number }}
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -115,12 +117,6 @@
                                             Nac: {{ $client->birth_date->format('d/m/Y') }}
                                         @endif
                                     </div>
-                                </td>
-                                <td class="px-2 py-2 whitespace-nowrap">
-                                    <div class="text-gray-900">
-                                        <span class="font-medium">{{ $client->document_type ?: '-' }}</span>
-                                    </div>
-                                    <div class="text-[10px] text-gray-400">{{ $client->document_number ?: '-' }}</div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
                                     <div>
@@ -173,7 +169,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="users" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron clientes</p>
@@ -238,8 +234,8 @@
 
                     <!-- Teléfono -->
                     <div class="col-span-2">
-                        <flux:input mask="999999999" label="Teléfono" wire:model="phone" size="xs" placeholder="Teléfono"
-                            class="w-full" />
+                        <flux:input mask="999999999" label="Teléfono" wire:model="phone" size="xs"
+                            placeholder="Teléfono" class="w-full" />
                     </div>
 
                     <!-- Tipo de Cliente -->
@@ -334,24 +330,4 @@
     </flux:modal>
 
 
-    <!-- Script para SweetAlert2 -->
-    <script>
-        document.addEventListener('livewire:init', () => {
-            // Escuchar eventos de éxito
-            Livewire.on('show-success', (event) => {
-                window.showSuccess(event.message);
-            });
-
-
-            // Escuchar eventos de error
-            Livewire.on('show-error', (event) => {
-                window.showError(event.message);
-            });
-
-            // Escuchar eventos de información
-            Livewire.on('show-info', (event) => {
-                window.showInfo(event.message);
-            });
-        });
-    </script>
 </div>

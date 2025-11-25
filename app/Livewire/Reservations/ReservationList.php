@@ -8,12 +8,16 @@ use App\Models\Project;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 class ReservationList extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads, Toast;
 
     // Filtros
     public $search = '';
@@ -45,6 +49,8 @@ class ReservationList extends Component
     public $payment_reference = '';
     public $notes = '';
     public $terms_conditions = '';
+    public $image;
+    public $imagePreview;
 
     public $clients = [];
     public $projects = [];
@@ -67,6 +73,7 @@ class ReservationList extends Component
         'payment_reference' => 'nullable|string|max:255',
         'notes' => 'nullable|string',
         'terms_conditions' => 'nullable|string',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
     ];
 
     public function mount()
@@ -82,13 +89,32 @@ class ReservationList extends Component
     public function updatedProjectId()
     {
         if ($this->project_id) {
-            $this->units = Unit::where('project_id', $this->project_id)
-                ->where('status', 'disponible')
-                ->get();
+            // Al crear: solo unidades disponibles
+            // Al editar: incluir la unidad actual si está reservada por esta reserva
+            $query = Unit::where('project_id', $this->project_id)
+                ->where(function($q) {
+                    $q->where('status', 'disponible');
+                    // Si estamos editando y la unidad pertenece a esta reserva, incluirla
+                    if ($this->editingReservation && $this->editingReservation->unit_id) {
+                        $q->orWhere('id', $this->editingReservation->unit_id);
+                    }
+                });
+            $this->units = $query->get();
         } else {
             $this->units = [];
         }
-        $this->unit_id = '';
+        // Solo resetear unit_id si no estamos editando o si cambió el proyecto
+        if (!$this->editingReservation || $this->editingReservation->project_id != $this->project_id) {
+            $this->unit_id = '';
+        }
+    }
+
+    public function updatedImage()
+    {
+        $this->validateOnly('image');
+        if ($this->image) {
+            $this->imagePreview = $this->image->temporaryUrl();
+        }
     }
 
     // Métodos para resetear paginación cuando cambian los filtros
@@ -184,7 +210,9 @@ class ReservationList extends Component
             'payment_status',
             'payment_reference',
             'notes',
-            'terms_conditions'
+            'terms_conditions',
+            'image',
+            'imagePreview'
         ]);
         $this->reservation_date = now()->format('Y-m-d');
         $this->status = 'activa';
@@ -210,10 +238,17 @@ class ReservationList extends Component
         $this->payment_reference = $reservation->payment_reference ?? '';
         $this->notes = $reservation->notes ?? '';
         $this->terms_conditions = $reservation->terms_conditions ?? '';
+        $this->imagePreview = $reservation->image ? $reservation->image_url : null;
 
-        // Cargar unidades del proyecto
+        // Cargar unidades del proyecto (disponibles + la unidad actual si está reservada)
         if ($this->project_id) {
-            $this->units = Unit::where('project_id', $this->project_id)->get();
+            $unitId = $reservation->unit_id;
+            $this->units = Unit::where('project_id', $this->project_id)
+                ->where(function($q) use ($unitId) {
+                    $q->where('status', 'disponible')
+                      ->orWhere('id', $unitId);
+                })
+                ->get();
         }
     }
 
@@ -221,35 +256,66 @@ class ReservationList extends Component
     {
         $this->validate();
 
-        $reservation = Reservation::create([
-            'client_id' => $this->client_id,
-            'project_id' => $this->project_id,
-            'unit_id' => $this->unit_id,
-            'advisor_id' => $this->advisor_id,
-            'reservation_type' => $this->reservation_type,
-            'status' => $this->status,
-            'reservation_date' => $this->reservation_date,
-            'expiration_date' => $this->expiration_date,
-            'reservation_amount' => $this->reservation_amount,
-            'reservation_percentage' => $this->reservation_percentage,
-            'payment_method' => $this->payment_method,
-            'payment_status' => $this->payment_status,
-            'payment_reference' => $this->payment_reference,
-            'notes' => $this->notes,
-            'terms_conditions' => $this->terms_conditions,
-            'reservation_number' => $this->generateReservationNumber(),
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
-
-        // Bloquear la unidad
-        if ($reservation->unit) {
-            $reservation->unit->update(['status' => 'reservado']);
-            $reservation->unit->project->updateUnitCounts();
+        // Validar que la unidad esté disponible
+        $unit = Unit::find($this->unit_id);
+        if (!$unit) {
+            $this->error('La unidad seleccionada no existe.');
+            return;
         }
 
-        $this->closeModals();
-        $this->dispatch('show-success', message: 'Reserva creada exitosamente.');
+        if ($unit->status !== 'disponible') {
+            $this->error('La unidad seleccionada no está disponible.');
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Procesar imagen si existe
+            $imagePath = null;
+            if ($this->image) {
+                $imagePath = $this->image->store('reservations', 'public');
+            }
+
+            $reservation = Reservation::create([
+                'client_id' => $this->client_id,
+                'project_id' => $this->project_id,
+                'unit_id' => $this->unit_id,
+                'advisor_id' => $this->advisor_id,
+                'reservation_type' => $this->reservation_type,
+                'status' => $this->status,
+                'reservation_date' => $this->reservation_date,
+                'expiration_date' => $this->expiration_date,
+                'reservation_amount' => $this->reservation_amount,
+                'reservation_percentage' => $this->reservation_percentage,
+                'payment_method' => $this->payment_method,
+                'payment_status' => $this->payment_status,
+                'payment_reference' => $this->payment_reference,
+                'notes' => $this->notes,
+                'terms_conditions' => $this->terms_conditions,
+                'image' => $imagePath,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Bloquear la unidad
+            if ($reservation->unit) {
+                $reservation->unit->update(['status' => 'reservado']);
+                $reservation->unit->project->updateUnitCounts();
+            }
+
+            DB::commit();
+
+            $this->closeModals();
+            $this->success('Reserva creada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Eliminar imagen si se subió pero falló la creación
+            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+            $this->error('Error al crear la reserva: ' . $e->getMessage());
+        }
     }
 
     public function updateReservation()
@@ -257,68 +323,160 @@ class ReservationList extends Component
         $this->validate();
 
         if (!$this->editingReservation) {
+            $this->error('Reserva no encontrada.');
             return;
         }
 
-        $this->editingReservation->update([
-            'client_id' => $this->client_id,
-            'project_id' => $this->project_id,
-            'unit_id' => $this->unit_id,
-            'advisor_id' => $this->advisor_id,
-            'reservation_type' => $this->reservation_type,
-            'status' => $this->status,
-            'reservation_date' => $this->reservation_date,
-            'expiration_date' => $this->expiration_date,
-            'reservation_amount' => $this->reservation_amount,
-            'reservation_percentage' => $this->reservation_percentage,
-            'payment_method' => $this->payment_method,
-            'payment_status' => $this->payment_status,
-            'payment_reference' => $this->payment_reference,
-            'notes' => $this->notes,
-            'terms_conditions' => $this->terms_conditions,
-            'updated_by' => Auth::id(),
-        ]);
+        // Validar disponibilidad de unidad si cambió
+        $oldUnitId = $this->editingReservation->unit_id;
+        if ($this->unit_id != $oldUnitId) {
+            $newUnit = Unit::find($this->unit_id);
+            if (!$newUnit) {
+                $this->error('La unidad seleccionada no existe.');
+                return;
+            }
 
-        $this->closeModals();
-        $this->dispatch('show-success', message: 'Reserva actualizada exitosamente.');
+            if ($newUnit->status !== 'disponible' && $newUnit->id != $oldUnitId) {
+                $this->error('La unidad seleccionada no está disponible.');
+                return;
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Procesar imagen si existe
+            $imagePath = $this->editingReservation->image;
+            if ($this->image) {
+                // Eliminar imagen anterior si existe
+                if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+                    Storage::disk('public')->delete($imagePath);
+                }
+                $imagePath = $this->image->store('reservations', 'public');
+            }
+
+            $updateData = [
+                'client_id' => $this->client_id,
+                'project_id' => $this->project_id,
+                'unit_id' => $this->unit_id,
+                'advisor_id' => $this->advisor_id,
+                'reservation_type' => $this->reservation_type,
+                'status' => $this->status,
+                'reservation_date' => $this->reservation_date,
+                'expiration_date' => $this->expiration_date,
+                'reservation_amount' => $this->reservation_amount,
+                'reservation_percentage' => $this->reservation_percentage,
+                'payment_method' => $this->payment_method,
+                'payment_status' => $this->payment_status,
+                'payment_reference' => $this->payment_reference,
+                'notes' => $this->notes,
+                'terms_conditions' => $this->terms_conditions,
+                'image' => $imagePath,
+                'updated_by' => Auth::id(),
+            ];
+
+            $this->editingReservation->update($updateData);
+
+            // Gestionar estado de unidades si cambió
+            if ($this->unit_id != $oldUnitId) {
+                // Liberar unidad anterior
+                $oldUnit = Unit::find($oldUnitId);
+                if ($oldUnit && $oldUnit->status === 'reservado') {
+                    $oldUnit->update(['status' => 'disponible']);
+                    $oldUnit->project->updateUnitCounts();
+                }
+
+                // Reservar nueva unidad
+                $newUnit = Unit::find($this->unit_id);
+                if ($newUnit && $newUnit->status === 'disponible') {
+                    $newUnit->update(['status' => 'reservado']);
+                    $newUnit->project->updateUnitCounts();
+                }
+            }
+
+            DB::commit();
+
+            $this->closeModals();
+            $this->success('Reserva actualizada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->error('Error al actualizar la reserva: ' . $e->getMessage());
+        }
     }
 
     public function confirmReservation($reservationId)
     {
         $reservation = Reservation::find($reservationId);
-        if ($reservation && $reservation->confirm()) {
-            $this->dispatch('show-success', message: 'Reserva confirmada exitosamente.');
-        } else {
-            $this->dispatch('show-error', message: 'No se pudo confirmar la reserva.');
+        
+        if (!$reservation) {
+            $this->error('Reserva no encontrada.');
+            return;
+        }
+
+        if (!$reservation->canBeConfirmed()) {
+            $this->error('La reserva no puede ser confirmada. Verifique que esté activa y firmada por ambas partes.');
+            return;
+        }
+
+        try {
+            if ($reservation->confirm()) {
+                $this->success('Reserva confirmada exitosamente.');
+            } else {
+                $this->error('No se pudo confirmar la reserva.');
+            }
+        } catch (\Exception $e) {
+            $this->error('Error al confirmar la reserva: ' . $e->getMessage());
         }
     }
 
     public function cancelReservation($reservationId)
     {
         $reservation = Reservation::find($reservationId);
-        if ($reservation && $reservation->cancel()) {
-            $this->dispatch('show-success', message: 'Reserva cancelada exitosamente.');
-        } else {
-            $this->dispatch('show-error', message: 'No se pudo cancelar la reserva.');
+        
+        if (!$reservation) {
+            $this->error('Reserva no encontrada.');
+            return;
+        }
+
+        if (!$reservation->canBeCancelled()) {
+            $this->error('La reserva no puede ser cancelada en su estado actual.');
+            return;
+        }
+
+        try {
+            if ($reservation->cancel()) {
+                $this->success('Reserva cancelada exitosamente.');
+            } else {
+                $this->error('No se pudo cancelar la reserva.');
+            }
+        } catch (\Exception $e) {
+            $this->error('Error al cancelar la reserva: ' . $e->getMessage());
         }
     }
 
     public function convertToSale($reservationId)
     {
         $reservation = Reservation::find($reservationId);
-        if ($reservation && $reservation->convertToSale()) {
-            $this->dispatch('show-success', message: 'Reserva convertida a venta exitosamente.');
-        } else {
-            $this->dispatch('show-error', message: 'No se pudo convertir la reserva a venta.');
+        
+        if (!$reservation) {
+            $this->error('Reserva no encontrada.');
+            return;
         }
-    }
 
-    private function generateReservationNumber(): string
-    {
-        $prefix = 'RES';
-        $year = now()->format('Y');
-        $sequence = str_pad(Reservation::max('id') + 1, 6, '0', STR_PAD_LEFT);
-        return "{$prefix}-{$year}-{$sequence}";
+        if (!$reservation->canBeConverted()) {
+            $this->error('La reserva no puede ser convertida a venta en su estado actual.');
+            return;
+        }
+
+        try {
+            if ($reservation->convertToSale()) {
+                $this->success('Reserva convertida a venta exitosamente.');
+            } else {
+                $this->error('No se pudo convertir la reserva a venta.');
+            }
+        } catch (\Exception $e) {
+            $this->error('Error al convertir la reserva: ' . $e->getMessage());
+        }
     }
 
     public function render()
@@ -366,7 +524,9 @@ class ReservationList extends Component
         $reservations = $query->paginate(15);
 
         return view('livewire.reservations.reservation-list', [
-            'reservations' => $reservations
+            'reservations' => $reservations,
+            'projects' => $this->projects,
+            'clients' => $this->clients,
         ]);
     }
 }

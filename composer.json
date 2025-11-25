@@ -14,8 +14,10 @@
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
         "livewire/flux": "^2.1.1",
-        "livewire/volt": "^1.7.0",
+        "livewire/livewire": "^3.7",
+        "livewire/volt": "^1.10",
         "mpdf/mpdf": "^8.2",
+        "robsontenorio/mary": "^2.4",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-permission": "^6.21",
         "tymon/jwt-auth": "^2.2"

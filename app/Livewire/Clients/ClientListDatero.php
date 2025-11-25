@@ -6,13 +6,17 @@ use App\Models\Client;
 use App\Services\ClientService;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Traits\SearchDocument;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
+use Mary\Traits\Toast;
 
 class ClientListDatero extends Component
 {
+    use Toast;
     use WithPagination;
     use SearchDocument;
     
@@ -34,8 +38,8 @@ class ClientListDatero extends Component
     public $document_number = '';
     public $address = '';
     public $birth_date = '';
-    public $client_type = 'Comprador';
-    public $source = 'Redes Sociales';
+    public $client_type = 'comprador';
+    public $source = 'redes_sociales';
     public $status = 'nuevo';
     public $score = 0;
     public $notes = '';
@@ -44,51 +48,15 @@ class ClientListDatero extends Component
     protected $clientService;
     public $advisors = [];
 
-    protected $rules = [
-        'name' => 'required|string|max:255',
-        'phone' => 'nullable|string|max:20',
-        'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
-        'document_number' => 'required|string|max:20',
-        'address' => 'nullable|string|max:500',
-        'birth_date' => 'required|date',
-        'client_type' => 'required|in:inversor,comprador,empresa,constructor',
-        'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
-        'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
-        'score' => 'required|integer|min:0|max:100',
-        'notes' => 'nullable|string',
-        'assigned_advisor_id' => 'nullable|exists:users,id'
-    ];
-    
-    protected $messages = [
-        'document_number.unique' => 'El número de documento ya está en uso.',
-        'birth_date.required' => 'La fecha de nacimiento es obligatoria.',
-        'birth_date.date' => 'La fecha de nacimiento debe ser una fecha válida.',
-        'client_type.required' => 'El tipo de cliente es obligatorio.',
-        'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
-        'source.required' => 'El origen es obligatorio.',
-        'source.in' => 'El origen seleccionado no es válido.',
-        'status.required' => 'El estado es obligatorio.',
-        'status.in' => 'El estado seleccionado no es válido.',
-        'score.required' => 'La puntuación es obligatoria.',
-        'score.integer' => 'La puntuación debe ser un número entero.',
-        'score.min' => 'La puntuación debe ser al menos 0.',
-        'score.max' => 'La puntuación no puede exceder 100.',
-        'notes.string' => 'Las notas deben ser una cadena de texto.',
-        'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
-        'document_type.required' => 'El tipo de documento es obligatorio.',
-        'document_type.in' => 'El tipo de documento seleccionado no es válido.',
-        'document_number.required' => 'El número de documento es obligatorio.',
-        'document_number.string' => 'El número de documento debe ser una cadena de texto.',
-        'document_number.max' => 'El número de documento no puede exceder 20 caracteres.',
-        'address.string' => 'La dirección debe ser una cadena de texto.',
-        'address.max' => 'La dirección no puede exceder 500 caracteres.',
-        'name.required' => 'El nombre es obligatorio.',
-        'name.string' => 'El nombre debe ser una cadena de texto.',
-        'name.max' => 'El nombre no puede exceder 255 caracteres.',
-        'phone.string' => 'El teléfono debe ser una cadena de texto.',
-        'phone.max' => 'El teléfono no puede exceder 20 caracteres.',
-        'assigned_advisor_id.required' => 'El asesor es obligatorio.',
-    ];
+    public function getRules(): array
+    {
+        $clientId = $this->editingClient ? $this->editingClient->id : null;
+        return $this->clientService->getValidationRules($clientId);
+    }
+    public function getMessages(): array
+    {
+        return $this->clientService->getValidationMessages();
+    }
 
     public function boot(ClientService $clientService)
     {
@@ -133,16 +101,40 @@ class ClientListDatero extends Component
 
     public function openCreateModal($clientId = null)
     {
-        if ($clientId) {
-            $this->editingClient = $this->clientService->getClientById($clientId);
-            if ($this->editingClient) {
-                $this->fillFormFromClient($this->editingClient);
+        try {
+            if ($clientId) {
+                Log::info('Abriendo modal para editar cliente', [
+                    'client_id' => $clientId,
+                    'user_id' => Auth::id()
+                ]);
+                
+                $this->editingClient = $this->clientService->getClientById($clientId);
+                if ($this->editingClient) {
+                    $this->fillFormFromClient($this->editingClient);
+                } else {
+                    Log::warning('Cliente no encontrado al intentar editar', [
+                        'client_id' => $clientId,
+                        'user_id' => Auth::id()
+                    ]);
+                    $this->error('Cliente no encontrado.');
+                    return;
+                }
+            } else {
+                Log::info('Abriendo modal para crear nuevo cliente', [
+                    'user_id' => Auth::id()
+                ]);
+                $this->resetForm();
+                $this->editingClient = null;
             }
-        } else {
-            $this->resetForm();
-            $this->editingClient = null;
+            $this->showFormModal = true;
+        } catch (\Exception $e) {
+            Log::error('Error al abrir modal de cliente', [
+                'client_id' => $clientId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->error('Error al abrir el formulario: ' . $e->getMessage());
         }
-        $this->showFormModal = true;
     }
 
     public function closeModals()
@@ -167,6 +159,9 @@ class ClientListDatero extends Component
             'notes',
             'assigned_advisor_id'
         ]);
+        $this->document_type = 'DNI';
+        $this->client_type = 'comprador';
+        $this->source = 'redes_sociales';
         $this->status = 'nuevo';
         $this->score = 0;
     }
@@ -189,40 +184,152 @@ class ClientListDatero extends Component
 
     public function createClient()
     {
-        $this->validate();
+        try {
+            $this->validate($this->getRules(), $this->getMessages());
 
-        $formData = $this->getFormData();
-        $this->clientService->createClient($formData);
+            $formData = $this->getFormData();
+            
+            Log::info('Intentando crear cliente', [
+                'user_id' => Auth::id(),
+                'document_number' => $formData['document_number'],
+                'document_type' => $formData['document_type']
+            ]);
 
-        $this->closeModals();
-        $this->dispatch('show-success', message: 'Cliente creado exitosamente.');
+            $client = $this->clientService->createClient($formData);
+
+            Log::info('Cliente creado exitosamente', [
+                'client_id' => $client->id,
+                'user_id' => Auth::id()
+            ]);
+
+            $this->closeModals();
+            $this->resetPage(); // Refrescar la lista
+            $this->success('Cliente creado exitosamente.');
+        } catch (ValidationException $e) {
+            Log::warning('Error de validación al crear cliente', [
+                'user_id' => Auth::id(),
+                'errors' => $e->errors()
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Error al crear cliente', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al crear el cliente: ' . $e->getMessage());
+        }
     }
 
     public function updateClient()
     {
-        $this->validate();
+        try {
+            if (!$this->editingClient) {
+                Log::warning('Intento de actualizar cliente sin editingClient', [
+                    'user_id' => Auth::id()
+                ]);
+                $this->warning('No se puede actualizar: cliente no seleccionado.');
+                return;
+            }
 
-        if (!$this->editingClient) {
-            return;
+            $this->validate($this->getRules(), $this->getMessages());
+
+            $formData = $this->getFormData();
+            
+            Log::info('Intentando actualizar cliente', [
+                'client_id' => $this->editingClient->id,
+                'user_id' => Auth::id(),
+                'document_number' => $formData['document_number']
+            ]);
+
+            $this->clientService->updateClient($this->editingClient->id, $formData);
+
+            Log::info('Cliente actualizado exitosamente', [
+                'client_id' => $this->editingClient->id,
+                'user_id' => Auth::id()
+            ]);
+
+            $this->closeModals();
+            $this->resetPage(); // Refrescar la lista
+            $this->success('Cliente actualizado exitosamente.');
+        } catch (ValidationException $e) {
+            Log::warning('Error de validación al actualizar cliente', [
+                'client_id' => $this->editingClient->id ?? null,
+                'user_id' => Auth::id(),
+                'errors' => $e->errors()
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar cliente', [
+                'client_id' => $this->editingClient->id ?? null,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al actualizar el cliente: ' . $e->getMessage());
         }
-
-        $formData = $this->getFormData();
-        $this->clientService->updateClient($this->editingClient->id, $formData);
-
-        $this->closeModals();
-        $this->dispatch('show-success', message: 'Cliente actualizado exitosamente.');
     }
 
     public function changeStatus($clientId, $newStatus)
     {
-        $this->clientService->changeStatus($clientId, $newStatus);
-        $this->dispatch('show-success', message: 'Estado del cliente actualizado.');
+        try {
+            Log::info('Intentando cambiar estado de cliente', [
+                'client_id' => $clientId,
+                'new_status' => $newStatus,
+                'user_id' => Auth::id()
+            ]);
+
+            $this->clientService->changeStatus($clientId, $newStatus);
+
+            Log::info('Estado de cliente actualizado exitosamente', [
+                'client_id' => $clientId,
+                'new_status' => $newStatus,
+                'user_id' => Auth::id()
+            ]);
+
+            $this->resetPage(); // Refrescar la lista
+            $this->success('Estado del cliente actualizado.');
+        } catch (\Exception $e) {
+            Log::error('Error al cambiar estado de cliente', [
+                'client_id' => $clientId,
+                'new_status' => $newStatus,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al actualizar el estado: ' . $e->getMessage());
+        }
     }
 
     public function updateScore($clientId, $newScore)
     {
-        $this->clientService->updateScore($clientId, $newScore);
-        $this->dispatch('show-success', message: 'Score del cliente actualizado.');
+        try {
+            Log::info('Intentando actualizar score de cliente', [
+                'client_id' => $clientId,
+                'new_score' => $newScore,
+                'user_id' => Auth::id()
+            ]);
+
+            $this->clientService->updateScore($clientId, $newScore);
+
+            Log::info('Score de cliente actualizado exitosamente', [
+                'client_id' => $clientId,
+                'new_score' => $newScore,
+                'user_id' => Auth::id()
+            ]);
+
+            $this->resetPage(); // Refrescar la lista
+            $this->success('Score del cliente actualizado.');
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar score de cliente', [
+                'client_id' => $clientId,
+                'new_score' => $newScore,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al actualizar el score: ' . $e->getMessage());
+        }
     }
 
     private function getFormData(): array
@@ -245,43 +352,119 @@ class ClientListDatero extends Component
     
     public function buscarDocumento()
     {
-        $tipo = strtolower($this->document_type);
-        $num_doc = $this->document_number;
-        
-        // Verificar si el cliente ya existe
-        if ($this->clientExists($tipo, $num_doc)) {
-            return;
-        }
-        
-        if ($tipo === 'dni' && strlen($num_doc) === 8) {
+        try {
+            $tipo = strtolower($this->document_type);
+            $num_doc = trim($this->document_number);
+            
+            if (empty($num_doc)) {
+                $this->error('Ingrese un número de documento');
+                return;
+            }
+            
+            // Validar formato antes de buscar
+            if ($tipo !== 'dni' || strlen($num_doc) !== 8) {
+                Log::warning('Formato de documento inválido para búsqueda', [
+                    'document_type' => $tipo,
+                    'document_number' => $num_doc,
+                    'user_id' => Auth::id()
+                ]);
+                $this->error('Ingrese un número de DNI válido (8 dígitos)');
+                return;
+            }
+            
+            Log::info('Buscando documento en API externa', [
+                'document_type' => $tipo,
+                'document_number' => $num_doc,
+                'user_id' => Auth::id()
+            ]);
+            
+            $this->info('Buscando documento en la base de datos...');
+            
+            // Verificar si el cliente ya existe
+            if ($this->clientExists($tipo, $num_doc)) {
+                return;
+            }
+            
+            // Buscar en API externa
             $this->searchClientData($tipo, $num_doc);
-        } else {
-            $this->dispatch('show-error', message: 'Ingrese un número de documento válido');
+        } catch (\Exception $e) {
+            Log::error('Error al buscar documento', [
+                'document_type' => $this->document_type,
+                'document_number' => $this->document_number,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al buscar el documento: ' . $e->getMessage());
         }
     }
     
     private function clientExists(string $tipo, string $num_doc): bool
     {
-        $client = $this->clientService->clientExists($tipo, $num_doc);
+        try {
+            // El servicio ya carga la relación assignedAdvisor
+            $client = $this->clientService->clientExists($tipo, $num_doc);
+                
+            if ($client) {
+                $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
+                
+                Log::info('Cliente ya existe en la base de datos', [
+                    'client_id' => $client->id,
+                    'document_type' => $tipo,
+                    'document_number' => $num_doc,
+                    'assigned_advisor' => $advisorName,
+                    'user_id' => Auth::id()
+                ]);
+                
+                $this->warning('Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
+                return true;
+            }
             
-        if ($client) {
-            $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
-            $this->dispatch('show-error', message: 'Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
-            return true;
+            return false;
+        } catch (\Exception $e) {
+            Log::error('Error al verificar existencia de cliente', [
+                'document_type' => $tipo,
+                'document_number' => $num_doc,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            return false;
         }
-        
-        return false;
     }
     
     private function searchClientData(string $tipo, string $num_doc): void
     {
-        $result = $this->searchComplete($tipo, $num_doc);
-        
-        if ($result['encontrado']) {
-            $this->fillClientData($result['data']);
-            $this->dispatch('show-success', message: 'Cliente encontrado: ' . $this->name);
-        } else {
-            $this->dispatch('show-error', message: 'No encontrado');
+        try {
+            $result = $this->searchComplete($tipo, $num_doc);
+            
+            if ($result['encontrado'] ?? false) {
+                $this->fillClientData($result['data']);
+                
+                Log::info('Cliente encontrado en API externa', [
+                    'document_type' => $tipo,
+                    'document_number' => $num_doc,
+                    'name' => $this->name,
+                    'user_id' => Auth::id()
+                ]);
+                
+                $this->success('Cliente encontrado: ' . $this->name);
+            } else {
+                Log::warning('Cliente no encontrado en API externa', [
+                    'document_type' => $tipo,
+                    'document_number' => $num_doc,
+                    'user_id' => Auth::id()
+                ]);
+                $this->error('Documento no encontrado en la base de datos. Por favor, complete los datos manualmente.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al buscar datos del cliente en API', [
+                'document_type' => $tipo,
+                'document_number' => $num_doc,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al buscar los datos del cliente. Por favor, complete los datos manualmente.');
         }
     }
     private function fillClientData(object $data): void

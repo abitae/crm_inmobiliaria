@@ -6,10 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Reservation extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($reservation) {
+            if (empty($reservation->reservation_number)) {
+                $reservation->reservation_number = $reservation->generateReservationNumber();
+            }
+        });
+    }
 
     protected $fillable = [
         'client_id',
@@ -28,6 +40,7 @@ class Reservation extends Model
         'payment_reference',
         'notes',
         'terms_conditions',
+        'image',
         'client_signature',
         'advisor_signature',
         'created_by',
@@ -203,12 +216,12 @@ class Reservation extends Model
 
     public function getFormattedReservationAmountAttribute(): string
     {
-        return number_format($this->reservation_amount, 2);
+        return number_format((float)($this->reservation_amount ?? 0), 2);
     }
 
     public function getFormattedReservationPercentageAttribute(): string
     {
-        return number_format($this->reservation_percentage, 2) . '%';
+        return number_format((float)($this->reservation_percentage ?? 0), 2) . '%';
     }
 
     public function getStatusColorAttribute(): string
@@ -349,8 +362,34 @@ class Reservation extends Model
     {
         $prefix = 'RES';
         $year = now()->format('Y');
-        $sequence = str_pad($this->id, 6, '0', STR_PAD_LEFT);
+        
+        // Obtener el último número de reserva del año actual
+        $lastReservation = static::whereYear('created_at', $year)
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastReservation && $lastReservation->reservation_number) {
+            // Extraer el número de secuencia del último número
+            $parts = explode('-', $lastReservation->reservation_number);
+            $lastSequence = isset($parts[2]) ? (int)$parts[2] : 0;
+            $sequence = str_pad($lastSequence + 1, 6, '0', STR_PAD_LEFT);
+        } else {
+            $sequence = '000001';
+        }
 
         return "{$prefix}-{$year}-{$sequence}";
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+        
+        if (Str::startsWith($this->image, 'http')) {
+            return $this->image;
+        }
+        
+        return asset('storage/' . $this->image);
     }
 }

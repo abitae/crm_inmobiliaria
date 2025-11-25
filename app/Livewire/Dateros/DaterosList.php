@@ -4,11 +4,14 @@ namespace App\Livewire\Dateros;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 class DaterosList extends Component
 {
+    use Toast;
     use WithPagination;
 
     // Filtros

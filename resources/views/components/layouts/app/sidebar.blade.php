@@ -22,7 +22,7 @@
                 :current="request()->routeIs('clients.registro-masivo')" wire:navigate>
                 {{ __('Registro Cliente Masivo') }}
             </flux:navbar.item>
-            
+
             <flux:navbar.item icon="layout-grid" :href="route('clients.registro-datero', ['id' => auth()->user()->id])"
                 :current="request()->routeIs('clients.registro-datero', ['id' => auth()->user()->id])" wire:navigate>
                 {{ __('Registro Cliente Datero') }}
@@ -49,11 +49,14 @@
                     :current="request()->routeIs('clients.index')" wire:navigate>{{ __('Clientes') }}
                 </flux:navlist.item>
 
-                
-                    <flux:navlist.item icon="users" :href="route('dateros.index')"
-                        :current="request()->routeIs('dateros.index')" wire:navigate>{{ __('Dateros') }}
-                    </flux:navlist.item>
-                
+                <flux:navlist.item icon="users" :href="route('clients.index-datero')"
+                    :current="request()->routeIs('clients.index-datero')" wire:navigate>{{ __('Clientes Datero') }}
+                </flux:navlist.item>
+
+                <flux:navlist.item icon="users" :href="route('dateros.index')"
+                    :current="request()->routeIs('dateros.index')" wire:navigate>{{ __('Dateros') }}
+                </flux:navlist.item>
+
                 <flux:navlist.item icon="building-office" :href="route('projects.index')"
                     :current="request()->routeIs('projects.index')" wire:navigate>{{ __('Proyectos') }}
                 </flux:navlist.item>
@@ -75,7 +78,8 @@
                     :current="request()->routeIs('commissions.index')" wire:navigate>{{ __('Comisiones') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="calendar" :href="route('commissions.index-datero')"
-                    :current="request()->routeIs('commissions.index-datero')" wire:navigate>{{ __('Comisiones Datero') }}
+                    :current="request()->routeIs('commissions.index-datero')" wire:navigate>
+                    {{ __('Comisiones Datero') }}
                 </flux:navlist.item>
             </flux:navlist.group>
 
@@ -225,7 +229,7 @@
     </flux:header>
 
     {{ $slot }}
-
+    <x-mary-toast position="toast-top toast-center" />
     @fluxScripts
 </body>
 

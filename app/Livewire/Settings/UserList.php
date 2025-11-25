@@ -8,9 +8,12 @@ use App\Models\User;
 use App\Services\UserManagementService;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Mary\Traits\Toast;
 
 class UserList extends Component
 {
+    use Toast;
     use WithPagination;
 
     // Propiedades de filtrado y búsqueda
@@ -118,15 +121,33 @@ class UserList extends Component
      */
     public function openUserModal(int $userId): void
     {
-        $this->selectedUser = $this->getUserService()->findUser($userId);
-        if (!$this->selectedUser) {
-            $this->dispatch('show-error', message: 'Usuario no encontrado.');
-            return;
-        }
+        try {
+            Log::info('Abriendo modal para editar usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $this->selectedUser = $this->getUserService()->findUser($userId);
+            if (!$this->selectedUser) {
+                Log::warning('Usuario no encontrado al intentar editar', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->error('Usuario no encontrado.');
+                return;
+            }
 
-        $this->isCreating = false;
-        $this->fillFormFromUser();
-        $this->showUserModal = true;
+            $this->isCreating = false;
+            $this->fillFormFromUser();
+            $this->showUserModal = true;
+        } catch (\Exception $e) {
+            Log::error('Error al abrir modal de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->error('Error al abrir el formulario: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -202,17 +223,38 @@ class UserList extends Component
         }
 
         try {
+            Log::info('Intentando ' . $this->actionType . ' usuario', [
+                'user_id' => $this->userToModify->id,
+                'user_name' => $this->userToModify->name,
+                'current_user_id' => Auth::id()
+            ]);
+            
             if ($this->actionType === 'activate') {
                 $this->userToModify->activate();
-                $this->dispatch('user-activated', message: "Usuario {$this->userToModify->name} activado correctamente.");
+                Log::info('Usuario activado exitosamente', [
+                    'user_id' => $this->userToModify->id,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->success("Usuario {$this->userToModify->name} activado correctamente.");
             } else {
                 $this->userToModify->deactivate();
-                $this->dispatch('user-deactivated', message: "Usuario {$this->userToModify->name} desactivado correctamente.");
+                Log::info('Usuario desactivado exitosamente', [
+                    'user_id' => $this->userToModify->id,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->success("Usuario {$this->userToModify->name} desactivado correctamente.");
             }
             $this->closeDeactivateModal();
+            $this->resetPage(); // Refrescar la lista
         } catch (\Exception $e) {
             $action = $this->actionType === 'activate' ? 'activar' : 'desactivar';
-            $this->dispatch('show-error', message: "Error al {$action} el usuario.");
+            Log::error("Error al {$action} usuario", [
+                'user_id' => $this->userToModify->id ?? null,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error("Error al {$action} el usuario: " . $e->getMessage());
         }
     }
 
@@ -259,39 +301,74 @@ class UserList extends Component
      */
     public function saveUser(): void
     {
-        $userData = [
-            'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'lider_id' => $this->lider_id,
-            'selectedRole' => $this->selectedRole,
-            'password' => $this->password,
-            'password_confirmation' => $this->password_confirmation,
-            'banco' => $this->banco,
-            'cuenta_bancaria' => $this->cuenta_bancaria,
-            'cci_bancaria' => $this->cci_bancaria,
-        ];
+        try {
+            $userData = [
+                'name' => $this->name,
+                'email' => $this->email,
+                'phone' => $this->phone,
+                'lider_id' => $this->lider_id,
+                'selectedRole' => $this->selectedRole,
+                'password' => $this->password,
+                'password_confirmation' => $this->password_confirmation,
+                'banco' => $this->banco,
+                'cuenta_bancaria' => $this->cuenta_bancaria,
+                'cci_bancaria' => $this->cci_bancaria,
+            ];
 
-        $validation = $this->getUserService()->validateUserForm($userData, $this->isCreating, $this->selectedUser);
-        
-        if (!$validation['success']) {
-            $this->dispatch('show-error', message: $validation['message']);
-            return;
+            Log::info('Intentando ' . ($this->isCreating ? 'crear' : 'actualizar') . ' usuario', [
+                'is_creating' => $this->isCreating,
+                'user_id' => $this->selectedUser->id ?? null,
+                'email' => $this->email,
+                'current_user_id' => Auth::id()
+            ]);
+
+            $validation = $this->getUserService()->validateUserForm($userData, $this->isCreating, $this->selectedUser);
+            
+            if (!$validation['success']) {
+                Log::warning('Error de validación al guardar usuario', [
+                    'is_creating' => $this->isCreating,
+                    'user_id' => $this->selectedUser->id ?? null,
+                    'current_user_id' => Auth::id(),
+                    'validation_message' => $validation['message']
+                ]);
+                $this->error($validation['message']);
+                return;
+            }
+
+            if ($this->isCreating) {
+                $result = $this->getUserService()->createUser($userData);
+            } else {
+                $result = $this->getUserService()->updateUser($this->selectedUser, $userData);
+            }
+
+            if ($result['success']) {
+                Log::info('Usuario ' . ($this->isCreating ? 'creado' : 'actualizado') . ' exitosamente', [
+                    'is_creating' => $this->isCreating,
+                    'user_id' => $this->selectedUser->id ?? null,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->success($result['message']);
+                $this->closeUserModal();
+                $this->resetPage(); // Refrescar la lista
+            } else {
+                Log::error('Error al guardar usuario', [
+                    'is_creating' => $this->isCreating,
+                    'user_id' => $this->selectedUser->id ?? null,
+                    'current_user_id' => Auth::id(),
+                    'error_message' => $result['message']
+                ]);
+                $this->error($result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Excepción al guardar usuario', [
+                'is_creating' => $this->isCreating,
+                'user_id' => $this->selectedUser->id ?? null,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al guardar el usuario: ' . $e->getMessage());
         }
-
-        if ($this->isCreating) {
-            $result = $this->getUserService()->createUser($userData);
-        } else {
-            $result = $this->getUserService()->updateUser($this->selectedUser, $userData);
-        }
-
-        if ($result['success']) {
-            $this->dispatch('user-created', message: $result['message']);
-        } else {
-            $this->dispatch('show-error', message: $result['message']);
-        }
-
-        $this->closeUserModal();
     }
 
 
@@ -300,21 +377,43 @@ class UserList extends Component
      */
     public function confirmActivate(int $userId): void
     {
-        $user = $this->getUserService()->findUser($userId);
+        try {
+            Log::info('Confirmando activación de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $user = $this->getUserService()->findUser($userId);
 
-        if (!$user) {
-            $this->dispatch('show-error', message: 'Usuario no encontrado.');
-            return;
+            if (!$user) {
+                Log::warning('Usuario no encontrado al intentar activar', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->error('Usuario no encontrado.');
+                return;
+            }
+
+            if ($user->isActive()) {
+                Log::info('Usuario ya está activo', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->warning('El usuario ya está activo.');
+                return;
+            }
+
+            $this->showDeactivateModal = true;
+            $this->userToModify = $user;
+            $this->actionType = 'activate';
+        } catch (\Exception $e) {
+            Log::error('Error al confirmar activación de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->error('Error al procesar la solicitud: ' . $e->getMessage());
         }
-
-        if ($user->isActive()) {
-            $this->dispatch('show-error', message: 'El usuario ya está activo.');
-            return;
-        }
-
-        $this->showDeactivateModal = true;
-        $this->userToModify = $user;
-        $this->actionType = 'activate';
     }
 
     /**
@@ -322,26 +421,52 @@ class UserList extends Component
      */
     public function confirmDeactivate(int $userId): void
     {
-        $user = $this->getUserService()->findUser($userId);
+        try {
+            Log::info('Confirmando desactivación de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $user = $this->getUserService()->findUser($userId);
 
-        if (!$user) {
-            $this->dispatch('show-error', message: 'Usuario no encontrado.');
-            return;
+            if (!$user) {
+                Log::warning('Usuario no encontrado al intentar desactivar', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->error('Usuario no encontrado.');
+                return;
+            }
+
+            if ($user->isInactive()) {
+                Log::info('Usuario ya está inactivo', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->warning('El usuario ya está inactivo.');
+                return;
+            }
+
+            if (Auth::check() && $user->id === Auth::id()) {
+                Log::warning('Intento de desactivar cuenta propia', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->error('No puedes desactivar tu propia cuenta.');
+                return;
+            }
+
+            $this->showDeactivateModal = true;
+            $this->userToModify = $user;
+            $this->actionType = 'deactivate';
+        } catch (\Exception $e) {
+            Log::error('Error al confirmar desactivación de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->error('Error al procesar la solicitud: ' . $e->getMessage());
         }
-
-        if ($user->isInactive()) {
-            $this->dispatch('show-error', message: 'El usuario ya está inactivo.');
-            return;
-        }
-
-        if (Auth::check() && $user->id === Auth::id()) {
-            $this->dispatch('show-error', message: 'No puedes desactivar tu propia cuenta.');
-            return;
-        }
-
-        $this->showDeactivateModal = true;
-        $this->userToModify = $user;
-        $this->actionType = 'deactivate';
     }
 
     /**
@@ -349,12 +474,37 @@ class UserList extends Component
      */
     public function activateUser($userId): void
     {
-        $result = $this->getUserService()->activateUser($userId);
-        
-        if ($result['success']) {
-            $this->dispatch('user-activated', message: $result['message']);
-        } else {
-            $this->dispatch('show-error', message: $result['message']);
+        try {
+            Log::info('Activando usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $result = $this->getUserService()->activateUser($userId);
+            
+            if ($result['success']) {
+                Log::info('Usuario activado exitosamente', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->success($result['message']);
+                $this->resetPage(); // Refrescar la lista
+            } else {
+                Log::error('Error al activar usuario', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id(),
+                    'error_message' => $result['message']
+                ]);
+                $this->error($result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Excepción al activar usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al activar el usuario: ' . $e->getMessage());
         }
     }
 
@@ -363,12 +513,37 @@ class UserList extends Component
      */
     public function deactivateUser($userId): void
     {
-        $result = $this->getUserService()->desactivateUser($userId);
-        
-        if ($result['success']) {
-            $this->dispatch('user-deactivated', message: $result['message']);
-        } else {
-            $this->dispatch('show-error', message: $result['message']);
+        try {
+            Log::info('Desactivando usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $result = $this->getUserService()->desactivateUser($userId);
+            
+            if ($result['success']) {
+                Log::info('Usuario desactivado exitosamente', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->success($result['message']);
+                $this->resetPage(); // Refrescar la lista
+            } else {
+                Log::error('Error al desactivar usuario', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id(),
+                    'error_message' => $result['message']
+                ]);
+                $this->error($result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Excepción al desactivar usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al desactivar el usuario: ' . $e->getMessage());
         }
     }
 
@@ -397,14 +572,32 @@ class UserList extends Component
     }
     public function verQR(int $userId): void
     {
-        $this->selectedUser = $this->getUserService()->findUser($userId);
-        if (!$this->selectedUser) {
-            $this->dispatch('show-error', message: 'Usuario no encontrado.');
-            return;
+        try {
+            Log::info('Abriendo modal QR de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $this->selectedUser = $this->getUserService()->findUser($userId);
+            if (!$this->selectedUser) {
+                Log::warning('Usuario no encontrado al intentar ver QR', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->error('Usuario no encontrado.');
+                return;
+            }
+            
+            $this->qrcode = $this->getQRCode();
+            $this->showQRModal = true;
+        } catch (\Exception $e) {
+            Log::error('Error al abrir modal QR de usuario', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->error('Error al generar el código QR: ' . $e->getMessage());
         }
-        
-        $this->qrcode = $this->getQRCode();
-        $this->showQRModal = true;
     }
     
     public function closeQRModal(): void
