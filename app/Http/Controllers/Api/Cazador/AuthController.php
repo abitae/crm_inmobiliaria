@@ -59,10 +59,10 @@ class AuthController extends Controller
             // Obtener el usuario autenticado
             $user = auth()->user();
 
-            // Verificar que el usuario tiene rol vendedor (cazador)
-            if (!$user->isAdvisor()) {
+            // Verificar que el usuario tiene rol Datero (datero)
+            if (!$user->isDatero()) {
                 JWTAuth::invalidate($token);
-                Log::warning('Intento de acceso con rol incorrecto (Cazador)', [
+                Log::warning('Intento de acceso con rol incorrecto (Datero)', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'role' => $user->getRoleName(),
