@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Opportunity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Reservation extends Model
@@ -287,13 +289,85 @@ class Reservation extends Model
         return false;
     }
 
-    public function convertToSale(): bool
+    public function convertToSale(int $userId = null): bool
     {
-        if (in_array($this->status, ['activa', 'confirmada'])) {
-            $this->update(['status' => 'convertida_venta']);
-            return true;
+        if ($this->status !== 'confirmada') {
+            return false;
         }
-        return false;
+
+        try {
+            DB::beginTransaction();
+
+            // Actualizar estado de la reserva
+            $this->update([
+                'status' => 'convertida_venta',
+                'updated_by' => $userId ?? $this->updated_by,
+            ]);
+
+            // Buscar o crear oportunidad relacionada
+            $opportunity = Opportunity::where('client_id', $this->client_id)
+                ->where('project_id', $this->project_id)
+                ->where('unit_id', $this->unit_id)
+                ->where('advisor_id', $this->advisor_id)
+                ->where('status', 'registrado')
+                ->first();
+
+            // Obtener precio de la unidad para el close_value
+            $closeValue = $this->unit->final_price ?? $this->unit->total_price ?? 0;
+            
+            // Si no hay precio en la unidad, usar el monto de reserva como base
+            if ($closeValue == 0) {
+                $closeValue = $this->reservation_amount;
+                // Si hay porcentaje, calcular el precio total estimado
+                if ($this->reservation_percentage > 0) {
+                    $closeValue = ($this->reservation_amount / $this->reservation_percentage) * 100;
+                }
+            }
+
+            if ($opportunity) {
+                // Actualizar oportunidad existente
+                $opportunity->update([
+                    'status' => 'pagado',
+                    'close_value' => $closeValue,
+                    'close_reason' => "Convertida desde reserva: {$this->reservation_number}",
+                    'actual_close_date' => now(),
+                    'probability' => 100,
+                    'stage' => 'cierre',
+                    'updated_by' => $userId ?? $this->updated_by,
+                ]);
+            } else {
+                // Crear nueva oportunidad
+                $opportunity = Opportunity::create([
+                    'client_id' => $this->client_id,
+                    'project_id' => $this->project_id,
+                    'unit_id' => $this->unit_id,
+                    'advisor_id' => $this->advisor_id,
+                    'stage' => 'cierre',
+                    'status' => 'pagado',
+                    'probability' => 100,
+                    'expected_value' => $closeValue,
+                    'close_value' => $closeValue,
+                    'close_reason' => "Convertida desde reserva: {$this->reservation_number}",
+                    'actual_close_date' => now(),
+                    'expected_close_date' => $this->reservation_date,
+                    'notes' => "Oportunidad creada automáticamente desde reserva {$this->reservation_number}.\n" . ($this->notes ?? ''),
+                    'source' => 'reserva',
+                    'created_by' => $userId ?? $this->created_by,
+                    'updated_by' => $userId ?? $this->updated_by,
+                ]);
+            }
+
+            // Actualizar estado de la unidad a 'vendido'
+            if ($this->unit) {
+                $this->unit->sell(); // Este método actualiza a 'vendido' y actualiza contadores
+            }
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function extendExpiration(\DateTime $newExpirationDate): bool
@@ -342,7 +416,7 @@ class Reservation extends Model
 
     public function canBeConverted(): bool
     {
-        return in_array($this->status, ['activa', 'confirmada']);
+        return $this->status === 'confirmada';
     }
 
     public function needsRenewal(): bool

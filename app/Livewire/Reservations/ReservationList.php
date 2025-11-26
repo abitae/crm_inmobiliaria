@@ -88,7 +88,7 @@ class ReservationList extends Component
         'payment_reference' => 'nullable|string|max:255',
         'notes' => 'nullable|string',
         'terms_conditions' => 'nullable|string',
-        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+        // 'image' removido - solo se sube desde el modal de confirmación
     ];
 
     public function mount()
@@ -127,13 +127,7 @@ class ReservationList extends Component
         }
     }
 
-    public function updatedImage()
-    {
-        $this->validateOnly('image');
-        if ($this->image) {
-            $this->imagePreview = $this->image->temporaryUrl();
-        }
-    }
+    // Método removido - la imagen solo se sube desde el modal de confirmación
 
     // Métodos para resetear paginación cuando cambian los filtros
     public function updatedSearch()
@@ -288,8 +282,7 @@ class ReservationList extends Component
             'payment_reference',
             'notes',
             'terms_conditions',
-            'image',
-            'imagePreview'
+            // 'image' y 'imagePreview' removidos - solo se manejan en modal de confirmación
         ]);
         $this->reservation_date = now()->format('Y-m-d');
         $this->status = 'activa';
@@ -315,7 +308,7 @@ class ReservationList extends Component
         $this->payment_reference = $reservation->payment_reference ?? '';
         $this->notes = $reservation->notes ?? '';
         $this->terms_conditions = $reservation->terms_conditions ?? '';
-        $this->imagePreview = $reservation->image ? $reservation->image_url : null;
+        // imagePreview removido - la imagen solo se muestra en el modal de confirmación
 
         // Cargar unidades del proyecto (disponibles + la unidad actual si está reservada)
         if ($this->project_id) {
@@ -350,61 +343,39 @@ class ReservationList extends Component
         try {
             DB::beginTransaction();
 
-            // Procesar imagen si existe
-            $imagePath = null;
-            if ($this->image) {
-                $imagePath = $this->image->store('reservations', 'public');
-            }
-
-            // Determinar el estado según si hay imagen del comprobante de pago
-            // Si hay imagen, el status será 'confirmada', si no, será 'activa'
-            // El reservation_type siempre será 'pre_reserva' al crear
-            $status = $imagePath ? 'confirmada' : 'activa';
-
+            // Al crear, siempre será 'activa' y 'pre_reserva'
+            // El estado y estado de pago se fuerzan a los valores por defecto
+            // La imagen solo se sube a través del modal de confirmación
             $reservation = Reservation::create([
                 'client_id' => $this->client_id,
                 'project_id' => $this->project_id,
                 'unit_id' => $this->unit_id,
                 'advisor_id' => $this->advisor_id,
                 'reservation_type' => 'pre_reserva', // Siempre 'pre_reserva' al crear
-                'status' => $status, // 'confirmada' si hay imagen, 'activa' si no
+                'status' => 'activa', // Siempre 'activa' al crear (forzado)
+                'payment_status' => 'pendiente', // Siempre 'pendiente' al crear (forzado)
                 'reservation_date' => $this->reservation_date,
                 'expiration_date' => $this->expiration_date,
                 'reservation_amount' => $this->reservation_amount,
                 'reservation_percentage' => $this->reservation_percentage,
                 'payment_method' => $this->payment_method,
-                'payment_status' => $this->payment_status,
                 'payment_reference' => $this->payment_reference,
                 'notes' => $this->notes,
                 'terms_conditions' => $this->terms_conditions,
-                'image' => $imagePath,
+                'image' => null, // No se sube imagen al crear
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
 
-            // Actualizar estado de la unidad
-            if ($reservation->unit) {
-                // Si el status es 'confirmada', la unidad debe estar en 'reservado'
-                if ($status === 'confirmada') {
-                    $reservation->unit->update(['status' => 'reservado']);
-                    $reservation->unit->project->updateUnitCounts();
-                } elseif ($status === 'activa') {
-                    // Si es 'activa', también reservamos la unidad
-                    $reservation->unit->update(['status' => 'reservado']);
-                    $reservation->unit->project->updateUnitCounts();
-                }
-            }
+            // NO reservar la unidad al crear (solo cuando se confirma con imagen)
+            // La unidad permanece disponible hasta que se confirme la reserva
 
             DB::commit();
 
             $this->closeModals();
-            $this->success('Reserva creada exitosamente.');
+            $this->success('Reserva creada exitosamente. Para confirmarla, use el botón "Subir imagen de confirmación".');
         } catch (\Exception $e) {
             DB::rollBack();
-            // Eliminar imagen si se subió pero falló la creación
-            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-            }
             $this->error('Error al crear la reserva: ' . $e->getMessage());
         }
     }
@@ -418,57 +389,29 @@ class ReservationList extends Component
             return;
         }
 
-        // Validar disponibilidad de unidad si cambió
-        $oldUnitId = $this->editingReservation->unit_id;
-        if ($this->unit_id != $oldUnitId) {
-            $newUnit = Unit::find($this->unit_id);
-            if (!$newUnit) {
-                $this->error('La unidad seleccionada no existe.');
-                return;
-            }
-
-            if ($newUnit->status !== 'disponible' && $newUnit->id != $oldUnitId) {
-                $this->error('La unidad seleccionada no está disponible.');
-                return;
-            }
-        }
+        // Proyecto y unidad NO se pueden editar
+        // Mantener los valores originales de la reserva
+        $originalProjectId = $this->editingReservation->project_id;
+        $originalUnitId = $this->editingReservation->unit_id;
 
         try {
             DB::beginTransaction();
 
-            // Procesar imagen si existe
+            // Mantener imagen existente (no se puede cambiar desde aquí)
+            // La imagen solo se cambia desde el modal de confirmación
             $imagePath = $this->editingReservation->image;
-            $hasNewImage = false;
-            $hadImageBefore = (bool)$imagePath;
-            
-            if ($this->image) {
-                // Eliminar imagen anterior si existe
-                if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                    Storage::disk('public')->delete($imagePath);
-                }
-                $imagePath = $this->image->store('reservations', 'public');
-                $hasNewImage = true;
-            }
 
-            // Determinar el estado según si hay imagen
-            // Si se sube una nueva imagen, el status debe cambiar a 'confirmada'
-            // Si se elimina la imagen y estaba en 'confirmada', cambiar a 'activa'
-            $status = $this->status;
-            if ($hasNewImage) {
-                // Si se sube una nueva imagen, cambiar a 'confirmada'
-                $status = 'confirmada';
-            } elseif (!$imagePath && $this->editingReservation->status === 'confirmada') {
-                // Si se elimina la imagen y estaba en 'confirmada', cambiar a 'activa'
-                $status = 'activa';
-            }
+            // Mantener el status actual (no se puede editar)
+            // El status solo cambia automáticamente cuando se confirma con imagen, cancela, etc.
+            $status = $this->editingReservation->status; // No usar $this->status, mantener el actual
 
             $updateData = [
                 'client_id' => $this->client_id,
-                'project_id' => $this->project_id,
-                'unit_id' => $this->unit_id,
+                'project_id' => $originalProjectId, // Mantener proyecto original (no editable)
+                'unit_id' => $originalUnitId, // Mantener unidad original (no editable)
                 'advisor_id' => $this->advisor_id,
                 'reservation_type' => $this->reservation_type,
-                'status' => $status,
+                'status' => $status, // Mantener status actual
                 'reservation_date' => $this->reservation_date,
                 'expiration_date' => $this->expiration_date,
                 'reservation_amount' => $this->reservation_amount,
@@ -478,37 +421,13 @@ class ReservationList extends Component
                 'payment_reference' => $this->payment_reference,
                 'notes' => $this->notes,
                 'terms_conditions' => $this->terms_conditions,
-                'image' => $imagePath,
+                'image' => $imagePath, // Mantener imagen existente
                 'updated_by' => Auth::id(),
             ];
 
             $this->editingReservation->update($updateData);
 
-            // Actualizar estado de la unidad si el status cambió a 'confirmada'
-            if ($status === 'confirmada' && $this->editingReservation->unit) {
-                $unit = $this->editingReservation->unit;
-                if ($unit->status !== 'reservado') {
-                    $unit->update(['status' => 'reservado']);
-                    $unit->project->updateUnitCounts();
-                }
-            }
-
-            // Gestionar estado de unidades si cambió la unidad
-            if ($this->unit_id != $oldUnitId) {
-                // Liberar unidad anterior
-                $oldUnit = Unit::find($oldUnitId);
-                if ($oldUnit && $oldUnit->status === 'reservado') {
-                    $oldUnit->update(['status' => 'disponible']);
-                    $oldUnit->project->updateUnitCounts();
-                }
-
-                // Reservar nueva unidad
-                $newUnit = Unit::find($this->unit_id);
-                if ($newUnit && $newUnit->status === 'disponible') {
-                    $newUnit->update(['status' => 'reservado']);
-                    $newUnit->project->updateUnitCounts();
-                }
-            }
+            // No se gestiona cambio de unidad porque no se puede cambiar
 
             DB::commit();
 
@@ -668,7 +587,7 @@ class ReservationList extends Component
 
     public function convertToSale($reservationId)
     {
-        $reservation = Reservation::find($reservationId);
+        $reservation = Reservation::with(['unit', 'client', 'project'])->find($reservationId);
         
         if (!$reservation) {
             $this->error('Reserva no encontrada.');
@@ -680,9 +599,15 @@ class ReservationList extends Component
             return;
         }
 
+        // Validar que la unidad pueda venderse
+        if ($reservation->unit && !$reservation->unit->canBeSold()) {
+            $this->error('La unidad no puede ser vendida en su estado actual.');
+            return;
+        }
+
         try {
-            if ($reservation->convertToSale()) {
-                $this->success('Reserva convertida a venta exitosamente.');
+            if ($reservation->convertToSale(Auth::id())) {
+                $this->success('Reserva convertida a venta exitosamente. La unidad ha sido marcada como vendida.');
             } else {
                 $this->error('No se pudo convertir la reserva a venta.');
             }

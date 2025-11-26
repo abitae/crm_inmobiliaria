@@ -115,7 +115,11 @@
                                         <flux:button size="xs" variant="primary" color="blue" wire:click="openCreateModal({{ $reservation->id }})" icon="pencil"/>
                                             <flux:button size="xs" variant="primary" color="amber" wire:click="openConfirmationModal({{ $reservation->id }})" icon="arrow-up-tray" title="Subir imagen de confirmación"/>
                                         @endif
-                                        @if(in_array($reservation->status, ['activa', 'confirmada']))
+                                        @if($reservation->status === 'activa')
+                                            <flux:button size="xs" variant="primary" color="red" wire:click="cancelReservation({{ $reservation->id }})" icon="trash" title="Cancelar reserva"/>
+                                        @endif
+                                        @if($reservation->status === 'confirmada')
+                                            <flux:button size="xs" variant="primary" color="green" wire:click="convertToSale({{ $reservation->id }})" icon="check-circle" title="Convertir a venta"/>
                                             <flux:button size="xs" variant="primary" color="red" wire:click="cancelReservation({{ $reservation->id }})" icon="trash" title="Cancelar reserva"/>
                                         @endif
                                     </div>
@@ -154,7 +158,7 @@
                                 @endforeach
                             </flux:select>
 
-                            <flux:select size="xs" wire:model.live="project_id" label="Proyecto" required>
+                            <flux:select size="xs" wire:model.live="project_id" label="Proyecto" required :disabled="$editingReservation">
                                 <option value="">Seleccionar proyecto</option>
                                 @foreach($projects as $project)
                                     <option value="{{ $project->id }}">{{ $project->name }}</option>
@@ -163,12 +167,15 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <flux:select size="xs" wire:model="unit_id" label="Unidad" required>
+                            <flux:select size="xs" wire:model="unit_id" label="Unidad" required :disabled="$editingReservation">
                                 <option value="">Seleccionar unidad</option>
                                 @foreach($units as $unit)
                                     <option value="{{ $unit->id }}">{{ $unit->unit_manzana }} - {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
                                 @endforeach
                             </flux:select>
+                            @if($editingReservation)
+                            <p class="text-xs text-gray-500 mt-0.5">El proyecto y la unidad no se pueden editar.</p>
+                            @endif
 
                             <flux:select size="xs" wire:model="advisor_id" label="Asesor" required>
                                 <option value="">Seleccionar asesor</option>
@@ -185,17 +192,18 @@
                                 <option value="reserva_confirmada">Reserva Confirmada</option>
                             </flux:select>
 
-                            <flux:select size="xs" wire:model="status" label="Estado" required>
+                            <flux:select size="xs" wire:model="status" label="Estado" required disabled>
                                 <option value="activa">Activa</option>
                                 <option value="confirmada">Confirmada</option>
                                 <option value="cancelada">Cancelada</option>
                                 <option value="vencida">Vencida</option>
                                 <option value="convertida_venta">Convertida a Venta</option>
                             </flux:select>
+                            <p class="text-xs text-gray-500 mt-0.5">El estado no se puede editar. Se actualiza automáticamente según las acciones.</p>
                         </div>
                         @if(!$editingReservation)
                         <div class="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">
-                            El tipo será "Pre-reserva" y el estado "Activa" al crear. Si subes una imagen, cambiará a "Confirmada".
+                            El tipo será "Pre-reserva" y el estado "Activa" al crear. Para confirmar la reserva, use el botón "Subir imagen de confirmación" después de crear.
                         </div>
                         @endif
 
@@ -221,21 +229,16 @@
 
                         <flux:input size="xs" wire:model="payment_reference" label="Referencia de Pago" />
 
-                        <!-- Campo de Imagen -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Imagen</label>
-                            @if($imagePreview)
-                                <div class="mb-1">
-                                    <img src="{{ $imagePreview }}" alt="Vista previa" class="w-24 h-24 object-cover rounded border border-gray-300">
-                                </div>
-                            @elseif($editingReservation && $editingReservation->image)
-                                <div class="mb-1">
-                                    <img src="{{ $editingReservation->image_url }}" alt="Imagen actual" class="w-24 h-24 object-cover rounded border border-gray-300">
-                                </div>
-                            @endif
-                            <flux:input size="xs" wire:model="image" type="file" accept="image/*" label="Subir Imagen" />
-                            <p class="mt-0.5 text-xs text-gray-500">JPEG, PNG, JPG, GIF, WEBP (máx. 10MB)</p>
+                        @if($editingReservation && $editingReservation->image)
+                        <!-- Mostrar imagen existente (solo lectura) -->
+                        <div class="bg-gray-50 border border-gray-200 rounded p-2">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Imagen del Comprobante (solo lectura)</label>
+                            <div class="mb-1">
+                                <img src="{{ $editingReservation->image_url }}" alt="Imagen actual" class="w-32 h-32 object-cover rounded border border-gray-300">
+                            </div>
+                            <p class="text-xs text-gray-500">Para cambiar la imagen, use el botón "Subir imagen de confirmación" desde la tabla.</p>
                         </div>
+                        @endif
 
                         <flux:textarea size="xs" wire:model="notes" label="Notas" rows="2" />
                         <flux:textarea size="xs" wire:model="terms_conditions" label="Términos y Condiciones" rows="2" />
