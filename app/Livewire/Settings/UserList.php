@@ -34,6 +34,8 @@ class UserList extends Component
     public $selectedUser = null;
     public $isCreating = false;
     public $showQRModal = false;
+    public $showPasswordModal = false;
+    public $userForPasswordChange = null;
     // Propiedades para confirmación
     public $isConfirming = false;
     public $confirmAction = '';
@@ -53,6 +55,8 @@ class UserList extends Component
     public $selectedRole = '';
     public $password = '';
     public $password_confirmation = '';
+    public $new_password = '';
+    public $new_password_confirmation = '';
     public $banco = '';
     public $cuenta_bancaria = '';
     public $cci_bancaria = '';
@@ -613,6 +617,109 @@ class UserList extends Component
         }
         return $this->cachedQRCode;
     }
+
+    /**
+     * Abre el modal para cambiar la contraseña de un usuario
+     */
+    public function openPasswordModal(int $userId): void
+    {
+        try {
+            Log::info('Abriendo modal de cambio de contraseña', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id()
+            ]);
+            
+            $this->userForPasswordChange = $this->getUserService()->findUser($userId);
+            if (!$this->userForPasswordChange) {
+                Log::warning('Usuario no encontrado al intentar cambiar contraseña', [
+                    'user_id' => $userId,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->error('Usuario no encontrado.');
+                return;
+            }
+
+            $this->resetPasswordForm();
+            $this->showPasswordModal = true;
+        } catch (\Exception $e) {
+            Log::error('Error al abrir modal de cambio de contraseña', [
+                'user_id' => $userId,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            $this->error('Error al abrir el formulario: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cierra el modal de cambio de contraseña
+     */
+    public function closePasswordModal(): void
+    {
+        $this->resetPasswordForm();
+        $this->showPasswordModal = false;
+        $this->userForPasswordChange = null;
+    }
+
+    /**
+     * Resetea el formulario de cambio de contraseña
+     */
+    private function resetPasswordForm(): void
+    {
+        $this->reset([
+            'new_password',
+            'new_password_confirmation'
+        ]);
+    }
+
+    /**
+     * Cambia la contraseña de un usuario
+     */
+    public function changePassword(): void
+    {
+        try {
+            if (!$this->userForPasswordChange) {
+                $this->error('Usuario no encontrado.');
+                return;
+            }
+
+            Log::info('Intentando cambiar contraseña de usuario', [
+                'user_id' => $this->userForPasswordChange->id,
+                'current_user_id' => Auth::id()
+            ]);
+
+            $result = $this->getUserService()->changePassword(
+                $this->userForPasswordChange->id,
+                $this->new_password,
+                $this->new_password_confirmation
+            );
+
+            if ($result['success']) {
+                Log::info('Contraseña cambiada exitosamente', [
+                    'user_id' => $this->userForPasswordChange->id,
+                    'current_user_id' => Auth::id()
+                ]);
+                $this->success($result['message']);
+                $this->closePasswordModal();
+            } else {
+                Log::error('Error al cambiar contraseña', [
+                    'user_id' => $this->userForPasswordChange->id,
+                    'current_user_id' => Auth::id(),
+                    'error_message' => $result['message']
+                ]);
+                $this->error($result['message']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Excepción al cambiar contraseña', [
+                'user_id' => $this->userForPasswordChange->id ?? null,
+                'current_user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->error('Error al cambiar la contraseña: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Renderiza el componente
      */

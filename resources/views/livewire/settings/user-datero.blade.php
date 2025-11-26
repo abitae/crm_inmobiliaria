@@ -207,6 +207,10 @@
                                         <flux:button icon="pencil" size="xs" variant="outline"
                                             wire:click="openUserModal({{ $user->id }})" title="Editar usuario">
                                         </flux:button>
+                                        <flux:button icon="key" size="xs" variant="outline" color="blue"
+                                            wire:click="openPasswordModal({{ $user->id }})"
+                                            title="Cambiar contraseña">
+                                        </flux:button>
 
                                         @if ($user->isActive())
                                             <flux:button icon="x-circle" size="xs" variant="outline" color="red"
@@ -550,6 +554,102 @@
 
         </div>
     </flux:modal>
+
+    <!-- Modal de Cambio de Contraseña -->
+    <flux:modal wire:model="showPasswordModal" size="md">
+        <div class="p-6">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-blue-100">
+                <flux:icon name="key" class="w-6 h-6 text-blue-600" />
+            </div>
+
+            <div class="text-center mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">
+                    Cambiar Contraseña
+                </h3>
+
+                @if ($userForPasswordChange)
+                    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <span class="text-sm font-medium text-green-600">
+                                    {{ $userForPasswordChange->initials() }}
+                                </span>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-medium text-gray-900">{{ $userForPasswordChange->name }}</div>
+                                <div class="text-xs text-gray-500">{{ $userForPasswordChange->email }}</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <p class="text-sm text-gray-600 mb-4">
+                    Ingresa la nueva contraseña para este usuario. La contraseña debe tener al menos 6 caracteres.
+                </p>
+            </div>
+
+            <form wire:submit.prevent="changePassword">
+                <div class="space-y-4">
+                    <!-- Nueva Contraseña -->
+                    <div>
+                        <flux:input 
+                            id="new_password" 
+                            type="password" 
+                            wire:model="new_password" 
+                            size="xs"
+                            placeholder="Nueva contraseña *" 
+                            class="w-full" 
+                        />
+                        @error('new_password')
+                            <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <!-- Confirmar Nueva Contraseña -->
+                    <div>
+                        <flux:input 
+                            id="new_password_confirmation" 
+                            type="password" 
+                            wire:model="new_password_confirmation" 
+                            size="xs"
+                            placeholder="Confirmar nueva contraseña *" 
+                            class="w-full" 
+                        />
+                        @error('new_password_confirmation')
+                            <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
+                    <div class="flex">
+                        <flux:icon name="information-circle" class="w-5 h-5 text-blue-400 mr-2 mt-0.5" />
+                        <div class="text-sm text-blue-800">
+                            <p class="font-medium">Nota importante:</p>
+                            <p class="text-xs mt-1">El usuario deberá usar esta nueva contraseña para iniciar sesión.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <flux:button icon="x-circle" type="button" variant="outline" size="sm"
+                        wire:click="closePasswordModal">
+                        Cancelar
+                    </flux:button>
+                    <flux:button icon="key" type="submit" color="blue" size="sm"
+                        wire:loading.attr="disabled" wire:loading.class="opacity-50 cursor-not-allowed">
+                        <span wire:loading.remove>
+                            Cambiar Contraseña
+                        </span>
+                        <span wire:loading>
+                            <flux:icon name="arrow-path" class="w-4 h-4 animate-spin" />
+                            Cambiando...
+                        </span>
+                    </flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
 </div>
 
 <script>
@@ -623,6 +723,10 @@
 
     window.addEventListener('user-updated', event => {
         showNotification(event.detail.message, 'success', '¡Usuario Actualizado!');
+    });
+
+    window.addEventListener('password-changed', event => {
+        showNotification(event.detail.message, 'success', '¡Contraseña Cambiada!');
     });
 
     // Escuchar errores de Livewire

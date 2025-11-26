@@ -32,6 +32,8 @@ class UserDatero extends Component
     public $selectedUser = null;
     public $isCreating = false;
     public $showQRModal = false;
+    public $showPasswordModal = false;
+    public $userForPasswordChange = null;
     // Propiedades para confirmación
     public $isConfirming = false;
     public $confirmAction = '';
@@ -51,6 +53,8 @@ class UserDatero extends Component
     public $selectedRole = '';
     public $password = '';
     public $password_confirmation = '';
+    public $new_password = '';
+    public $new_password_confirmation = '';
     public $banco = '';
     public $cuenta_bancaria = '';
     public $cci_bancaria = '';
@@ -421,6 +425,67 @@ class UserDatero extends Component
         }
         return $this->cachedQRCode;
     }
+
+    /**
+     * Abre el modal para cambiar la contraseña de un usuario
+     */
+    public function openPasswordModal(int $userId): void
+    {
+        $this->userForPasswordChange = $this->getUserService()->findUser($userId);
+        if (!$this->userForPasswordChange) {
+            $this->dispatch('show-error', message: 'Usuario no encontrado.');
+            return;
+        }
+
+        $this->resetPasswordForm();
+        $this->showPasswordModal = true;
+    }
+
+    /**
+     * Cierra el modal de cambio de contraseña
+     */
+    public function closePasswordModal(): void
+    {
+        $this->resetPasswordForm();
+        $this->showPasswordModal = false;
+        $this->userForPasswordChange = null;
+    }
+
+    /**
+     * Resetea el formulario de cambio de contraseña
+     */
+    private function resetPasswordForm(): void
+    {
+        $this->reset([
+            'new_password',
+            'new_password_confirmation'
+        ]);
+    }
+
+    /**
+     * Cambia la contraseña de un usuario
+     */
+    public function changePassword(): void
+    {
+        if (!$this->userForPasswordChange) {
+            $this->dispatch('show-error', message: 'Usuario no encontrado.');
+            return;
+        }
+
+        $result = $this->getUserService()->changePassword(
+            $this->userForPasswordChange->id,
+            $this->new_password,
+            $this->new_password_confirmation
+        );
+
+        if ($result['success']) {
+            $this->dispatch('password-changed', message: $result['message']);
+            $this->closePasswordModal();
+        } else {
+            $this->dispatch('show-error', message: $result['message']);
+        }
+    }
+
     /**
      * Renderiza el componente
      */

@@ -258,4 +258,39 @@ class UserManagementService
             ->backgroundColor(255, 255, 255)
             ->generate($url);
     }
+
+    /**
+     * Cambia la contraseña de un usuario (para administradores)
+     */
+    public function changePassword(int $userId, string $newPassword, string $newPasswordConfirmation): array
+    {
+        $user = $this->findUser($userId);
+
+        if (!$user) {
+            return ['success' => false, 'message' => 'Usuario no encontrado.'];
+        }
+
+        // Validar que la nueva contraseña y su confirmación coincidan
+        if ($newPassword !== $newPasswordConfirmation) {
+            return ['success' => false, 'message' => 'Las contraseñas no coinciden.'];
+        }
+
+        // Validar longitud mínima
+        if (strlen($newPassword) < 6) {
+            return ['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.'];
+        }
+
+        try {
+            $user->update([
+                'password' => bcrypt($newPassword)
+            ]);
+
+            return [
+                'success' => true,
+                'message' => "Contraseña de {$user->name} actualizada correctamente."
+            ];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Error al cambiar la contraseña.'];
+        }
+    }
 }
