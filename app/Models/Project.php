@@ -165,7 +165,9 @@ class Project extends Model
     public function getProgressPercentageAttribute(): float
     {
         if ($this->total_units == 0) return 0;
-        return round((($this->sold_units + $this->reserved_units) / $this->total_units) * 100, 2);
+        // Incluir vendidas, reservadas, transferidas y cuotas en el progreso
+        $soldProgress = $this->sold_units + $this->reserved_units + $this->transferido_units + $this->cuotas_units;
+        return round(($soldProgress / $this->total_units) * 100, 2);
     }
 
     public function getFullAddressAttribute(): string
@@ -200,8 +202,19 @@ class Project extends Model
             'available_units' => $this->units()->where('status', 'disponible')->count(),
             'reserved_units' => $this->units()->where('status', 'reservado')->count(),
             'sold_units' => $this->units()->where('status', 'vendido')->count(),
-            'blocked_units' => $this->units()->where('status', 'bloqueado')->count(),
+            'blocked_units' => 0, // Ya no se usa, mantener para compatibilidad
         ]);
+    }
+    
+    // Accessors para los nuevos estados
+    public function getTransferidoUnitsAttribute(): int
+    {
+        return $this->units()->where('status', 'transferido')->count();
+    }
+    
+    public function getCuotasUnitsAttribute(): int
+    {
+        return $this->units()->where('status', 'cuotas')->count();
     }
 
     public function isActive(): bool

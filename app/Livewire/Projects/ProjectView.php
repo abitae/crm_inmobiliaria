@@ -26,6 +26,8 @@ class ProjectView extends Component
     public $statusFilter = '';
     #[Url(as: 'type_filter')]
     public $typeFilter = '';
+    #[Url(as: 'per_page')]
+    public $perPage = 20;
 
     
     // Modal de medios
@@ -90,28 +92,25 @@ class ProjectView extends Component
     // Propiedades para editar unidades
     public $editingUnit = null;
     public $isEditing = false;
+    
+    // Propiedades para selección múltiple de unidades
+    public $selectedUnits = [];
+    public $selectAll = false;
+    public $showDeleteModal = false;
+    public $showDeleteMultipleModal = false;
+    public $unitToDelete = null;
 
-    // Reglas de validación para unidades
+    // Reglas de validación para unidades (solo lotes)
     protected $unitRules = [
         'unit_number' => 'required|string|max:50',
         'unit_manzana' => 'nullable|string|max:50',
-        'unit_type' => 'required|in:lote,casa,departamento,oficina,local',
-        'tower' => 'nullable|string|max:50',
-        'block' => 'nullable|string|max:50',
-        'floor' => 'nullable|integer|min:0',
+        'unit_type' => 'required|in:lote',
         'area' => 'required|numeric|min:0.01',
-        'bedrooms' => 'nullable|integer|min:0',
-        'bathrooms' => 'nullable|integer|min:0',
-        'parking_spaces' => 'nullable|integer|min:0',
-        'storage_rooms' => 'nullable|integer|min:0',
-        'balcony_area' => 'nullable|numeric|min:0',
-        'terrace_area' => 'nullable|numeric|min:0',
-        'garden_area' => 'nullable|numeric|min:0',
         'base_price' => 'required|numeric|min:0.01',
         'total_price' => 'required|numeric|min:0.01',
         'discount_percentage' => 'nullable|numeric|min:0|max:100',
         'commission_percentage' => 'nullable|numeric|min:0|max:100',
-        'status' => 'required|in:disponible,reservado,vendido,bloqueado,en_construccion',
+        'status' => 'required|in:disponible,reservado,vendido,transferido,cuotas',
         'notes' => 'nullable|string|max:1000',
     ];
 
@@ -144,9 +143,16 @@ class ProjectView extends Component
     public function updatedSearch()
     {
         $this->resetPage();
+        $this->clearSelections();
     }
 
     public function updatedStatusFilter()
+    {
+        $this->resetPage();
+        $this->clearSelections();
+    }
+    
+    public function updatedPerPage()
     {
         $this->resetPage();
     }
@@ -154,6 +160,7 @@ class ProjectView extends Component
     public function updatedTypeFilter()
     {
         $this->resetPage();
+        $this->clearSelections();
     }
 
     public function clearFilters()
@@ -162,6 +169,160 @@ class ProjectView extends Component
         $this->statusFilter = '';
         $this->typeFilter = '';
         $this->resetPage();
+        $this->clearSelections();
+    }
+    
+    private function clearSelections()
+    {
+        $this->selectedUnits = [];
+        $this->selectAll = false;
+    }
+    
+    // ==================== MÉTODOS DE SELECCIÓN MÚLTIPLE ====================
+    public function toggleSelectAll()
+    {
+        $filteredUnits = $this->filteredUnits;
+        $currentPageIds = $filteredUnits->pluck('id')->toArray();
+        
+        if ($this->selectAll) {
+            // Seleccionar todas las unidades de la página actual
+            // Combinar con las ya seleccionadas (de otras páginas)
+            $this->selectedUnits = array_unique(array_merge($this->selectedUnits, $currentPageIds));
+        } else {
+            // Deseleccionar solo las de la página actual
+            $this->selectedUnits = array_values(array_diff($this->selectedUnits, $currentPageIds));
+        }
+        
+        // Actualizar el estado de "seleccionar todo" basado en la página actual
+        $this->updateSelectAllState();
+    }
+    
+    public function toggleUnitSelection($unitId)
+    {
+        if (in_array($unitId, $this->selectedUnits)) {
+            // Deseleccionar
+            $this->selectedUnits = array_values(array_diff($this->selectedUnits, [$unitId]));
+        } else {
+            // Seleccionar
+            $this->selectedUnits[] = $unitId;
+        }
+        
+        // Actualizar el estado de "seleccionar todo"
+        $this->updateSelectAllState();
+    }
+    
+    private function updateSelectAllState()
+    {
+        // Actualizar el estado de "seleccionar todo" basado en la página actual
+        $filteredUnits = $this->filteredUnits;
+        $currentPageIds = $filteredUnits->pluck('id')->toArray();
+        $selectedInPage = array_intersect($this->selectedUnits, $currentPageIds);
+        $this->selectAll = count($selectedInPage) === count($currentPageIds) && count($currentPageIds) > 0;
+    }
+    
+    public function updatedSelectedUnits()
+    {
+        // Actualizar el estado de "seleccionar todo" cuando cambian las selecciones
+        $this->updateSelectAllState();
+    }
+    
+    // ==================== MÉTODOS DE ELIMINACIÓN ====================
+    public function confirmDeleteUnit($unitId)
+    {
+        $this->unitToDelete = Unit::find($unitId);
+        if ($this->unitToDelete) {
+            $this->showDeleteModal = true;
+        }
+    }
+    
+    public function cancelDeleteUnit()
+    {
+        $this->showDeleteModal = false;
+        $this->unitToDelete = null;
+    }
+    
+    public function deleteUnit()
+    {
+        if (!$this->unitToDelete) {
+            $this->showDeleteModal = false;
+            return;
+        }
+        
+        try {
+            $unitNumber = $this->unitToDelete->unit_number;
+            $unitId = $this->unitToDelete->id;
+            $this->unitToDelete->delete();
+            
+            // Actualizar contadores del proyecto
+            $this->project->updateUnitCounts();
+            
+            // Recargar las unidades
+            $this->units = $this->project->fresh()->units;
+            
+            // Limpiar selección si estaba seleccionada
+            $this->selectedUnits = array_values(array_diff($this->selectedUnits, [$unitId]));
+            
+            // Actualizar estado de selección
+            $this->updateSelectAllState();
+            
+            $this->showDeleteModal = false;
+            $this->unitToDelete = null;
+            
+            $this->dispatch('show-success', message: "Unidad {$unitNumber} eliminada exitosamente");
+            
+        } catch (\Exception $e) {
+            $this->dispatch('show-error', message: 'Error al eliminar la unidad: ' . $e->getMessage());
+            $this->showDeleteModal = false;
+            $this->unitToDelete = null;
+        }
+    }
+    
+    public function confirmDeleteMultipleUnits()
+    {
+        if (empty($this->selectedUnits)) {
+            $this->dispatch('show-error', message: 'No hay unidades seleccionadas');
+            return;
+        }
+        
+        $this->showDeleteMultipleModal = true;
+    }
+    
+    public function cancelDeleteMultipleUnits()
+    {
+        $this->showDeleteMultipleModal = false;
+    }
+    
+    public function deleteMultipleUnits()
+    {
+        if (empty($this->selectedUnits)) {
+            $this->showDeleteMultipleModal = false;
+            return;
+        }
+        
+        try {
+            $count = count($this->selectedUnits);
+            $unitIds = $this->selectedUnits;
+            
+            // Eliminar las unidades
+            Unit::whereIn('id', $unitIds)->delete();
+            
+            // Actualizar contadores del proyecto
+            $this->project->updateUnitCounts();
+            
+            // Recargar las unidades
+            $this->units = $this->project->fresh()->units;
+            
+            // Limpiar selección
+            $this->clearSelections();
+            
+            $this->showDeleteMultipleModal = false;
+            
+            $this->dispatch('show-success', message: "{$count} unidad(es) eliminada(s) exitosamente");
+            
+        } catch (\Exception $e) {
+            $this->dispatch('show-error', message: 'Error al eliminar las unidades: ' . $e->getMessage());
+            $this->showDeleteMultipleModal = false;
+        }
     }
 
     public function checkUnitNumberAvailability()
@@ -780,10 +941,12 @@ class ProjectView extends Component
                     $query->where('unit_type', $this->typeFilter);
                 }
 
-        return $query->orderBy('unit_number')->paginate(10);
+        $perPage = $this->perPage === 'all' ? 999999 : (int)$this->perPage;
+        return $query->orderBy('unit_number')->paginate($perPage);
     }
     public function addUnit()
     {
+        $this->resetUnitForm();
         $this->showAddUnitModal = true;
     }
 
@@ -827,6 +990,7 @@ class ProjectView extends Component
             'notes'
         ]);
         $this->status = 'disponible';
+        $this->unit_type = 'lote'; // Establecer tipo lote por defecto
         $this->isEditing = false;
         $this->editingUnit = null;
     }
@@ -860,22 +1024,22 @@ class ProjectView extends Component
                 $commissionAmount = ($finalPrice * $this->commission_percentage) / 100;
             }
 
-            // Preparar datos para guardar
+            // Preparar datos para guardar (solo lotes)
             $unitData = [
                 'unit_number' => $this->unit_number,
                 'unit_manzana' => $this->unit_manzana,
-                'unit_type' => $this->unit_type,
-                'tower' => $this->tower,
-                'block' => $this->block,
-                'floor' => $this->floor ? (int)$this->floor : null,
+                'unit_type' => 'lote', // Siempre lote
+                'tower' => null,
+                'block' => null,
+                'floor' => null,
                 'area' => $this->area,
-                'bedrooms' => $this->bedrooms ? (int)$this->bedrooms : 0,
-                'bathrooms' => $this->bathrooms ? (int)$this->bathrooms : 0,
-                'parking_spaces' => $this->parking_spaces ? (int)$this->parking_spaces : 0,
-                'storage_rooms' => $this->storage_rooms ? (int)$this->storage_rooms : 0,
-                'balcony_area' => $this->balcony_area ?: 0,
-                'terrace_area' => $this->terrace_area ?: 0,
-                'garden_area' => $this->garden_area ?: 0,
+                'bedrooms' => 0,
+                'bathrooms' => 0,
+                'parking_spaces' => 0,
+                'storage_rooms' => 0,
+                'balcony_area' => 0,
+                'terrace_area' => 0,
+                'garden_area' => 0,
                 'base_price' => $this->base_price,
                 'total_price' => $this->total_price,
                 'discount_percentage' => $this->discount_percentage ?: 0,
@@ -920,18 +1084,8 @@ class ProjectView extends Component
         $this->isEditing = true;
         $this->unit_number = $this->editingUnit->unit_number;
         $this->unit_manzana = $this->editingUnit->unit_manzana;
-        $this->unit_type = $this->editingUnit->unit_type;
-        $this->tower = $this->editingUnit->tower;
-        $this->block = $this->editingUnit->block;
-        $this->floor = $this->editingUnit->floor;
+        $this->unit_type = 'lote'; // Siempre lote
         $this->area = $this->editingUnit->area;
-        $this->bedrooms = $this->editingUnit->bedrooms ?? 0;
-        $this->bathrooms = $this->editingUnit->bathrooms ?? 0;
-        $this->parking_spaces = $this->editingUnit->parking_spaces ?? 0;
-        $this->storage_rooms = $this->editingUnit->storage_rooms ?? 0;
-        $this->balcony_area = $this->editingUnit->balcony_area ?? 0;
-        $this->terrace_area = $this->editingUnit->terrace_area ?? 0;
-        $this->garden_area = $this->editingUnit->garden_area ?? 0;
         $this->base_price = $this->editingUnit->base_price;
         $this->total_price = $this->editingUnit->total_price;
         $this->discount_percentage = $this->editingUnit->discount_percentage ?? 0;
@@ -988,26 +1142,26 @@ class ProjectView extends Component
         ];
         
         $sampleData = [
-            'A-101',
+            'L-001',
             'Manzana A',
-            'departamento',
-            'Torre 1',
-            'Bloque A',
-            '1',
-            '85.5',
-            '2',
-            '2',
-            '1',
-            '1',
-            '5.0',
-            '0',
-            '0',
+            'lote',
+            '',
+            '',
+            '',
+            '200.00',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
             '15000',
-            '1282500',
+            '3000000',
             '5',
             '3',
             'disponible',
-            'Departamento con vista al mar'
+            'Lote con buena ubicación'
         ];
         
         $filename = 'plantilla_unidades_' . $this->project->name . '.csv';
@@ -1214,15 +1368,15 @@ class ProjectView extends Component
                         break;
                         
                     case 'unit_type':
-                        $validTypes = ['lote', 'casa', 'departamento', 'oficina', 'local'];
-                        if (!in_array(strtolower($value), $validTypes)) {
-                            throw new \Exception("Tipo de unidad inválido: '{$value}'. Valores válidos: " . implode(', ', $validTypes));
+                        // Solo aceptar lote
+                        if (strtolower($value) !== 'lote') {
+                            throw new \Exception("Tipo de unidad inválido: '{$value}'. Solo se acepta tipo 'lote'.");
                         }
-                        $value = strtolower($value);
+                        $value = 'lote';
                         break;
                         
                     case 'status':
-                        $validStatuses = ['disponible', 'reservado', 'vendido', 'bloqueado', 'en_construccion'];
+                        $validStatuses = ['disponible', 'reservado', 'vendido', 'transferido', 'cuotas'];
                         if (!in_array(strtolower($value), $validStatuses)) {
                             throw new \Exception("Estado inválido: '{$value}'. Valores válidos: " . implode(', ', $validStatuses));
                         }
@@ -1304,8 +1458,8 @@ class ProjectView extends Component
         
         return view('livewire.projects.project-view', [
             'filteredUnits' => $filteredUnits,
-            'statusOptions' => ['disponible', 'reservado', 'vendido', 'bloqueado'],
-            'typeOptions' => ['casa', 'departamento', 'lote', 'oficina', 'local'],
+            'statusOptions' => ['disponible', 'reservado', 'vendido', 'transferido', 'cuotas'],
+            'typeOptions' => ['lote'], // Solo lotes
         ]);
     }
 }

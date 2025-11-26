@@ -18,7 +18,7 @@ class ProjectList extends Component
     public $isPublishedFilter = '';
     public $loteTypeFilter = '';
     public $stageFilter = '';
-    public $locationFilter = '';
+    public $locationFilter = ''; // Mantenido para compatibilidad, no se usa
     public $withAvailableUnits = false;
     public $orderBy = 'created_at';
     public $orderDirection = 'desc';
@@ -148,10 +148,6 @@ class ProjectList extends Component
     {
         $this->resetPage();
     }
-    public function updatedLocationFilter()
-    {
-        $this->resetPage();
-    }
     public function updatedWithAvailableUnits()
     {
         $this->resetPage();
@@ -173,7 +169,6 @@ class ProjectList extends Component
             'isPublishedFilter',
             'loteTypeFilter',
             'stageFilter',
-            'locationFilter',
             'withAvailableUnits',
             'orderBy',
             'orderDirection'
@@ -618,10 +613,6 @@ class ProjectList extends Component
             'order_by' => $this->orderBy,
             'order_direction' => $this->orderDirection,
         ];
-
-        if ($this->locationFilter) {
-            $filters['location'] = ['region' => $this->locationFilter];
-        }
 
         if ($this->withAvailableUnits) {
             $filters['with_available_units'] = true;

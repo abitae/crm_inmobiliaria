@@ -24,45 +24,42 @@ class Reservation extends Model
     }
 
     protected $fillable = [
-        'client_id',
-        'project_id',
-        'unit_id',
-        'advisor_id',
-        'reservation_number',
+        'client_id', // id del cliente (client_id)
+        'project_id', // id del proyecto (project_id)
+        'unit_id', // id de la unidad (unit_id)
+        'advisor_id', // id del asesor (user_id)
+        'reservation_number', // número de la reserva
         'reservation_type', // pre_reserva, reserva_firmada, reserva_confirmada
         'status', // activa, confirmada, cancelada, vencida, convertida_venta
-        'reservation_date',
-        'expiration_date',
+        'reservation_date', // fecha de la reserva
+        'expiration_date', // fecha de vencimiento de la reserva
         'reservation_amount', // monto de la reserva
         'reservation_percentage', // porcentaje del precio total
-        'payment_method',
+        'payment_method', // efectivo, transferencia, tarjeta de crédito, tarjeta de débito, paypal, mercado pago, otros
         'payment_status', // pendiente, pagado, parcial
-        'payment_reference',
-        'notes',
-        'terms_conditions',
-        'image',
-        'client_signature',
-        'advisor_signature',
-        'created_by',
-        'updated_by',
+        'payment_reference', // referencia de la transacción
+        'notes', // notas de la reserva
+        'terms_conditions', // términos y condiciones de la reserva
+        'image', // imagen de la reserva
+        'client_signature', // firma del cliente
+        'advisor_signature', // firma del asesor
+        'created_by', // usuario que creó la reserva (user_id)
+        'updated_by', // usuario que actualizó la reserva (user_id)
     ];
 
     protected $casts = [
-        'client_id' => 'integer',
-        'project_id' => 'integer',
-        'unit_id' => 'integer',
-        'advisor_id' => 'integer',
-        'reservation_amount' => 'decimal:2',
-        'reservation_percentage' => 'decimal:2',
-        'reservation_date' => 'datetime',
-        'expiration_date' => 'datetime',
-        'client_signature' => 'boolean',
-        'advisor_signature' => 'boolean',
-        'created_by' => 'integer',
-        'updated_by' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'client_id' => 'integer', // id del cliente (client_id)
+        'project_id' => 'integer', // id del proyecto (project_id)
+        'unit_id' => 'integer', // id de la unidad (unit_id)
+        'advisor_id' => 'integer', // id del asesor (user_id)
+        'reservation_amount' => 'decimal:2', // monto de la reserva
+        'reservation_percentage' => 'decimal:2', // porcentaje del precio total
+        'reservation_date' => 'datetime', // fecha de la reserva
+        'expiration_date' => 'datetime', // fecha de vencimiento de la reserva
+        'client_signature' => 'boolean', // firma del cliente
+        'advisor_signature' => 'boolean', // firma del asesor
+        'created_by' => 'integer', // usuario que creó la reserva (user_id)
+        'updated_by' => 'integer', // usuario que actualizó la reserva (user_id)
     ];
 
     // Relaciones

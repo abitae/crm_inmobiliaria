@@ -1,99 +1,109 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Header Mejorado y Reordenado del Proyecto -->
-        <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-0 mb-8 overflow-hidden">
-            <!-- Primera fila: Icono, Nombre, Destacado, Estado y Etapa -->
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 px-8 pt-8 pb-4">
-                <div class="flex items-center gap-5 min-w-0">
-                    <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center shadow-md shrink-0">
-                        <flux:icon name="home-modern" class="w-9 h-9 text-blue-600" />
-                    </div>
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight truncate"
-                                title="{{ $project->name }}">
-                                {{ $project->name }}
-                            </h1>
-                            @if ($project->featured)
-                                <span
-                                    class="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded-full font-semibold shadow-sm">Destacado</span>
-                            @endif
+        <!-- Header Compacto del Proyecto -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+            <!-- Primera fila: Título, Estado y Etapa -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-4 min-w-0 flex-1">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                            <flux:icon name="home-modern" class="w-6 h-6 text-blue-600" />
                         </div>
-                        <div class="flex items-center gap-2 mt-2 text-gray-500 text-sm">
-                            <flux:icon name="map-pin" class="w-4 h-4 text-blue-400" />
-                            <span class="truncate max-w-xs md:max-w-md" title="{{ $project->full_address }}">
-                                {{ $project->full_address }}
-                            </span>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h1 class="text-2xl font-bold text-gray-900 truncate" title="{{ $project->name }}">
+                                    {{ $project->name }}
+                                </h1>
+                                @if ($project->featured)
+                                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full font-medium">
+                                        Destacado
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2 mt-1 text-gray-500 text-xs">
+                                <flux:icon name="map-pin" class="w-3 h-3 text-gray-400" />
+                                <span class="truncate" title="{{ $project->full_address }}">
+                                    {{ $project->full_address }}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="flex flex-col items-end gap-2 min-w-[160px]">
-                    <span
-                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold shadow-sm
-                        {{ $project->status === 'activo'
-                            ? 'bg-green-100 text-green-800'
-                            : ($project->status === 'inactivo'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-yellow-100 text-yellow-800') }}">
-                        <flux:icon
-                            name="{{ $project->status === 'activo' ? 'check-circle' : ($project->status === 'inactivo' ? 'x-circle' : 'exclamation-circle') }}"
-                            class="w-4 h-4 mr-1" />
-                        {{ ucfirst($project->status) }}
-                    </span>
-                    <span class="inline-flex items-center text-xs text-gray-500 mt-1">
-                        <flux:icon name="flag" class="w-3 h-3 mr-1" />
-                        {{ ucfirst($project->stage) }}
-                    </span>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium
+                            {{ $project->status === 'activo'
+                                ? 'bg-green-100 text-green-700'
+                                : ($project->status === 'inactivo'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-yellow-100 text-yellow-700') }}">
+                            <flux:icon
+                                name="{{ $project->status === 'activo' ? 'check-circle' : ($project->status === 'inactivo' ? 'x-circle' : 'exclamation-circle') }}"
+                                class="w-3 h-3 mr-1.5" />
+                            {{ ucfirst($project->status) }}
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                            <flux:icon name="flag" class="w-3 h-3 mr-1.5" />
+                            {{ ucfirst(str_replace('_', ' ', $project->stage)) }}
+                        </span>
+                    </div>
                 </div>
             </div>
-            <!-- Segunda fila: Métricas del Proyecto (mejoradas en una sola fila) -->
-            <div class="flex flex-wrap md:flex-nowrap gap-4 px-8 pb-4">
-                <div class="flex-1 bg-blue-50 p-4 rounded-lg flex flex-col items-center min-w-[120px]">
-                    <h3 class="text-sm font-semibold text-blue-900">Unidades Totales</h3>
-                    <p class="text-2xl md:text-3xl font-bold text-blue-600">{{ $project->total_units }}</p>
-                </div>
-                <div class="flex-1 bg-gray-50 p-4 rounded-lg flex flex-col items-center min-w-[120px]">
-                    <h3 class="text-sm font-semibold text-gray-900">Vendidas</h3>
-                    <p class="text-2xl md:text-3xl font-bold text-gray-600">{{ $project->sold_units }}</p>
-                </div>
-                <div class="flex-1 bg-green-50 p-4 rounded-lg flex flex-col items-center min-w-[120px]">
-                    <h3 class="text-sm font-semibold text-green-900">Disponibles</h3>
-                    <p class="text-2xl md:text-3xl font-bold text-green-600">{{ $project->available_units }}</p>
-                </div>
-                <div class="flex-1 bg-yellow-50 p-4 rounded-lg flex flex-col items-center min-w-[120px]">
-                    <h3 class="text-sm font-semibold text-yellow-900">Reservadas</h3>
-                    <p class="text-2xl md:text-3xl font-bold text-yellow-600">{{ $project->reserved_units }}</p>
-                </div>
-                <div class="flex-1 bg-orange-50 p-4 rounded-lg flex flex-col items-center min-w-[120px]">
-                    <h3 class="text-sm font-semibold text-orange-900">Progreso</h3>
-                    <p class="text-2xl md:text-3xl font-bold text-orange-600">{{ $project->progress_percentage }}%
-                    </p>
+
+            <!-- Segunda fila: Métricas Compactas -->
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+                    <div class="bg-blue-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-blue-700 mb-1">Total</p>
+                        <p class="text-xl font-bold text-blue-600">{{ $project->total_units }}</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-green-700 mb-1">Disponibles</p>
+                        <p class="text-xl font-bold text-green-600">{{ $project->available_units }}</p>
+                    </div>
+                    <div class="bg-yellow-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-yellow-700 mb-1">Reservadas</p>
+                        <p class="text-xl font-bold text-yellow-600">{{ $project->reserved_units }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-gray-700 mb-1">Vendidas</p>
+                        <p class="text-xl font-bold text-gray-600">{{ $project->sold_units }}</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-purple-700 mb-1">Transferidas</p>
+                        <p class="text-xl font-bold text-purple-600">{{ $project->transferido_units }}</p>
+                    </div>
+                    <div class="bg-indigo-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-indigo-700 mb-1">Cuotas</p>
+                        <p class="text-xl font-bold text-indigo-600">{{ $project->cuotas_units }}</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-3 text-center">
+                        <p class="text-xs font-medium text-orange-700 mb-1">Progreso</p>
+                        <p class="text-xl font-bold text-orange-600">{{ $project->progress_percentage }}%</p>
+                    </div>
                 </div>
             </div>
-            <!-- Tercera fila: Información Resumida del Proyecto -->
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 rounded-xl mx-8 p-6 mb-8 border border-gray-100 shadow-sm">
-                <div class="space-y-2">
+
+            <!-- Tercera fila: Información Adicional Compacta -->
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-gray-600">Tipo de Proyecto:</span>
-                        <span class="text-sm text-gray-900">{{ ucfirst($project->project_type) }}</span>
+                        <span class="text-gray-500">Tipo:</span>
+                        <span class="font-medium text-gray-700">{{ ucfirst($project->project_type) }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-gray-600">Estado Legal:</span>
-                        <span
-                            class="text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $project->legal_status)) }}</span>
+                        <span class="text-gray-500">Legal:</span>
+                        <span class="font-medium text-gray-700">{{ ucfirst(str_replace('_', ' ', $project->legal_status)) }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-gray-600">Fecha de Inicio:</span>
-                        <span class="text-sm text-gray-900">
-                            {{ $project->start_date ? $project->start_date->format('d/m/Y') : 'No definida' }}
+                        <span class="text-gray-500">Inicio:</span>
+                        <span class="font-medium text-gray-700">
+                            {{ $project->start_date ? $project->start_date->format('d/m/Y') : 'N/A' }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-gray-600">Fecha de Entrega:</span>
-                        <span class="text-sm text-gray-900">
-                            {{ $project->delivery_date ? $project->delivery_date->format('d/m/Y') : 'No definida' }}
+                        <span class="text-gray-500">Entrega:</span>
+                        <span class="font-medium text-gray-700">
+                            {{ $project->delivery_date ? $project->delivery_date->format('d/m/Y') : 'N/A' }}
                         </span>
                     </div>
                 </div>
@@ -101,181 +111,112 @@
         </div>
         <!-- Barra de Progreso -->
         <div class="mb-6 mx-8">
-            <div class="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Vendidas: {{ $project->sold_units }}</span>
+            <div class="flex flex-wrap justify-between gap-2 text-sm text-gray-600 mb-2">
+                <span>Disponibles: {{ $project->available_units }}</span>
                 <span>Reservadas: {{ $project->reserved_units }}</span>
-                <span>Bloqueadas: {{ $project->blocked_units }}</span>
+                <span>Vendidas: {{ $project->sold_units }}</span>
+                <span>Transferidas: {{ $project->transferido_units }}</span>
+                <span>Cuotas: {{ $project->cuotas_units }}</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3">
                 <div class="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full"
                     style="width: {{ $project->progress_percentage }}%"></div>
             </div>
         </div>
-        <!-- Detalles del Proyecto Mejorado: 3 columnas (Imágenes, Videos, Documentos) -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 w-full">
-            <!-- Columna 1: Imágenes -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex flex-col h-full">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <flux:icon name="photo" class="w-5 h-5 text-blue-600" />
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Imágenes del Proyecto</h3>
-                </div>
-                <div class="flex-1 flex flex-col justify-between">
-                    @if ($project->path_images && is_array($project->path_images) && count($project->path_images) > 0)
-                        <div
-                            class="flex items-center justify-between bg-blue-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
-                            <div class="flex items-center space-x-3 flex-1">
-                                <div
-                                    class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shadow-sm">
-                                    <flux:icon name="photo" class="w-5 h-5 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-blue-900">Imágenes</p>
-                                    <p class="text-xs text-blue-600">
-                                        {{ count($project->path_images) }}
-                                        archivo{{ count($project->path_images) == 1 ? '' : 's' }}
-                                        disponible{{ count($project->path_images) == 1 ? '' : 's' }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2">
-                                <flux:button size="xs" icon="eye" wire:click="openMediaModal('images')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Ver galería de imágenes">
-                                    Ver
-                                </flux:button>
-                                <flux:button size="xs" icon="plus" wire:click="addImages()"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Agregar imágenes">
-                                    Agregar
-                                </flux:button>
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div
-                                class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                                <flux:icon name="photo" class="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p class="text-sm text-gray-500">No hay imágenes disponibles</p>
-                            <flux:button size="xs" icon="plus" wire:click="addImages()"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                title="Agregar imágenes">
-                                Agregar
-                            </flux:button>
-                        </div>
-                    @endif
-                </div>
+        <!-- Detalles del Proyecto: Multimedia Compacta -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
+            <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <flux:icon name="photo" class="w-4 h-4 text-gray-500" />
+                    Multimedia del Proyecto
+                </h3>
             </div>
-            <!-- Columna 2: Videos -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex flex-col h-full">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <flux:icon name="play" class="w-5 h-5 text-purple-600" />
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">
+                <!-- Imágenes -->
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-100 hover:border-blue-200 transition-colors">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                                <flux:icon name="photo" class="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-blue-900">Imágenes</p>
+                                <p class="text-xs text-blue-600">
+                                    {{ $project->path_images && is_array($project->path_images) ? count($project->path_images) : 0 }} archivo{{ ($project->path_images && is_array($project->path_images) && count($project->path_images) == 1) ? '' : 's' }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Videos del Proyecto</h3>
-                </div>
-                <div class="flex-1 flex flex-col justify-between">
-                    @if ($project->path_videos && is_array($project->path_videos) && count($project->path_videos) > 0)
-                        <div
-                            class="flex items-center justify-between bg-purple-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
-                            <div class="flex items-center space-x-3 flex-1">
-                                <div
-                                    class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center shadow-sm">
-                                    <flux:icon name="play" class="w-5 h-5 text-purple-600" />
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-purple-900">Videos</p>
-                                    <p class="text-xs text-purple-600">
-                                        {{ count($project->path_videos) }}
-                                        archivo{{ count($project->path_videos) == 1 ? '' : 's' }}
-                                        disponible{{ count($project->path_videos) == 1 ? '' : 's' }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="flex space-x-2">
-                                <flux:button size="xs" icon="eye" wire:click="openMediaModal('videos')"
-                                    class="bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Ver galería de videos">
-                                    Ver
-                                </flux:button>
-                                <flux:button size="xs" icon="plus" wire:click="addVideos()"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Agregar videos">
-                                    Agregar
-                                </flux:button>
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div
-                                class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                                <flux:icon name="play" class="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p class="text-sm text-gray-500">No hay videos disponibles</p>
-                            <flux:button size="xs" icon="plus" wire:click="addVideos()"
-                                class="bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                title="Agregar videos">
-                                Agregar
+                    <div class="flex gap-2">
+                        @if ($project->path_images && is_array($project->path_images) && count($project->path_images) > 0)
+                            <flux:button size="xs" icon="eye" wire:click="openMediaModal('images')"
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                                Ver
                             </flux:button>
-                        </div>
-                    @endif
-                </div>
-            </div>
-            <!-- Columna 3: Documentos -->
-            <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm flex flex-col h-full">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <flux:icon name="document" class="w-5 h-5 text-orange-600" />
+                        @endif
+                        <flux:button size="xs" icon="plus" wire:click="addImages()"
+                            class="flex-1 {{ ($project->path_images && is_array($project->path_images) && count($project->path_images) > 0) ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }} text-white">
+                            {{ ($project->path_images && is_array($project->path_images) && count($project->path_images) > 0) ? 'Agregar' : 'Agregar' }}
+                        </flux:button>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900">Documentos del Proyecto</h3>
                 </div>
-                <div class="flex-1 flex flex-col justify-between">
-                    @if ($project->path_documents && is_array($project->path_documents) && count($project->path_documents) > 0)
-                        <div
-                            class="flex items-center justify-between bg-orange-50 rounded-lg p-3 hover:shadow transition-shadow mb-2">
-                            <div class="flex items-center space-x-3 flex-1">
-                                <div
-                                    class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shadow-sm">
-                                    <flux:icon name="document" class="w-5 h-5 text-orange-600" />
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-orange-900">Documentos</p>
-                                    <p class="text-xs text-orange-600">
-                                        {{ count($project->path_documents) }}
-                                        archivo{{ count($project->path_documents) == 1 ? '' : 's' }}
-                                        disponible{{ count($project->path_documents) == 1 ? '' : 's' }}
-                                    </p>
-                                </div>
+
+                <!-- Videos -->
+                <div class="bg-purple-50 rounded-lg p-4 border border-purple-100 hover:border-purple-200 transition-colors">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
+                                <flux:icon name="play" class="w-4 h-4 text-purple-600" />
                             </div>
-                            <div class="flex space-x-2">
-                                <flux:button size="xs" icon="eye" wire:click="openPdfModal()"
-                                    class="bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Ver documentos PDF">
-                                    Ver PDFs
-                                </flux:button>
-                                <flux:button size="xs" icon="plus" wire:click="addDocuments()"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                    title="Agregar documentos">
-                                    Agregar
-                                </flux:button>
+                            <div>
+                                <p class="text-sm font-semibold text-purple-900">Videos</p>
+                                <p class="text-xs text-purple-600">
+                                    {{ $project->path_videos && is_array($project->path_videos) ? count($project->path_videos) : 0 }} archivo{{ ($project->path_videos && is_array($project->path_videos) && count($project->path_videos) == 1) ? '' : 's' }}
+                                </p>
                             </div>
                         </div>
-                    @else
-                        <div class="text-center py-8">
-                            <div
-                                class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                                <flux:icon name="document" class="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p class="text-sm text-gray-500">No hay documentos disponibles</p>
-                            <flux:button size="xs" icon="plus" wire:click="addDocuments()"
-                                class="bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
-                                title="Agregar documentos">
-                                Agregar
+                    </div>
+                    <div class="flex gap-2">
+                        @if ($project->path_videos && is_array($project->path_videos) && count($project->path_videos) > 0)
+                            <flux:button size="xs" icon="eye" wire:click="openMediaModal('videos')"
+                                class="flex-1 bg-purple-600 hover:bg-purple-700 text-white">
+                                Ver
                             </flux:button>
+                        @endif
+                        <flux:button size="xs" icon="plus" wire:click="addVideos()"
+                            class="flex-1 {{ ($project->path_videos && is_array($project->path_videos) && count($project->path_videos) > 0) ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700' }} text-white">
+                            Agregar
+                        </flux:button>
+                    </div>
+                </div>
+
+                <!-- Documentos -->
+                <div class="bg-orange-50 rounded-lg p-4 border border-orange-100 hover:border-orange-200 transition-colors">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-orange-100 rounded-md flex items-center justify-center">
+                                <flux:icon name="document" class="w-4 h-4 text-orange-600" />
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-orange-900">Documentos</p>
+                                <p class="text-xs text-orange-600">
+                                    {{ $project->path_documents && is_array($project->path_documents) ? count($project->path_documents) : 0 }} archivo{{ ($project->path_documents && is_array($project->path_documents) && count($project->path_documents) == 1) ? '' : 's' }}
+                                </p>
+                            </div>
                         </div>
-                    @endif
+                    </div>
+                    <div class="flex gap-2">
+                        @if ($project->path_documents && is_array($project->path_documents) && count($project->path_documents) > 0)
+                            <flux:button size="xs" icon="eye" wire:click="openPdfModal()"
+                                class="flex-1 bg-orange-600 hover:bg-orange-700 text-white">
+                                Ver PDFs
+                            </flux:button>
+                        @endif
+                        <flux:button size="xs" icon="plus" wire:click="addDocuments()"
+                            class="flex-1 {{ ($project->path_documents && is_array($project->path_documents) && count($project->path_documents) > 0) ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700' }} text-white">
+                            Agregar
+                        </flux:button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -308,8 +249,23 @@
                             <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
                             <span>Vendido</span>
                         </div>
+                        <div class="flex items-center space-x-1 text-sm text-gray-600">
+                            <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                            <span>Transferido</span>
+                        </div>
+                        <div class="flex items-center space-x-1 text-sm text-gray-600">
+                            <div class="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                            <span>Cuotas</span>
+                        </div>
                     </div>
                     <div class="flex items-center space-x-2">
+                        @if (!empty($selectedUnits))
+                            <flux:button size="xs" icon="trash" wire:click="confirmDeleteMultipleUnits()"
+                                class="bg-red-600 hover:bg-red-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
+                                title="Eliminar unidades seleccionadas">
+                                Eliminar ({{ count($selectedUnits) }})
+                            </flux:button>
+                        @endif
                         <flux:button size="xs" icon="plus" wire:click="addUnit()"
                             class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
                             title="Agregar unidad">
@@ -324,38 +280,40 @@
                 </div>
 
                 <!-- Buscador y Filtros -->
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
                     <!-- Buscador -->
                     <div class="lg:col-span-2">
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <flux:icon name="magnifying-glass" class="h-5 w-5 text-gray-400" />
+                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                <flux:icon name="magnifying-glass" class="h-4 w-4 text-gray-400" />
                             </div>
-                            <flux:input wire:model.live="search" type="text" placeholder="Buscar unidades..." />
+                            <flux:input wire:model.live="search" type="text" placeholder="Buscar..." size="xs" />
                         </div>
                     </div>
 
                     <!-- Filtro de Estado -->
                     <div>
-                        <flux:select wire:model.live="statusFilter" placeholder="Todos los estados">
+                        <flux:select wire:model.live="statusFilter" placeholder="Estado" size="xs">
+                            <option value="">Todos</option>
                             @foreach ($statusOptions as $status)
                                 <option value="{{ $status }}">{{ ucfirst($status) }}</option>
                             @endforeach
                         </flux:select>
                     </div>
 
-                    <!-- Filtro de Tipo -->
+                    <!-- Selector de registros por página -->
                     <div>
-                        <flux:select wire:model.live="typeFilter" placeholder="Todos los tipos">
-                            @foreach ($typeOptions as $type)
-                                <option value="{{ $type }}">{{ ucfirst($type) }}</option>
-                            @endforeach
+                        <flux:select wire:model.live="perPage" size="xs">
+                            <option value="20">20 por página</option>
+                            <option value="50">50 por página</option>
+                            <option value="100">100 por página</option>
+                            <option value="all">Todos</option>
                         </flux:select>
                     </div>
 
                     <!-- Botón Limpiar Filtros -->
                     <div>
-                        <flux:button wire:click="clearFilters" title="Limpiar filtros">
+                        <flux:button wire:click="clearFilters" size="xs" variant="outline" title="Limpiar filtros">
                             Limpiar
                         </flux:button>
                     </div>
@@ -365,118 +323,120 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                                <input type="checkbox" 
+                                    @if($filteredUnits->count() > 0)
+                                        wire:model.live="selectAll"
+                                    @else
+                                        disabled
+                                    @endif
+                                    class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    title="Seleccionar todas"
+                                    aria-label="Seleccionar todas las unidades de esta página">
+                            </th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Unidad
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tipo
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Área
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Área (m²)
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Estado
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Precio Base
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Precio Final
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Acciones
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($filteredUnits as $unit)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        Numero: {{ $unit->unit_number }}
-                                        @if ($unit->tower)
-                                            <span class="text-gray-500">- Torre {{ $unit->tower }}</span>
-                                        @endif
-                                        @if ($unit->floor)
-                                            <span class="text-gray-500">- Piso {{ $unit->floor }}</span>
-                                        @endif
+                            <tr class="hover:bg-gray-50 transition-colors {{ in_array($unit->id, $selectedUnits) ? 'bg-blue-50' : '' }}">
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <input type="checkbox" 
+                                        wire:model.live="selectedUnits" 
+                                        value="{{ $unit->id }}"
+                                        class="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        aria-label="Seleccionar unidad {{ $unit->unit_number }}">
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <div class="text-xs font-medium text-gray-900">
+                                        {{ $unit->unit_number }}
                                     </div>
                                     @if ($unit->unit_manzana)
                                         <div class="text-xs text-gray-500">{{ $unit->unit_manzana }}</div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    {{ $unit->unit_type === 'casa'
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : ($unit->unit_type === 'departamento'
-                                            ? 'bg-green-100 text-green-800'
-                                            : ($unit->unit_type === 'lote'
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : 'bg-gray-100 text-gray-800')) }}">
-                                        {{ ucfirst($unit->unit_type) }}
-                                    </span>
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
+                                    {{ number_format($unit->area, 2) }} m²
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ number_format($unit->area, 2) }}
-                                    @if ($unit->balcony_area > 0 || $unit->terrace_area > 0 || $unit->garden_area > 0)
-                                        <div class="text-xs text-gray-500">
-                                            Total: {{ number_format($unit->total_area, 2) }}
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
                                     {{ $unit->status === 'disponible'
                                         ? 'bg-green-100 text-green-800'
                                         : ($unit->status === 'reservado'
                                             ? 'bg-yellow-100 text-yellow-800'
                                             : ($unit->status === 'vendido'
                                                 ? 'bg-blue-100 text-blue-800'
-                                                : 'bg-red-100 text-red-800')) }}">
+                                                : ($unit->status === 'transferido'
+                                                    ? 'bg-purple-100 text-purple-800'
+                                                    : ($unit->status === 'cuotas'
+                                                        ? 'bg-indigo-100 text-indigo-800'
+                                                        : 'bg-gray-100 text-gray-800')))) }}">
                                         {{ ucfirst($unit->status) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                     @if ($unit->base_price)
-                                        <span class="font-medium">S/{{ number_format($unit->base_price, 2) }}</span>
+                                        <div class="font-medium">S/{{ number_format($unit->base_price, 0) }}</div>
                                         <div class="text-xs text-gray-500">
-                                            S/{{ number_format($unit->price_per_square_meter, 2) }}/m²
+                                            S/{{ number_format($unit->price_per_square_meter, 0) }}/m²
                                         </div>
                                     @else
-                                        <span class="text-gray-400">No definido</span>
+                                        <span class="text-gray-400 text-xs">N/A</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-900">
                                     @if ($unit->final_price)
-                                        <span class="font-medium">S/{{ number_format($unit->final_price, 2) }}</span>
+                                        <div class="font-medium">S/{{ number_format($unit->final_price, 0) }}</div>
                                         @if ($unit->discount_percentage > 0)
                                             <div class="text-xs text-red-600">
                                                 -{{ $unit->discount_percentage }}%
                                             </div>
                                         @endif
                                     @else
-                                        <span class="text-gray-400">No definido</span>
+                                        <span class="text-gray-400 text-xs">N/A</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <flux:button size="xs" icon="eye"
-                                        wire:click="selectUnit({{ $unit->id }})">
-
-                                    </flux:button>
-                                    <flux:button size="xs" icon="pencil"
-                                        wire:click="editUnit({{ $unit->id }})">
-                                    </flux:button>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <div class="flex items-center gap-1">
+                                        <flux:button size="xs" icon="eye"
+                                            wire:click="selectUnit({{ $unit->id }})"
+                                            title="Ver detalles">
+                                        </flux:button>
+                                        <flux:button size="xs" icon="pencil"
+                                            wire:click="editUnit({{ $unit->id }})"
+                                            title="Editar">
+                                        </flux:button>
+                                        <flux:button size="xs" icon="trash" color="danger"
+                                            wire:click="confirmDeleteUnit({{ $unit->id }})"
+                                            title="Eliminar">
+                                        </flux:button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500 py-8">
+                                <td colspan="7" class="px-3 py-4 text-center text-gray-500 py-8">
                                     <div class="text-center">
                                         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
@@ -488,7 +448,7 @@
                                             unidades
                                         </h3>
                                         <p class="mt-1 text-sm text-gray-500">
-                                            @if ($search || $statusFilter || $typeFilter)
+                                            @if ($search || $statusFilter)
                                                 Intenta ajustar los filtros de búsqueda.
                                             @else
                                                 No hay unidades registradas para este proyecto.
@@ -504,9 +464,9 @@
 
             <!-- Paginación -->
             @if ($filteredUnits->hasPages())
-                <div class="px-8 py-4 border-t border-gray-200 bg-gray-50">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-700">
+                <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                        <div class="text-xs text-gray-700">
                             Mostrando
                             <span class="font-medium">{{ $filteredUnits->firstItem() }}</span>
                             a
@@ -610,11 +570,11 @@
                         <div class="space-y-2 text-sm text-gray-600">
                             @if ($selectedUnit->base_price)
                                 <p><span class="font-medium">Precio Base:</span>
-                                    ${{ number_format($selectedUnit->base_price, 2) }}</p>
+                                    S/{{ number_format($selectedUnit->base_price, 2) }}</p>
                             @endif
                             @if ($selectedUnit->total_price)
                                 <p><span class="font-medium">Precio Total:</span>
-                                    ${{ number_format($selectedUnit->total_price, 2) }}</p>
+                                    S/{{ number_format($selectedUnit->total_price, 2) }}</p>
                             @endif
                             @if ($selectedUnit->discount_percentage > 0)
                                 <p><span class="font-medium">Descuento:</span>
@@ -622,7 +582,7 @@
                             @endif
                             @if ($selectedUnit->final_price)
                                 <p class="font-medium text-lg text-green-600">
-                                    Precio Final: ${{ number_format($selectedUnit->final_price, 2) }}
+                                    Precio Final: S/{{ number_format($selectedUnit->final_price, 2) }}
                                 </p>
                             @endif
                             @if ($selectedUnit->commission_percentage > 0)
@@ -1088,84 +1048,53 @@
     </flux:modal>
 
     <!-- Modal para Agregar Imágenes -->
-    <flux:modal wire:model.self="showAddImagesModal">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <flux:icon name="photo" class="w-5 h-5 text-blue-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900">Agregar Imágenes al Proyecto</h3>
+    <flux:modal wire:model.self="showAddImagesModal" size="lg">
+        <div class="p-4">
+            <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+                <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                    <flux:icon name="photo" class="w-4 h-4 text-blue-600" />
                 </div>
+                <h3 class="text-lg font-semibold text-gray-900">Agregar Imágenes</h3>
             </div>
 
             @if (session()->has('error'))
-                <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <div class="mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
                     {{ session('error') }}
                 </div>
             @endif
 
             <form wire:submit.prevent="saveImages">
-                <div class="space-y-4">
-                    <!-- Selector de archivos -->
+                <div class="space-y-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Seleccionar Imágenes
-                        </label>
-                        <flux:input type="file" wire:model="newImages" multiple accept="image/*" />
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Seleccionar Imágenes</label>
+                        <flux:input type="file" wire:model="newImages" multiple accept="image/*" size="xs" />
                     </div>
 
-                    <!-- Lista de imágenes seleccionadas -->
                     @if (count($newImages) > 0)
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-gray-900">Configurar Imágenes</h4>
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1">
                             @foreach ($newImages as $index => $image)
-                                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                    <div class="flex items-start space-x-4">
-                                        <!-- Vista previa de la imagen -->
+                                <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                                    <div class="flex items-start gap-2.5">
                                         <div class="flex-shrink-0">
                                             @if ($image->getMimeType() && str_starts_with($image->getMimeType(), 'image/'))
                                                 <img src="{{ $image->temporaryUrl() }}" alt="Vista previa"
-                                                    class="w-20 h-20 object-cover rounded-lg border border-gray-300">
+                                                    class="w-14 h-14 object-cover rounded border border-gray-300">
                                             @else
-                                                <div
-                                                    class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                                                    <flux:icon name="photo" class="w-8 h-8 text-gray-400" />
+                                                <div class="w-14 h-14 bg-gray-200 rounded flex items-center justify-center">
+                                                    <flux:icon name="photo" class="w-6 h-6 text-gray-400" />
                                                 </div>
                                             @endif
                                         </div>
-
-                                        <!-- Campos de configuración -->
-                                        <div class="flex-1 space-y-3">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Título de la imagen {{ $index + 1 }}
-                                                </label>
-                                                <input type="text" wire:model="imageTitles.{{ $index }}"
-                                                    placeholder="Título opcional"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                @error("imageTitles.{$index}")
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Descripción (opcional)
-                                                </label>
-                                                <textarea wire:model="imageDescriptions.{{ $index }}" placeholder="Descripción de la imagen" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-                                                @error("imageDescriptions.{$index}")
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-
-                                            <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $image->getClientOriginalName() }}
-                                                </p>
-                                                <p><strong>Tamaño:</strong>
-                                                    {{ number_format($image->getSize() / 1024, 2) }} KB</p>
-                                                <p><strong>Tipo:</strong> {{ $image->getMimeType() }}</p>
+                                        <div class="flex-1 space-y-2 min-w-0">
+                                            <input type="text" wire:model="imageTitles.{{ $index }}"
+                                                placeholder="Título (opcional)"
+                                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                            <textarea wire:model="imageDescriptions.{{ $index }}" 
+                                                placeholder="Descripción (opcional)" rows="1"
+                                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+                                            <div class="text-xs text-gray-500 space-y-0.5">
+                                                <p class="truncate"><strong>Archivo:</strong> {{ $image->getClientOriginalName() }}</p>
+                                                <p><strong>Tamaño:</strong> {{ number_format($image->getSize() / 1024, 1) }} KB</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1175,15 +1104,12 @@
                     @endif
                 </div>
 
-                <!-- Botones de acción -->
-                <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <flux:button wire:click="closeAddImagesModal">
-                        Cancelar
-                    </flux:button>
-                    <flux:button type="submit">
-                        <span wire:loading.remove wire:target="saveImages">Guardar Imágenes</span>
-                        <span wire:loading wire:target="saveImages" class="flex items-center">
-                            <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
+                <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
+                    <flux:button wire:click="closeAddImagesModal" size="xs" variant="outline">Cancelar</flux:button>
+                    <flux:button type="submit" size="xs">
+                        <span wire:loading.remove wire:target="saveImages">Guardar</span>
+                        <span wire:loading wire:target="saveImages" class="flex items-center gap-1">
+                            <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
                             Guardando...
                         </span>
                     </flux:button>
@@ -1193,85 +1119,49 @@
     </flux:modal>
 
     <!-- Modal para Agregar Videos -->
-    <flux:modal wire:model.self="showAddVideosModal">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <flux:icon name="play" class="w-5 h-5 text-purple-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900">Agregar Videos al Proyecto</h3>
+    <flux:modal wire:model.self="showAddVideosModal" size="lg">
+        <div class="p-4">
+            <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+                <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
+                    <flux:icon name="play" class="w-4 h-4 text-purple-600" />
                 </div>
+                <h3 class="text-lg font-semibold text-gray-900">Agregar Videos</h3>
             </div>
 
             @if (session()->has('error'))
-                <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <div class="mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
                     {{ session('error') }}
                 </div>
             @endif
 
             <form wire:submit.prevent="saveVideos">
-                <div class="space-y-4">
-                    <!-- Selector de archivos -->
+                <div class="space-y-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Seleccionar Videos
-                        </label>
-                        <flux:input type="file" wire:model="newVideos" multiple accept="video/*"/>
-                        @error('newVideos.*')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
-                        @enderror
-                        <p class="mt-1 text-xs text-gray-500">
-                            Formatos soportados: MP4, AVI, MOV, WMV, FLV, WEBM. Tamaño máximo: 100MB por archivo.
-                        </p>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Seleccionar Videos</label>
+                        <flux:input type="file" wire:model="newVideos" multiple accept="video/*" size="xs" />
+                        <p class="mt-1 text-xs text-gray-500">MP4, AVI, MOV, WMV, FLV, WEBM. Máx: 100MB</p>
                     </div>
 
-                    <!-- Lista de videos seleccionados -->
                     @if (count($newVideos) > 0)
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-gray-900">Configurar Videos</h4>
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1">
                             @foreach ($newVideos as $index => $video)
-                                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                    <div class="flex items-start space-x-4">
-                                        <!-- Icono de video -->
+                                <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                                    <div class="flex items-start gap-2.5">
                                         <div class="flex-shrink-0">
-                                            <div
-                                                class="w-20 h-20 bg-purple-100 rounded-lg flex items-center justify-center">
-                                                <flux:icon name="play" class="w-8 h-8 text-purple-600" />
+                                            <div class="w-14 h-14 bg-purple-100 rounded flex items-center justify-center">
+                                                <flux:icon name="play" class="w-6 h-6 text-purple-600" />
                                             </div>
                                         </div>
-
-                                        <!-- Campos de configuración -->
-                                        <div class="flex-1 space-y-3">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Título del video {{ $index + 1 }}
-                                                </label>
-                                                <input type="text" wire:model="videoTitles.{{ $index }}"
-                                                    placeholder="Título opcional"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                                                @error("videoTitles.{$index}")
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Descripción (opcional)
-                                                </label>
-                                                <textarea wire:model="videoDescriptions.{{ $index }}" placeholder="Descripción del video" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"></textarea>
-                                                @error("videoDescriptions.{$index}")
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-
-                                            <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $video->getClientOriginalName() }}
-                                                </p>
-                                                <p><strong>Tamaño:</strong>
-                                                    {{ number_format($video->getSize() / 1024 / 1024, 2) }} MB</p>
-                                                <p><strong>Tipo:</strong> {{ $video->getMimeType() }}</p>
+                                        <div class="flex-1 space-y-2 min-w-0">
+                                            <input type="text" wire:model="videoTitles.{{ $index }}"
+                                                placeholder="Título (opcional)"
+                                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-purple-500">
+                                            <textarea wire:model="videoDescriptions.{{ $index }}" 
+                                                placeholder="Descripción (opcional)" rows="1"
+                                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-purple-500"></textarea>
+                                            <div class="text-xs text-gray-500 space-y-0.5">
+                                                <p class="truncate"><strong>Archivo:</strong> {{ $video->getClientOriginalName() }}</p>
+                                                <p><strong>Tamaño:</strong> {{ number_format($video->getSize() / 1024 / 1024, 1) }} MB</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1281,15 +1171,12 @@
                     @endif
                 </div>
 
-                <!-- Botones de acción -->
-                <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <flux:button wire:click="closeAddVideosModal">
-                        Cancelar
-                    </flux:button>
-                    <flux:button type="submit">
-                        <span wire:loading.remove wire:target="saveVideos">Guardar Videos</span>
-                        <span wire:loading wire:target="saveVideos" class="flex items-center">
-                            <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
+                <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
+                    <flux:button wire:click="closeAddVideosModal" size="xs" variant="outline">Cancelar</flux:button>
+                    <flux:button type="submit" size="xs">
+                        <span wire:loading.remove wire:target="saveVideos">Guardar</span>
+                        <span wire:loading wire:target="saveVideos" class="flex items-center gap-1">
+                            <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
                             Guardando...
                         </span>
                     </flux:button>
@@ -1299,90 +1186,50 @@
     </flux:modal>
 
     <!-- Modal para Agregar Documentos -->
-    <flux:modal wire:model.self="showAddDocumentsModal">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <flux:icon name="document" class="w-5 h-5 text-orange-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900">Agregar Documentos al Proyecto</h3>
+    <flux:modal wire:model.self="showAddDocumentsModal" size="lg">
+        <div class="p-4">
+            <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
+                <div class="w-8 h-8 bg-orange-100 rounded-md flex items-center justify-center">
+                    <flux:icon name="document" class="w-4 h-4 text-orange-600" />
                 </div>
+                <h3 class="text-lg font-semibold text-gray-900">Agregar Documentos</h3>
             </div>
 
             @if (session()->has('error'))
-                <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <div class="mb-3 p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
                     {{ session('error') }}
                 </div>
             @endif
 
             <form wire:submit.prevent="saveDocuments">
-                <div class="space-y-4">
-                    <!-- Selector de archivos -->
+                <div class="space-y-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Seleccionar Documentos
-                        </label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1.5">Seleccionar Documentos</label>
                         <flux:input type="file" wire:model="newDocuments" multiple
-                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf"
-                            />
-                        @error('newDocuments.*')
-                            <span class="text-red-500 text-sm">{{ $message }}</span>
-                        @enderror
-                        <p class="mt-1 text-xs text-gray-500">
-                            Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF. Tamaño máximo: 50MB por
-                            archivo.
-                        </p>
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf" size="xs" />
+                        <p class="mt-1 text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, RTF. Máx: 50MB</p>
                     </div>
 
-                    <!-- Lista de documentos seleccionados -->
                     @if (count($newDocuments) > 0)
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-gray-900">Configurar Documentos</h4>
+                        <div class="space-y-2 max-h-96 overflow-y-auto pr-1">
                             @foreach ($newDocuments as $index => $document)
-                                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                    <div class="flex items-start space-x-4">
-                                        <!-- Icono de documento -->
+                                <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                                    <div class="flex items-start gap-2.5">
                                         <div class="flex-shrink-0">
-                                            <div
-                                                class="w-20 h-20 bg-orange-100 rounded-lg flex items-center justify-center">
-                                                <flux:icon name="document" class="w-8 h-8 text-orange-600" />
+                                            <div class="w-14 h-14 bg-orange-100 rounded flex items-center justify-center">
+                                                <flux:icon name="document" class="w-6 h-6 text-orange-600" />
                                             </div>
                                         </div>
-
-                                        <!-- Campos de configuración -->
-                                        <div class="flex-1 space-y-3">
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Título del Documento
-                                                </label>
-                                                <input type="text"
-                                                    wire:model="documentTitles.{{ $index }}"
-                                                    placeholder="Ingrese un título descriptivo"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-                                                @error('documentTitles.' . $index)
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                                    Descripción
-                                                </label>
-                                                <textarea wire:model="documentDescriptions.{{ $index }}"
-                                                    placeholder="Agregue una descripción del documento (opcional)" rows="2"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
-                                                @error('documentDescriptions.' . $index)
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-
-                                            <!-- Información del archivo -->
-                                            <div class="text-xs text-gray-500">
-                                                <p><strong>Archivo:</strong> {{ $document->getClientOriginalName() }}
-                                                </p>
-                                                <p><strong>Tamaño:</strong>
-                                                    {{ number_format($document->getSize() / 1024, 2) }} KB</p>
+                                        <div class="flex-1 space-y-2 min-w-0">
+                                            <input type="text" wire:model="documentTitles.{{ $index }}"
+                                                placeholder="Título del documento"
+                                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500">
+                                            <textarea wire:model="documentDescriptions.{{ $index }}"
+                                                placeholder="Descripción (opcional)" rows="1"
+                                                class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-orange-500"></textarea>
+                                            <div class="text-xs text-gray-500 space-y-0.5">
+                                                <p class="truncate"><strong>Archivo:</strong> {{ $document->getClientOriginalName() }}</p>
+                                                <p><strong>Tamaño:</strong> {{ number_format($document->getSize() / 1024, 1) }} KB</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1392,17 +1239,12 @@
                     @endif
                 </div>
 
-                <!-- Botones de acción -->
-                <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                    <flux:button wire:click="closeAddDocumentsModal" variant="outline" color="gray"
-                        icon="x-mark" size="xs">
-                        Cancelar
-                    </flux:button>
-                    <flux:button type="submit" color="orange" size="xs" icon="plus" wire:loading.remove
-                        wire:target="saveDocuments">
-                        <span wire:loading.remove wire:target="saveDocuments">Guardar Documentos</span>
-                        <span wire:loading wire:target="saveDocuments" class="flex items-center">
-                            <flux:icon name="arrow-path" class="w-4 h-4 mr-2 animate-spin" />
+                <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
+                    <flux:button wire:click="closeAddDocumentsModal" size="xs" variant="outline">Cancelar</flux:button>
+                    <flux:button type="submit" size="xs">
+                        <span wire:loading.remove wire:target="saveDocuments">Guardar</span>
+                        <span wire:loading wire:target="saveDocuments" class="flex items-center gap-1">
+                            <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
                             Guardando...
                         </span>
                     </flux:button>
@@ -1449,30 +1291,16 @@
                                 placeholder="Ej: Manzana 1, A, B, C">
                             </flux:input>
 
-                            <flux:select label="Tipo de Unidad *" size="xs" wire:model="unit_type">
-                                <option value="">Seleccionar tipo</option>
-                                <option value="departamento">Departamento</option>
-                                <option value="casa">Casa</option>
-                                <option value="lote">Lote</option>
-                                <option value="oficina">Oficina</option>
-                                <option value="local">Local</option>
-                            </flux:select>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <flux:input label="Torre" size="xs" type="text" wire:model="tower"
-                                    placeholder="Ej: A">
-                                </flux:input>
-                                <flux:input label="Bloque" size="xs" type="text" wire:model="block"
-                                    placeholder="Ej: 1">
-                                </flux:input>
+                            <!-- Tipo de unidad fijo como Lote -->
+                            <div class="space-y-1">
+                                <label class="block text-xs font-medium text-gray-700">Tipo de Unidad</label>
+                                <div class="flex items-center px-3 py-2 bg-gray-50 border border-gray-200 rounded-md">
+                                    <span class="text-sm text-gray-700 font-medium">Lote</span>
+                                </div>
                             </div>
 
-                            <flux:input label="Piso" size="xs" type="number" wire:model="floor"
-                                min="0" placeholder="Ej: 5">
-                            </flux:input>
-
                             <flux:input label="Área (m²) *" size="xs" type="number" wire:model="area"
-                                step="0.01" min="0.01" placeholder="Ej: 120.50">
+                                step="0.01" min="0.01" placeholder="Ej: 200.00">
                             </flux:input>
 
                             <flux:select label="Estado *" size="xs" wire:model="status">
@@ -1480,48 +1308,12 @@
                                 <option value="disponible">Disponible</option>
                                 <option value="reservado">Reservado</option>
                                 <option value="vendido">Vendido</option>
-                                <option value="bloqueado">Bloqueado</option>
-                                <option value="en_construccion">En Construcción</option>
+                                <option value="transferido">Transferido</option>
+                                <option value="cuotas">Cuotas</option>
                             </flux:select>
                         </div>
 
-                        <!-- Características -->
-                        <div class="space-y-2 pt-3">
-                            <h4 class="text-sm font-semibold text-blue-800 border-b pb-1 flex items-center gap-1">
-                                <flux:icon name="adjustments-horizontal" class="w-4 h-4 text-blue-400" />
-                                Características
-                            </h4>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <flux:input label="Dormitorios" size="xs" type="number" wire:model="bedrooms"
-                                    min="0" placeholder="Ej: 3">
-                                </flux:input>
-                                <flux:input label="Baños" size="xs" type="number" wire:model="bathrooms"
-                                    min="0" placeholder="Ej: 2">
-                                </flux:input>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <flux:input label="Estacionamientos" size="xs" type="number"
-                                    wire:model="parking_spaces" min="0" placeholder="Ej: 1">
-                                </flux:input>
-                                <flux:input label="Depósitos" size="xs" type="number"
-                                    wire:model="storage_rooms" min="0" placeholder="Ej: 1">
-                                </flux:input>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-2">
-                                <flux:input label="Balcón (m²)" size="xs" type="number"
-                                    wire:model="balcony_area" step="0.01" min="0" placeholder="Ej: 8.5">
-                                </flux:input>
-                                <flux:input label="Terraza (m²)" size="xs" type="number"
-                                    wire:model="terrace_area" step="0.01" min="0" placeholder="Ej: 15.0">
-                                </flux:input>
-                                <flux:input label="Jardín (m²)" size="xs" type="number"
-                                    wire:model="garden_area" step="0.01" min="0" placeholder="Ej: 25.0">
-                                </flux:input>
-                            </div>
-                        </div>
+                        <!-- Características no aplicables para lotes - Ocultado -->
                     </div>
 
                     <!-- Precios y Comisiones -->
@@ -1584,9 +1376,8 @@
                 Sube un archivo <b>CSV</b> con las unidades del proyecto.<br>
                 <span class="text-blue-700">Campos requeridos:</span> <b>numero_unidad, tipo, area, precio_base,
                     precio_total</b>.<br>
-                <span class="text-blue-700">Tipos válidos:</span> lote, casa, departamento, oficina, local.<br>
-                <span class="text-blue-700">Estados válidos:</span> disponible, reservado, vendido, bloqueado,
-                en_construccion.<br>
+                <span class="text-blue-700">Tipo válido:</span> lote (solo lotes).<br>
+                <span class="text-blue-700">Estados válidos:</span> disponible, reservado, vendido, transferido, cuotas.<br>
                 <span class="text-blue-700">Importante:</span> Solo se aceptan archivos CSV.
             </div>
             <div class="flex items-center justify-between mb-2">
@@ -1650,6 +1441,58 @@
                     :disabled="!$importFile || $importProgress > 0" variant="primary" size="xs">
                     Importar
                 </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal de Confirmación para Eliminar Una Unidad -->
+    <flux:modal wire:model.self="showDeleteModal" size="sm">
+        <div class="p-6">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <flux:icon name="exclamation-triangle" class="h-6 w-6 text-red-600" />
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirmar eliminación</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    ¿Estás seguro de que quieres eliminar la unidad 
+                    <strong>{{ $unitToDelete?->unit_number ?? 'N/A' }}</strong>? 
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <div class="flex justify-center space-x-3">
+                    <flux:button size="xs" variant="outline" wire:click="cancelDeleteUnit">
+                        Cancelar
+                    </flux:button>
+                    <flux:button size="xs" color="danger" wire:click="deleteUnit">
+                        Eliminar
+                    </flux:button>
+                </div>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal de Confirmación para Eliminar Múltiples Unidades -->
+    <flux:modal wire:model.self="showDeleteMultipleModal" size="sm">
+        <div class="p-6">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <flux:icon name="exclamation-triangle" class="h-6 w-6 text-red-600" />
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirmar eliminación múltiple</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    ¿Estás seguro de que quieres eliminar 
+                    <strong>{{ count($selectedUnits) }}</strong> unidad(es) seleccionada(s)? 
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <div class="flex justify-center space-x-3">
+                    <flux:button size="xs" variant="outline" wire:click="cancelDeleteMultipleUnits">
+                        Cancelar
+                    </flux:button>
+                    <flux:button size="xs" color="danger" wire:click="deleteMultipleUnits">
+                        Eliminar {{ count($selectedUnits) }} unidad(es)
+                    </flux:button>
+                </div>
             </div>
         </div>
     </flux:modal>

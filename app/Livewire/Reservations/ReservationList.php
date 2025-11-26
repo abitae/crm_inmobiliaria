@@ -22,7 +22,6 @@ class ReservationList extends Component
     // Filtros
     public $search = '';
     public $statusFilter = '';
-    public $typeFilter = '';
     public $advisorFilter = '';
     public $projectFilter = '';
     public $clientFilter = '';
@@ -31,7 +30,9 @@ class ReservationList extends Component
     // Modales
     public $showFormModal = false;
     public $showDetailModal = false;
+    public $showConfirmationModal = false;
     public $editingReservation = null;
+    public $confirmingReservation = null;
 
     // Campos del formulario
     public $client_id = '';
@@ -39,7 +40,7 @@ class ReservationList extends Component
     public $unit_id = '';
     public $advisor_id = '';
     public $reservation_type = 'pre_reserva';
-    public $status = 'activa';
+    public $status = 'activa'; // Se cambiará automáticamente a 'reservado' si hay imagen
     public $reservation_date = '';
     public $expiration_date = '';
     public $reservation_amount = 0;
@@ -51,6 +52,17 @@ class ReservationList extends Component
     public $terms_conditions = '';
     public $image;
     public $imagePreview;
+    
+    // Campos para modal de confirmación
+    public $confirmation_reservation_date = '';
+    public $confirmation_expiration_date = '';
+    public $confirmation_reservation_amount = 0;
+    public $confirmation_reservation_percentage = 0;
+    public $confirmation_payment_method = '';
+    public $confirmation_payment_status = 'pendiente';
+    public $confirmation_payment_reference = '';
+    public $confirmation_image;
+    public $confirmation_imagePreview;
 
     public $clients = [];
     public $projects = [];
@@ -128,11 +140,6 @@ class ReservationList extends Component
         $this->resetPage();
     }
 
-    public function updatedTypeFilter()
-    {
-        $this->resetPage();
-    }
-
     public function updatedAdvisorFilter()
     {
         $this->resetPage();
@@ -158,7 +165,6 @@ class ReservationList extends Component
         $this->reset([
             'search',
             'statusFilter',
-            'typeFilter',
             'advisorFilter',
             'projectFilter',
             'clientFilter',
@@ -187,10 +193,52 @@ class ReservationList extends Component
         $this->showDetailModal = true;
     }
 
+    public function openConfirmationModal($reservationId)
+    {
+        $this->confirmingReservation = Reservation::with(['client', 'project', 'unit', 'advisor'])->find($reservationId);
+        if ($this->confirmingReservation) {
+            $this->confirmation_reservation_date = $this->confirmingReservation->reservation_date ? $this->confirmingReservation->reservation_date->format('Y-m-d') : now()->format('Y-m-d');
+            $this->confirmation_expiration_date = $this->confirmingReservation->expiration_date ? $this->confirmingReservation->expiration_date->format('Y-m-d') : '';
+            $this->confirmation_reservation_amount = $this->confirmingReservation->reservation_amount ?? 0;
+            $this->confirmation_reservation_percentage = $this->confirmingReservation->reservation_percentage ?? 0;
+            $this->confirmation_payment_method = $this->confirmingReservation->payment_method ?? '';
+            $this->confirmation_payment_status = $this->confirmingReservation->payment_status ?? 'pendiente';
+            $this->confirmation_payment_reference = $this->confirmingReservation->payment_reference ?? '';
+            $this->confirmation_imagePreview = $this->confirmingReservation->image ? $this->confirmingReservation->image_url : null;
+        }
+        $this->showConfirmationModal = true;
+    }
+
     public function closeModals()
     {
-        $this->reset(['showFormModal', 'showDetailModal', 'editingReservation']);
+        $this->reset(['showFormModal', 'showDetailModal', 'showConfirmationModal', 'editingReservation', 'confirmingReservation']);
         $this->resetForm();
+        $this->resetConfirmationForm();
+    }
+
+    public function resetConfirmationForm()
+    {
+        $this->reset([
+            'confirmation_reservation_date',
+            'confirmation_expiration_date',
+            'confirmation_reservation_amount',
+            'confirmation_reservation_percentage',
+            'confirmation_payment_method',
+            'confirmation_payment_status',
+            'confirmation_payment_reference',
+            'confirmation_image',
+            'confirmation_imagePreview'
+        ]);
+    }
+
+    public function updatedConfirmationImage()
+    {
+        $this->validateOnly('confirmation_image', [
+            'confirmation_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+        ]);
+        if ($this->confirmation_image) {
+            $this->confirmation_imagePreview = $this->confirmation_image->temporaryUrl();
+        }
     }
 
     public function resetForm()
@@ -277,13 +325,18 @@ class ReservationList extends Component
                 $imagePath = $this->image->store('reservations', 'public');
             }
 
+            // Determinar el estado según si hay imagen del comprobante de pago
+            // Si hay imagen, el status será 'confirmada', si no, será 'activa'
+            // El reservation_type siempre será 'pre_reserva' al crear
+            $status = $imagePath ? 'confirmada' : 'activa';
+
             $reservation = Reservation::create([
                 'client_id' => $this->client_id,
                 'project_id' => $this->project_id,
                 'unit_id' => $this->unit_id,
                 'advisor_id' => $this->advisor_id,
-                'reservation_type' => $this->reservation_type,
-                'status' => $this->status,
+                'reservation_type' => 'pre_reserva', // Siempre 'pre_reserva' al crear
+                'status' => $status, // 'confirmada' si hay imagen, 'activa' si no
                 'reservation_date' => $this->reservation_date,
                 'expiration_date' => $this->expiration_date,
                 'reservation_amount' => $this->reservation_amount,
@@ -298,10 +351,17 @@ class ReservationList extends Component
                 'updated_by' => Auth::id(),
             ]);
 
-            // Bloquear la unidad
+            // Actualizar estado de la unidad
             if ($reservation->unit) {
-                $reservation->unit->update(['status' => 'reservado']);
-                $reservation->unit->project->updateUnitCounts();
+                // Si el status es 'confirmada', la unidad debe estar en 'reservado'
+                if ($status === 'confirmada') {
+                    $reservation->unit->update(['status' => 'reservado']);
+                    $reservation->unit->project->updateUnitCounts();
+                } elseif ($status === 'activa') {
+                    // Si es 'activa', también reservamos la unidad
+                    $reservation->unit->update(['status' => 'reservado']);
+                    $reservation->unit->project->updateUnitCounts();
+                }
             }
 
             DB::commit();
@@ -347,12 +407,28 @@ class ReservationList extends Component
 
             // Procesar imagen si existe
             $imagePath = $this->editingReservation->image;
+            $hasNewImage = false;
+            $hadImageBefore = (bool)$imagePath;
+            
             if ($this->image) {
                 // Eliminar imagen anterior si existe
                 if ($imagePath && Storage::disk('public')->exists($imagePath)) {
                     Storage::disk('public')->delete($imagePath);
                 }
                 $imagePath = $this->image->store('reservations', 'public');
+                $hasNewImage = true;
+            }
+
+            // Determinar el estado según si hay imagen
+            // Si se sube una nueva imagen, el status debe cambiar a 'confirmada'
+            // Si se elimina la imagen y estaba en 'confirmada', cambiar a 'activa'
+            $status = $this->status;
+            if ($hasNewImage) {
+                // Si se sube una nueva imagen, cambiar a 'confirmada'
+                $status = 'confirmada';
+            } elseif (!$imagePath && $this->editingReservation->status === 'confirmada') {
+                // Si se elimina la imagen y estaba en 'confirmada', cambiar a 'activa'
+                $status = 'activa';
             }
 
             $updateData = [
@@ -361,7 +437,7 @@ class ReservationList extends Component
                 'unit_id' => $this->unit_id,
                 'advisor_id' => $this->advisor_id,
                 'reservation_type' => $this->reservation_type,
-                'status' => $this->status,
+                'status' => $status,
                 'reservation_date' => $this->reservation_date,
                 'expiration_date' => $this->expiration_date,
                 'reservation_amount' => $this->reservation_amount,
@@ -377,7 +453,16 @@ class ReservationList extends Component
 
             $this->editingReservation->update($updateData);
 
-            // Gestionar estado de unidades si cambió
+            // Actualizar estado de la unidad si el status cambió a 'confirmada'
+            if ($status === 'confirmada' && $this->editingReservation->unit) {
+                $unit = $this->editingReservation->unit;
+                if ($unit->status !== 'reservado') {
+                    $unit->update(['status' => 'reservado']);
+                    $unit->project->updateUnitCounts();
+                }
+            }
+
+            // Gestionar estado de unidades si cambió la unidad
             if ($this->unit_id != $oldUnitId) {
                 // Liberar unidad anterior
                 $oldUnit = Unit::find($oldUnitId);
@@ -425,6 +510,74 @@ class ReservationList extends Component
                 $this->error('No se pudo confirmar la reserva.');
             }
         } catch (\Exception $e) {
+            $this->error('Error al confirmar la reserva: ' . $e->getMessage());
+        }
+    }
+
+    public function submitConfirmation()
+    {
+        $this->validate([
+            'confirmation_reservation_date' => 'required|date',
+            'confirmation_expiration_date' => 'nullable|date|after:confirmation_reservation_date',
+            'confirmation_reservation_amount' => 'required|numeric|min:0',
+            'confirmation_reservation_percentage' => 'nullable|numeric|min:0|max:100',
+            'confirmation_payment_method' => 'nullable|string|max:255',
+            'confirmation_payment_status' => 'required|in:pendiente,pagado,parcial',
+            'confirmation_payment_reference' => 'nullable|string|max:255',
+            'confirmation_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+        ]);
+
+        if (!$this->confirmingReservation) {
+            $this->error('Reserva no encontrada.');
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Procesar imagen
+            $imagePath = null;
+            if ($this->confirmation_image) {
+                // Eliminar imagen anterior si existe
+                if ($this->confirmingReservation->image && Storage::disk('public')->exists($this->confirmingReservation->image)) {
+                    Storage::disk('public')->delete($this->confirmingReservation->image);
+                }
+                $imagePath = $this->confirmation_image->store('reservations', 'public');
+            }
+
+            // Actualizar la reserva con los datos y la imagen
+            $this->confirmingReservation->update([
+                'reservation_date' => $this->confirmation_reservation_date,
+                'expiration_date' => $this->confirmation_expiration_date,
+                'reservation_amount' => $this->confirmation_reservation_amount,
+                'reservation_percentage' => $this->confirmation_reservation_percentage,
+                'payment_method' => $this->confirmation_payment_method,
+                'payment_status' => $this->confirmation_payment_status,
+                'payment_reference' => $this->confirmation_payment_reference,
+                'image' => $imagePath,
+                'status' => 'confirmada', // Cambiar status a confirmada cuando se sube la imagen
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Actualizar estado de la unidad a 'reservado'
+            if ($this->confirmingReservation->unit) {
+                $unit = $this->confirmingReservation->unit;
+                if ($unit->status !== 'reservado') {
+                    $unit->update(['status' => 'reservado']);
+                    $unit->project->updateUnitCounts();
+                }
+            }
+
+            DB::commit();
+
+            $this->closeModals();
+            $this->success('Reserva confirmada exitosamente con la imagen del comprobante.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Eliminar imagen si se subió pero falló la actualización
+            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
             $this->error('Error al confirmar la reserva: ' . $e->getMessage());
         }
     }
@@ -499,10 +652,6 @@ class ReservationList extends Component
 
         if ($this->statusFilter) {
             $query->byStatus($this->statusFilter);
-        }
-
-        if ($this->typeFilter) {
-            $query->byType($this->typeFilter);
         }
 
         if ($this->advisorFilter) {

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->decimal('balcony_area', 8, 2)->default(0);//area de balcon
             $table->decimal('terrace_area', 8, 2)->default(0);//area de terraza
             $table->decimal('garden_area', 8, 2)->default(0);//area de jardin
-            $table->enum('status', ['disponible', 'reservado', 'vendido', 'bloqueado', 'en_construccion'])->default('disponible');
+            $table->enum('status', ['disponible', 'reservado', 'vendido', 'transferido', 'cuotas'])->default('disponible');
             $table->decimal('base_price', 12, 2); // precio base por m²
             $table->decimal('total_price', 12, 2); // precio total
             $table->decimal('discount_percentage', 5, 2)->default(0);

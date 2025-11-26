@@ -37,7 +37,7 @@
                 <p class="text-sm text-gray-600">Refina los resultados según tus necesidades</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">Búsqueda</label>
                     <flux:input size="xs" wire:model.live="search" placeholder="Buscar proyectos..."
@@ -77,18 +77,6 @@
                         <option value="lanzamiento">Lanzamiento</option>
                         <option value="venta_activa">Venta Activa</option>
                         <option value="cierre">Cierre</option>
-                    </flux:select>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Ubicación</label>
-                    <flux:select size="xs" wire:model.live="locationFilter" class="w-full">
-                        <option value="">Todas</option>
-                        <option value="lima">Lima</option>
-                        <option value="arequipa">Arequipa</option>
-                        <option value="trujillo">Trujillo</option>
-                        <option value="piura">Piura</option>
-                        <option value="chiclayo">Chiclayo</option>
-                        <option value="cusco">Cusco</option>
                     </flux:select>
                 </div>
             </div>

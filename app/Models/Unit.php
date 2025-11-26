@@ -29,7 +29,7 @@ class Unit extends Model
         'balcony_area', // área de balcón de la unidad Ejemplo: 10, 20, 30, etc.
         'terrace_area', // área de terraza de la unidad Ejemplo: 10, 20, 30, etc.
         'garden_area', // área de jardín de la unidad Ejemplo: 10, 20, 30, etc.
-        'status', // disponible, reservado, vendido, bloqueado, en_construccion
+        'status', // disponible, reservado, vendido, transferido, cuotas
         'base_price', // precio base por m² Ejemplo: 10000, 20000, 30000, etc.
         'total_price', // precio total Ejemplo: 100000, 200000, 300000, etc.
         'discount_percentage', // descuento en porcentaje Ejemplo: 10, 20, 30, etc.
