@@ -126,7 +126,10 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         try {
+            // Validar y obtener parámetros de paginación
             $perPage = min((int) $request->get('per_page', 15), 100);
+            
+            // Validar filtros básicos
             $filters = [
                 'search' => $request->get('search'),
                 'project_type' => $request->get('project_type'),
@@ -137,10 +140,10 @@ class ProjectController extends Controller
                 'district' => $request->get('district'),
                 'province' => $request->get('province'),
                 'region' => $request->get('region'),
-                'has_available_units' => $request->get('has_available_units', false),
+                'has_available_units' => filter_var($request->get('has_available_units', false), FILTER_VALIDATE_BOOLEAN),
             ];
 
-            // Obtener todos los proyectos (no solo publicados)
+            // Obtener todos los proyectos (no solo publicados) con eager loading optimizado
             $query = Project::with(['advisors:id,name,email']);
 
             // Aplicar filtros
@@ -216,17 +219,25 @@ class ProjectController extends Controller
     /**
      * Obtener un proyecto específico completo
      * 
+     * @param Request $request
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            // Buscar proyecto con todas sus relaciones
+            // Validar ID
+            if (!is_numeric($id)) {
+                return $this->errorResponse('ID de proyecto inválido', null, 400);
+            }
+
+            // Obtener parámetros de paginación para unidades
+            $unitsPerPage = min((int) $request->get('units_per_page', 15), 100);
+            $includeUnits = $request->get('include_units', true);
+
+            // Buscar proyecto con relaciones optimizadas
             $project = Project::with([
                 'advisors:id,name,email',
-                'units',
-                'opportunities.client:id,name',
             ])->find($id);
 
             if (!$project) {
@@ -235,11 +246,27 @@ class ProjectController extends Controller
 
             $projectData = $this->formatProject($project);
             
-            // Incluir unidades si están cargadas
-            if ($project->relationLoaded('units')) {
-                $projectData['units'] = $project->units->map(function ($unit) {
+            // Paginar unidades disponibles si se solicitan
+            if ($includeUnits) {
+                $unitsQuery = Unit::where('project_id', $id)
+                    ->available()
+                    ->orderBy('unit_manzana', 'asc')
+                    ->orderBy('unit_number', 'asc');
+                
+                $units = $unitsQuery->paginate($unitsPerPage, ['*'], 'units_page');
+                
+                $projectData['units'] = $units->map(function ($unit) {
                     return $this->formatUnit($unit);
                 });
+                
+                $projectData['units_pagination'] = [
+                    'current_page' => $units->currentPage(),
+                    'per_page' => $units->perPage(),
+                    'total' => $units->total(),
+                    'last_page' => $units->lastPage(),
+                    'from' => $units->firstItem(),
+                    'to' => $units->lastItem(),
+                ];
             }
 
             return $this->successResponse(['project' => $projectData], 'Proyecto obtenido exitosamente');
@@ -259,60 +286,27 @@ class ProjectController extends Controller
     public function units(Request $request, $id)
     {
         try {
-            // Verificar que el proyecto existe
-            $project = Project::find($id);
+            // Validar ID
+            if (!is_numeric($id)) {
+                return $this->errorResponse('ID de proyecto inválido', null, 400);
+            }
+
+            // Verificar que el proyecto existe (solo campos necesarios)
+            $project = Project::select('id', 'name')->find($id);
 
             if (!$project) {
                 return $this->notFoundResponse('Proyecto');
             }
 
-            // Obtener parámetros de paginación y filtros
+            // Obtener parámetros de paginación
             $perPage = min((int) $request->get('per_page', 15), 100);
-            $filters = [
-                'status' => $request->get('status'),
-                'unit_type' => $request->get('unit_type'),
-                'min_price' => $request->get('min_price'),
-                'max_price' => $request->get('max_price'),
-                'min_area' => $request->get('min_area'),
-                'max_area' => $request->get('max_area'),
-                'bedrooms' => $request->get('bedrooms'),
-                'only_available' => $request->get('only_available', false),
-            ];
 
-            // Obtener unidades del proyecto
-            $query = Unit::where('project_id', $id);
-
-            // Aplicar filtros
-            if (!empty($filters['status'])) {
-                $query->byStatus($filters['status']);
-            }
-
-            if (!empty($filters['unit_type'])) {
-                $query->byType($filters['unit_type']);
-            }
-
-            if (!empty($filters['min_price']) || !empty($filters['max_price'])) {
-                $minPrice = $filters['min_price'] ?? 0;
-                $maxPrice = $filters['max_price'] ?? PHP_INT_MAX;
-                $query->byPriceRange($minPrice, $maxPrice);
-            }
-
-            if (!empty($filters['min_area']) || !empty($filters['max_area'])) {
-                $minArea = $filters['min_area'] ?? 0;
-                $maxArea = $filters['max_area'] ?? PHP_INT_MAX;
-                $query->byAreaRange($minArea, $maxArea);
-            }
-
-            if (!empty($filters['bedrooms'])) {
-                $query->byBedrooms($filters['bedrooms']);
-            }
-
-            if ($filters['only_available']) {
-                $query->available();
-            }
-
-            // Paginar resultados
-            $units = $query->orderBy('unit_number', 'asc')
+            // Obtener solo unidades disponibles del proyecto
+            // Ordenar primero por manzana y luego por número de unidad
+            $units = Unit::where('project_id', $id)
+                ->available()
+                ->orderBy('unit_manzana', 'asc')
+                ->orderBy('unit_number', 'asc')
                 ->paginate($perPage);
 
             // Formatear unidades

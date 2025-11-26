@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Datero\ProfileController as DateroProfileController
 use App\Http\Controllers\Api\Cazador\AuthController as CazadorAuthController;
 use App\Http\Controllers\Api\Cazador\ClientController as CazadorClientController;
 use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectController;
+use App\Http\Controllers\Api\Cazador\ReservationController as CazadorReservationController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\DocumentController;
 
@@ -154,6 +155,30 @@ Route::prefix('cazador')->group(function () {
         
         Route::get('/{id}/units', [CazadorProjectController::class, 'units'])
             ->name('api.cazador.projects.units');
+    });
+
+    // Rutas de reservas (protegidas con JWT y middleware cazador)
+    Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('reservations')->group(function () {
+        Route::get('/', [CazadorReservationController::class, 'index'])
+            ->name('api.cazador.reservations.index');
+        
+        Route::post('/', [CazadorReservationController::class, 'store'])
+            ->name('api.cazador.reservations.store');
+        
+        Route::get('/{id}', [CazadorReservationController::class, 'show'])
+            ->name('api.cazador.reservations.show');
+        
+        Route::match(['put', 'patch'], '/{id}', [CazadorReservationController::class, 'update'])
+            ->name('api.cazador.reservations.update');
+        
+        Route::post('/{id}/confirm', [CazadorReservationController::class, 'confirm'])
+            ->name('api.cazador.reservations.confirm');
+        
+        Route::post('/{id}/cancel', [CazadorReservationController::class, 'cancel'])
+            ->name('api.cazador.reservations.cancel');
+        
+        Route::post('/{id}/convert-to-sale', [CazadorReservationController::class, 'convertToSale'])
+            ->name('api.cazador.reservations.convert-to-sale');
     });
 
     // Rutas de búsqueda de documentos (protegidas con JWT y middleware cazador)
