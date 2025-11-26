@@ -31,8 +31,11 @@ class ReservationList extends Component
     public $showFormModal = false;
     public $showDetailModal = false;
     public $showConfirmationModal = false;
+    public $showCancelModal = false;
     public $editingReservation = null;
     public $confirmingReservation = null;
+    public $cancelingReservation = null;
+    public $cancel_note = '';
 
     // Campos del formulario
     public $client_id = '';
@@ -101,22 +104,25 @@ class ReservationList extends Component
     public function updatedProjectId()
     {
         if ($this->project_id) {
-            // Al crear: solo unidades disponibles
-            // Al editar: incluir la unidad actual si está reservada por esta reserva
+            // Cargar solo unidades libres (disponibles) del proyecto seleccionado
             $query = Unit::where('project_id', $this->project_id)
-                ->where(function($q) {
-                    $q->where('status', 'disponible');
-                    // Si estamos editando y la unidad pertenece a esta reserva, incluirla
-                    if ($this->editingReservation && $this->editingReservation->unit_id) {
-                        $q->orWhere('id', $this->editingReservation->unit_id);
-                    }
-                });
-            $this->units = $query->get();
+                ->where('status', 'disponible');
+            
+            // Si estamos editando y la unidad actual pertenece a esta reserva, incluirla aunque esté reservada
+            if ($this->editingReservation && $this->editingReservation->unit_id) {
+                $query->orWhere('id', $this->editingReservation->unit_id);
+            }
+            
+            // Ordenar primero por manzana y luego por número de unidad
+            $this->units = $query->orderBy('unit_manzana')
+                ->orderBy('unit_number')
+                ->get();
         } else {
             $this->units = [];
         }
+        
         // Solo resetear unit_id si no estamos editando o si cambió el proyecto
-        if (!$this->editingReservation || $this->editingReservation->project_id != $this->project_id) {
+        if (!$this->editingReservation || ($this->editingReservation && $this->editingReservation->project_id != $this->project_id)) {
             $this->unit_id = '';
         }
     }
@@ -211,9 +217,32 @@ class ReservationList extends Component
 
     public function closeModals()
     {
-        $this->reset(['showFormModal', 'showDetailModal', 'showConfirmationModal', 'editingReservation', 'confirmingReservation']);
+        $this->reset(['showFormModal', 'showDetailModal', 'showConfirmationModal', 'showCancelModal', 'editingReservation', 'confirmingReservation', 'cancelingReservation']);
         $this->resetForm();
         $this->resetConfirmationForm();
+        $this->resetCancelForm();
+    }
+
+    public function resetCancelForm()
+    {
+        $this->reset(['cancel_note']);
+    }
+
+    public function openCancelModal($reservationId)
+    {
+        $this->cancelingReservation = Reservation::with(['client', 'project', 'unit'])->find($reservationId);
+        if (!$this->cancelingReservation) {
+            $this->error('Reserva no encontrada.');
+            return;
+        }
+
+        if (!$this->cancelingReservation->canBeCancelled()) {
+            $this->error('La reserva no puede ser cancelada en su estado actual.');
+            return;
+        }
+
+        $this->cancel_note = '';
+        $this->showCancelModal = true;
     }
 
     public function resetConfirmationForm()
@@ -296,6 +325,8 @@ class ReservationList extends Component
                     $q->where('status', 'disponible')
                       ->orWhere('id', $unitId);
                 })
+                ->orderBy('unit_manzana')
+                ->orderBy('unit_number')
                 ->get();
         }
     }
@@ -584,25 +615,53 @@ class ReservationList extends Component
 
     public function cancelReservation($reservationId)
     {
-        $reservation = Reservation::find($reservationId);
-        
-        if (!$reservation) {
+        // Abrir modal de cancelación en lugar de cancelar directamente
+        $this->openCancelModal($reservationId);
+    }
+
+    public function submitCancellation()
+    {
+        $this->validate([
+            'cancel_note' => 'required|string|min:10|max:500',
+        ], [
+            'cancel_note.required' => 'La nota de cancelación es obligatoria.',
+            'cancel_note.min' => 'La nota debe tener al menos 10 caracteres.',
+            'cancel_note.max' => 'La nota no puede exceder 500 caracteres.',
+        ]);
+
+        if (!$this->cancelingReservation) {
             $this->error('Reserva no encontrada.');
             return;
         }
 
-        if (!$reservation->canBeCancelled()) {
+        if (!$this->cancelingReservation->canBeCancelled()) {
             $this->error('La reserva no puede ser cancelada en su estado actual.');
             return;
         }
 
         try {
-            if ($reservation->cancel()) {
-                $this->success('Reserva cancelada exitosamente.');
-            } else {
-                $this->error('No se pudo cancelar la reserva.');
+            DB::beginTransaction();
+
+            // Actualizar la reserva con la nota de cancelación
+            $this->cancelingReservation->update([
+                'status' => 'cancelada',
+                'notes' => ($this->cancelingReservation->notes ?? '') . "\n\n[Cancelada] " . $this->cancel_note,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Actualizar la unidad a 'disponible'
+            if ($this->cancelingReservation->unit) {
+                $unit = $this->cancelingReservation->unit;
+                $unit->update(['status' => 'disponible']);
+                $unit->project->updateUnitCounts();
             }
+
+            DB::commit();
+
+            $this->closeModals();
+            $this->success('Reserva cancelada exitosamente y unidad liberada.');
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->error('Error al cancelar la reserva: ' . $e->getMessage());
         }
     }

@@ -114,7 +114,9 @@
                                         @if($reservation->status === 'activa')
                                         <flux:button size="xs" variant="primary" color="blue" wire:click="openCreateModal({{ $reservation->id }})" icon="pencil"/>
                                             <flux:button size="xs" variant="primary" color="amber" wire:click="openConfirmationModal({{ $reservation->id }})" icon="arrow-up-tray" title="Subir imagen de confirmación"/>
-                                            <flux:button size="xs" variant="primary" color="red" wire:click="cancelReservation({{ $reservation->id }})" icon="trash"/>
+                                        @endif
+                                        @if(in_array($reservation->status, ['activa', 'confirmada']))
+                                            <flux:button size="xs" variant="primary" color="red" wire:click="cancelReservation({{ $reservation->id }})" icon="trash" title="Cancelar reserva"/>
                                         @endif
                                     </div>
                                 </td>
@@ -152,7 +154,7 @@
                                 @endforeach
                             </flux:select>
 
-                            <flux:select size="xs" wire:model="project_id" label="Proyecto" required>
+                            <flux:select size="xs" wire:model.live="project_id" label="Proyecto" required>
                                 <option value="">Seleccionar proyecto</option>
                                 @foreach($projects as $project)
                                     <option value="{{ $project->id }}">{{ $project->name }}</option>
@@ -164,7 +166,7 @@
                             <flux:select size="xs" wire:model="unit_id" label="Unidad" required>
                                 <option value="">Seleccionar unidad</option>
                                 @foreach($units as $unit)
-                                    <option value="{{ $unit->id }}">{{ $unit->unit_number }}</option>
+                                    <option value="{{ $unit->id }}">{{ $unit->unit_manzana }} - {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}</option>
                                 @endforeach
                             </flux:select>
 
@@ -248,115 +250,154 @@
         </flux:modal>
     @endif
 
-    <!-- Modal de Detalle -->
+    <!-- Modal de Detalle (ANCHO) -->
     @if($showDetailModal && $editingReservation)
-        <flux:modal wire:model="showDetailModal" name="reservation-detail">
-            <div class="p-4">
-                <h2 class="text-base font-semibold mb-3">Detalle de Reserva</h2>
-                <div class="space-y-3 max-h-[80vh] overflow-y-auto">
+        <flux:modal wire:model="showDetailModal" class="w-[100vw]" name="reservation-detail">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Detalle de Reserva</h2>
+                    <span class="px-4 py-1 text-sm font-semibold rounded-full bg-{{ $editingReservation->status_color }}-100 text-{{ $editingReservation->status_color }}-800">
+                        {{ ucfirst($editingReservation->status) }}
+                    </span>
+                </div>
+                
+                <div class="space-y-4 max-h-[84vh] overflow-y-auto pr-2">
+                    <!-- Imagen del Comprobante -->
                     @if($editingReservation->image)
-                        <div class="mb-3">
-                            <img src="{{ $editingReservation->image_url }}" alt="Imagen de reserva" class="w-full max-w-sm h-auto rounded border border-gray-300">
-                        </div>
-                    @endif
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <p class="text-xs text-gray-600">Número de Reserva</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->reservation_number }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Tipo</p>
-                            <p class="text-sm font-semibold">{{ ucfirst(str_replace('_', ' ', $editingReservation->reservation_type)) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Cliente</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->client->name }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Proyecto</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->project->name }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Unidad</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->unit->unit_number ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Asesor</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->advisor->name }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Monto de Reserva</p>
-                            <p class="text-sm font-semibold">S/ {{ number_format($editingReservation->reservation_amount, 2) }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Porcentaje</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->reservation_percentage ? number_format($editingReservation->reservation_percentage, 2) . '%' : 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Estado</p>
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $editingReservation->status_color }}-100 text-{{ $editingReservation->status_color }}-800">
-                                {{ ucfirst($editingReservation->status) }}
-                            </span>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Estado de Pago</p>
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $editingReservation->payment_status_color }}-100 text-{{ $editingReservation->payment_status_color }}-800">
-                                {{ ucfirst($editingReservation->payment_status) }}
-                            </span>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Fecha de Reserva</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->reservation_date->format('d/m/Y') }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-600">Fecha de Vencimiento</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->expiration_date ? $editingReservation->expiration_date->format('d/m/Y') : 'N/A' }}</p>
-                        </div>
-                        @if($editingReservation->payment_method)
-                        <div>
-                            <p class="text-xs text-gray-600">Método de Pago</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->payment_method }}</p>
-                        </div>
-                        @endif
-                        @if($editingReservation->payment_reference)
-                        <div>
-                            <p class="text-xs text-gray-600">Referencia de Pago</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->payment_reference }}</p>
-                        </div>
-                        @endif
-                    </div>
-                    
-                    @if($editingReservation->notes)
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Notas</p>
-                            <p class="text-xs bg-gray-50 p-2 rounded border">{{ $editingReservation->notes }}</p>
-                        </div>
-                    @endif
-                    
-                    @if($editingReservation->terms_conditions)
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Términos y Condiciones</p>
-                            <p class="text-xs bg-gray-50 p-2 rounded border">{{ $editingReservation->terms_conditions }}</p>
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 flex justify-center">
+                            <div class="max-w-2xl w-full">
+                                <p class="text-xs font-medium text-gray-700 mb-2">Comprobante de Pago</p>
+                                <img src="{{ $editingReservation->image_url }}" alt="Imagen de reserva" class="w-full h-auto rounded-lg border border-gray-300 shadow-sm object-contain">
+                            </div>
                         </div>
                     @endif
 
-                    <div class="grid grid-cols-2 gap-3 pt-3 border-t">
-                        <div>
-                            <p class="text-xs text-gray-600">Creado por</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->createdBy->name ?? 'N/A' }}</p>
-                            <p class="text-xs text-gray-500">{{ $editingReservation->created_at->format('d/m/Y H:i') }}</p>
+                    <!-- Información Principal y Financiera horizontal -->
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <!-- Información Principal -->
+                        <div class="flex-1 bg-blue-50 rounded-lg p-4 border border-blue-200 min-w-[260px]">
+                            <h3 class="text-base font-semibold text-blue-900 mb-4">Información Principal</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-xs text-blue-700 font-medium">Número de Reserva</p>
+                                    <p class="text-base font-bold text-blue-900">{{ $editingReservation->reservation_number }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-700 font-medium">Tipo</p>
+                                    <p class="text-base font-semibold text-blue-900">{{ ucfirst(str_replace('_', ' ', $editingReservation->reservation_type)) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-700 font-medium">Cliente</p>
+                                    <p class="text-base font-semibold text-blue-900">{{ $editingReservation->client->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-700 font-medium">Proyecto</p>
+                                    <p class="text-base font-semibold text-blue-900">{{ $editingReservation->project->name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-700 font-medium">Unidad</p>
+                                    <p class="text-base font-semibold text-blue-900">{{ $editingReservation->unit->unit_number ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-700 font-medium">Asesor</p>
+                                    <p class="text-base font-semibold text-blue-900">{{ $editingReservation->advisor->name }}</p>
+                                </div>
+                            </div>
                         </div>
-                        @if($editingReservation->updatedBy)
-                        <div>
-                            <p class="text-xs text-gray-600">Actualizado por</p>
-                            <p class="text-sm font-semibold">{{ $editingReservation->updatedBy->name }}</p>
-                            <p class="text-xs text-gray-500">{{ $editingReservation->updated_at->format('d/m/Y H:i') }}</p>
+
+                        <!-- Información Financiera -->
+                        <div class="flex-1 bg-green-50 rounded-lg p-4 border border-green-200 min-w-[260px]">
+                            <h3 class="text-base font-semibold text-green-900 mb-4">Información Financiera</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-xs text-green-700 font-medium">Monto de Reserva</p>
+                                    <p class="text-xl font-bold text-green-900">S/ {{ number_format($editingReservation->reservation_amount, 2) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-green-700 font-medium">Porcentaje</p>
+                                    <p class="text-base font-semibold text-green-900">{{ $editingReservation->reservation_percentage ? number_format($editingReservation->reservation_percentage, 2) . '%' : 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-green-700 font-medium">Estado de Pago</p>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $editingReservation->payment_status_color }}-100 text-{{ $editingReservation->payment_status_color }}-800">
+                                        {{ ucfirst($editingReservation->payment_status) }}
+                                    </span>
+                                </div>
+                                @if($editingReservation->payment_method)
+                                <div>
+                                    <p class="text-xs text-green-700 font-medium">Método de Pago</p>
+                                    <p class="text-base font-semibold text-green-900">{{ $editingReservation->payment_method }}</p>
+                                </div>
+                                @endif
+                                @if($editingReservation->payment_reference)
+                                <div>
+                                    <p class="text-xs text-green-700 font-medium">Referencia de Pago</p>
+                                    <p class="text-base font-semibold text-green-900 break-all">{{ $editingReservation->payment_reference }}</p>
+                                </div>
+                                @endif
+                            </div>
                         </div>
+
+                        <!-- Fechas -->
+                        <div class="flex-1 bg-purple-50 rounded-lg p-4 border border-purple-200 min-w-[260px]">
+                            <h3 class="text-base font-semibold text-purple-900 mb-4">Fechas</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="text-xs text-purple-700 font-medium">Fecha de Reserva</p>
+                                    <p class="text-base font-semibold text-purple-900">{{ $editingReservation->reservation_date->format('d/m/Y') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-purple-700 font-medium">Fecha de Vencimiento</p>
+                                    <p class="text-base font-semibold text-purple-900">
+                                        {{ $editingReservation->expiration_date ? $editingReservation->expiration_date->format('d/m/Y') : 'N/A' }}
+                                        @if($editingReservation->expiration_date && $editingReservation->expiration_date->isPast() && $editingReservation->status === 'activa')
+                                            <span class="ml-2 text-xs text-red-600 font-medium">(Vencida)</span>
+                                        @elseif($editingReservation->expiration_date && $editingReservation->is_expiring_soon)
+                                            <span class="ml-2 text-xs text-yellow-600 font-medium">(Por vencer)</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notas y Términos y Condiciones en una sola fila ancha si hay alguno -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        @if($editingReservation->notes)
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <h3 class="text-base font-semibold text-gray-900 mb-2">Notas</h3>
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $editingReservation->notes }}</p>
+                            </div>
+                        @endif
+                        @if($editingReservation->terms_conditions)
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <h3 class="text-base font-semibold text-gray-900 mb-2">Términos y Condiciones</h3>
+                                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ $editingReservation->terms_conditions }}</p>
+                            </div>
                         @endif
                     </div>
+
+                    <!-- Auditoría -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 max-w-4xl mx-auto">
+                        <h3 class="text-base font-semibold text-gray-900 mb-4">Auditoría</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <p class="text-xs text-gray-600 font-medium">Creado por</p>
+                                <p class="text-base font-semibold text-gray-900">{{ $editingReservation->createdBy->name ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-500">{{ $editingReservation->created_at->format('d/m/Y H:i') }}</p>
+                            </div>
+                            @if($editingReservation->updatedBy)
+                            <div>
+                                <p class="text-xs text-gray-600 font-medium">Actualizado por</p>
+                                <p class="text-base font-semibold text-gray-900">{{ $editingReservation->updatedBy->name }}</p>
+                                <p class="text-xs text-gray-500">{{ $editingReservation->updated_at->format('d/m/Y H:i') }}</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-end pt-3 border-t">
+                
+                <div class="flex justify-end pt-6 mt-6 border-t">
                     <flux:button size="xs" variant="primary" color="zinc" wire:click="closeModals">Cerrar</flux:button>
                 </div>
             </div>
@@ -429,6 +470,43 @@
                         <div class="flex justify-end space-x-2 pt-3 border-t">
                             <flux:button size="xs" type="button" variant="primary" color="zinc" wire:click="closeModals">Cancelar</flux:button>
                             <flux:button size="xs" type="submit" variant="primary" color="green">Confirmar y Guardar</flux:button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </flux:modal>
+    @endif
+
+    <!-- Modal de Cancelación -->
+    @if($showCancelModal && $cancelingReservation)
+        <flux:modal wire:model="showCancelModal" name="cancel-modal">
+            <div class="p-4">
+                <h2 class="text-base font-semibold mb-3 text-red-600">Cancelar Reserva</h2>
+                <form wire:submit.prevent="submitCancellation">
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border border-red-200 rounded p-2 mb-3">
+                            <p class="text-xs text-red-800">
+                                <strong>Reserva:</strong> {{ $cancelingReservation->reservation_number }} | 
+                                <strong>Cliente:</strong> {{ $cancelingReservation->client->name }} | 
+                                <strong>Proyecto:</strong> {{ $cancelingReservation->project->name }} | 
+                                <strong>Unidad:</strong> {{ $cancelingReservation->unit->unit_number ?? 'N/A' }}
+                            </p>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3">
+                            <p class="text-xs text-yellow-800">
+                                <strong>⚠️ Advertencia:</strong> Al cancelar esta reserva, la unidad se marcará como "Disponible" y estará disponible para nuevas reservas.
+                            </p>
+                        </div>
+
+                        <flux:textarea size="xs" wire:model="cancel_note" label="Motivo de Cancelación" rows="4" required placeholder="Ingrese el motivo de la cancelación (mínimo 10 caracteres)..." />
+                        @error('cancel_note') 
+                            <p class="text-xs text-red-500 mt-0.5">{{ $message }}</p> 
+                        @enderror
+
+                        <div class="flex justify-end space-x-2 pt-3 border-t">
+                            <flux:button size="xs" type="button" variant="primary" color="zinc" wire:click="closeModals">No Cancelar</flux:button>
+                            <flux:button size="xs" type="submit" variant="primary" color="red">Confirmar Cancelación</flux:button>
                         </div>
                     </div>
                 </form>

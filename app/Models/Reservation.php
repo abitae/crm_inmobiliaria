@@ -261,9 +261,10 @@ class Reservation extends Model
                 'notes' => $this->notes . "\n\nCancelada: " . $reason
             ]);
 
-            // Liberar la unidad
+            // Actualizar la unidad a 'disponible'
             if ($this->unit) {
-                $this->unit->unblock();
+                $this->unit->update(['status' => 'disponible']);
+                $this->unit->project->updateUnitCounts();
             }
 
             return true;
