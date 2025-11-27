@@ -175,15 +175,16 @@ class Unit extends Model
     {
         // Retornar el valor del atributo directamente desde el array de atributos
         // para evitar conflicto con el método block()
-        return $this->attributes['block'] ?? null;
+        // Verificar si existe la clave antes de acceder para evitar errores con select() específico
+        return isset($this->attributes['block']) ? $this->attributes['block'] : null;
     }
 
     public function getFullIdentifierAttribute(): string
     {
         $parts = array_filter([
-            $this->project->name,
+            $this->relationLoaded('project') && $this->project ? $this->project->name : null,
             $this->tower ? "Torre {$this->tower}" : null,
-            $this->attributes['block'] ? "Bloque {$this->attributes['block']}" : null,
+            $this->block ? "Bloque {$this->block}" : null,
             $this->floor ? "Piso {$this->floor}" : null,
             "Unidad {$this->unit_number}"
         ]);

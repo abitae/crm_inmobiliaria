@@ -22,19 +22,17 @@ Obtiene una lista paginada de reservas del cazador autenticado.
 |-----------|------|-----------|-------------|
 | `per_page` | integer | No | Elementos por página (máximo 100, por defecto 15) |
 | `page` | integer | No | Número de página (por defecto 1) |
-| `search` | string | No | Búsqueda en número de reserva, nombre de cliente o proyecto |
-| `status` | string | No | Estado de reserva (activa, confirmada, cancelada, vencida, convertida_venta) |
-| `payment_status` | string | No | Estado de pago (pendiente, pagado, parcial) |
-| `project_id` | integer | No | Filtrar por proyecto |
-| `client_id` | integer | No | Filtrar por cliente |
-| `advisor_id` | integer | No | Filtrar por asesor (solo admin/líder) |
 
-> ⚠️ **Nota**: Los cazadores normales solo ven sus propias reservas. Los administradores y líderes ven todas las reservas.
+> ⚠️ **Nota**: 
+> - Los cazadores normales solo ven sus propias reservas (filtrado automático por `advisor_id`).
+> - Los administradores y líderes ven todas las reservas.
+> - Las reservas se ordenan por fecha de creación descendente (más recientes primero).
+> - No hay filtros adicionales disponibles. Para buscar reservas específicas, use el endpoint de obtener reserva por ID.
 
 #### Ejemplo de Solicitud
 
 ```bash
-curl -X GET "https://tu-dominio.com/api/cazador/reservations?status=activa&per_page=20" \
+curl -X GET "https://tu-dominio.com/api/cazador/reservations?per_page=20" \
   -H "Authorization: Bearer {token}"
 ```
 
@@ -557,8 +555,9 @@ confirmada → cancelada (al cancelar)
 5. **Conversión**: Al convertir, se crea/actualiza una Opportunity y la unidad se marca como `vendido`
 6. **Número de reserva**: Se genera automáticamente con formato `RES-YYYY-NNNNNN`
 7. **Imágenes**: Se almacenan en `storage/app/public/reservations`
+8. **Listado de reservas**: El endpoint de listado no incluye filtros adicionales. Solo permite paginación. El filtrado por asesor es automático según el rol del usuario.
 
 ---
 
-**Última actualización**: 2024-01-01
+**Última actualización**: 2024-12-19
 
