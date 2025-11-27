@@ -92,96 +92,86 @@ class ReservationController extends Controller
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
+    /**
+     * Listar reservas del cazador autenticado
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
         try {
-            $perPage = min((int) $request->get('per_page', 15), 100);
-            
-            $filters = [
-                'search' => $request->get('search'),
-                'status' => $request->get('status'),
-                'payment_status' => $request->get('payment_status'),
-                'project_id' => $request->get('project_id'),
-                'client_id' => $request->get('client_id'),
-                'advisor_id' => $request->get('advisor_id'),
-            ];
-
+            $perPage = min(max((int)$request->input('per_page', 15), 1), 100);
             $user = Auth::user();
-            
-            // Construir query base
-            $query = Reservation::with([
-                'client:id,name,phone',
-                'project:id,name',
-                'unit:id,project_id,unit_manzana,unit_number',
-                'advisor:id,name,email',
+
+            // Obtener filtros únicos eficientemente
+            $filters = $request->only([
+                'search', 'status', 'payment_status', 'project_id', 'client_id', 'advisor_id'
             ]);
 
-            // Filtrar por asesor: solo sus reservas (excepto admin/líder que ven todas)
+            // Construir la query base solo con los campos y relaciones necesarios
+            $query = Reservation::query()
+                ->with([
+                    'client:id,name,phone',
+                    'project:id,name',
+                    'unit:id,project_id,unit_manzana,unit_number',
+                    'advisor:id,name,email',
+                ]);
+
+            // Filtrar por asesor según rol (usuario normal solo sus reservas)
             if (!$user->isAdmin() && !$user->isLider()) {
                 $query->where('advisor_id', $user->id);
             } elseif (!empty($filters['advisor_id'])) {
-                $query->byAdvisor($filters['advisor_id']);
+                $query->where('advisor_id', $filters['advisor_id']);
             }
 
-            // Aplicar filtros
-            if (!empty($filters['status'])) {
-                $query->byStatus($filters['status']);
+            // Aplicar filtros simples usando foreach para reducir líneas de código
+            $filterScopes = [
+                'status' => 'byStatus',
+                'payment_status' => 'byPaymentStatus',
+                'project_id' => 'byProject',
+                'client_id' => 'byClient'
+            ];
+
+            foreach ($filterScopes as $key => $scope) {
+                if (!empty($filters[$key])) {
+                    $query->$scope($filters[$key]);
+                }
             }
 
-            if (!empty($filters['payment_status'])) {
-                $query->byPaymentStatus($filters['payment_status']);
-            }
-
-            if (!empty($filters['project_id'])) {
-                $query->byProject($filters['project_id']);
-            }
-
-            if (!empty($filters['client_id'])) {
-                $query->byClient($filters['client_id']);
-            }
-
+            // Optimizar búsqueda textual sobre reservation_number, cliente y proyecto
             if (!empty($filters['search'])) {
                 $search = trim($filters['search']);
                 $query->where(function ($q) use ($search) {
                     $q->where('reservation_number', 'like', "%{$search}%")
-                        ->orWhereHas('client', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
-                        })
-                        ->orWhereHas('project', function ($q) use ($search) {
-                            $q->where('name', 'like', "%{$search}%");
-                        });
+                        ->orWhereHas('client', fn($qc) => $qc->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('project', fn($qp) => $qp->where('name', 'like', "%{$search}%"));
                 });
             }
 
-            // Paginar resultados
-            $reservations = $query->orderBy('created_at', 'desc')
-                ->paginate($perPage);
+            // Paginación y mapeo optimizado usando ->getCollection()->transform()
+            $reservationsPage = $query->orderByDesc('created_at')->paginate($perPage);
 
-            // Formatear reservas
-            $formattedReservations = $reservations->map(function ($reservation) {
-                return $this->formatReservation($reservation);
-            });
+            // Transformar la colección paginada (no crea una segunda colección en memoria)
+            $reservationsPage->getCollection()->transform(fn($reservation) => $this->formatReservation($reservation));
 
             return $this->successResponse([
-                'reservations' => $formattedReservations,
+                'reservations' => $reservationsPage->items(),
                 'pagination' => [
-                    'current_page' => $reservations->currentPage(),
-                    'per_page' => $reservations->perPage(),
-                    'total' => $reservations->total(),
-                    'last_page' => $reservations->lastPage(),
-                    'from' => $reservations->firstItem(),
-                    'to' => $reservations->lastItem(),
+                    'current_page' => $reservationsPage->currentPage(),
+                    'per_page' => $reservationsPage->perPage(),
+                    'total' => $reservationsPage->total(),
+                    'last_page' => $reservationsPage->lastPage(),
+                    'from' => $reservationsPage->firstItem(),
+                    'to' => $reservationsPage->lastItem(),
                 ]
             ], 'Reservas obtenidas exitosamente');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Error al obtener reservas (Cazador)', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
-            
             return $this->serverErrorResponse($e, 'Error al obtener las reservas');
         }
     }
