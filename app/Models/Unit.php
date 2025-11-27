@@ -167,12 +167,23 @@ class Unit extends Model
     }
 
     // Accessors
+    /**
+     * Accessor para el atributo 'block' (bloque de la unidad)
+     * Necesario para evitar conflicto con el método block()
+     */
+    public function getBlockAttribute()
+    {
+        // Retornar el valor del atributo directamente desde el array de atributos
+        // para evitar conflicto con el método block()
+        return $this->attributes['block'] ?? null;
+    }
+
     public function getFullIdentifierAttribute(): string
     {
         $parts = array_filter([
             $this->project->name,
             $this->tower ? "Torre {$this->tower}" : null,
-            $this->block ? "Bloque {$this->block}" : null,
+            $this->attributes['block'] ? "Bloque {$this->attributes['block']}" : null,
             $this->floor ? "Piso {$this->floor}" : null,
             "Unidad {$this->unit_number}"
         ]);

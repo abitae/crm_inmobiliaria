@@ -2,7 +2,7 @@
 
 ## 📋 Introducción
 
-La API Cazador está diseñada para usuarios con rol **Cazador** (vendedores/asesores), **Líder** y **Administrador**. Esta API permite gestionar clientes, consultar proyectos y unidades disponibles, y realizar operaciones de autenticación.
+La API Cazador está diseñada para usuarios con rol **Cazador** (vendedores/asesores), **Líder** y **Administrador**. Esta API permite gestionar clientes, consultar proyectos y unidades disponibles, gestionar reservas, buscar documentos y realizar operaciones de autenticación.
 
 ## 🔐 Autenticación
 
@@ -26,6 +26,7 @@ https://tu-dominio.com/api/cazador
 - **[PROJECTS.md](./PROJECTS.md)** - Gestión de proyectos y unidades
 - **[CLIENTS.md](./CLIENTS.md)** - Gestión de clientes
 - **[RESERVATIONS.md](./RESERVATIONS.md)** - Gestión de reservas
+- **[DOCUMENTS.md](./DOCUMENTS.md)** - Búsqueda de documentos (DNI/RUC)
 
 ## 🎯 Roles Permitidos
 
@@ -71,6 +72,7 @@ Todas las respuestas siguen un formato estándar:
 - `401` - No autenticado
 - `403` - Acceso denegado
 - `404` - Recurso no encontrado
+- `409` - Conflicto (recurso ya existe)
 - `422` - Error de validación
 - `500` - Error del servidor
 
@@ -128,6 +130,7 @@ Consulta los archivos específicos para cada módulo:
 - [Proyectos](./PROJECTS.md)
 - [Clientes](./CLIENTS.md)
 - [Reservas](./RESERVATIONS.md)
+- [Búsqueda de Documentos](./DOCUMENTS.md)
 
 ---
 
