@@ -1,0 +1,1397 @@
+{
+	"info": {
+		"_postman_id": "crm-inmobiliaria-api-2024",
+		"name": "CRM Inmobiliaria API",
+		"description": "Colección completa de endpoints para las aplicaciones Cazador, Datero y API pública",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Cazador",
+			"item": [
+				{
+					"name": "Auth",
+					"item": [
+						{
+							"name": "Login",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"cazador@example.com\",\n    \"password\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "auth", "login"]
+								}
+							}
+						},
+						{
+							"name": "Me",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/auth/me",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "auth", "me"]
+								}
+							}
+						},
+						{
+							"name": "Logout",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/auth/logout",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "auth", "logout"]
+								}
+							}
+						},
+						{
+							"name": "Refresh Token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/auth/refresh",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "auth", "refresh"]
+								}
+							}
+						},
+						{
+							"name": "Change Password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"current_password\": \"password123\",\n    \"new_password\": \"newpassword123\",\n    \"new_password_confirmation\": \"newpassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/auth/change-password",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "auth", "change-password"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Clients",
+					"item": [
+						{
+							"name": "List Clients",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/clients?per_page=15&page=1&search=&status=&type=&source=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "clients"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "search",
+											"value": ""
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "type",
+											"value": ""
+										},
+										{
+											"key": "source",
+											"value": ""
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Client",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/clients/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "clients", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Client",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Juan Pérez\",\n    \"phone\": \"987654321\",\n    \"document_type\": \"DNI\",\n    \"document_number\": \"12345678\",\n    \"address\": \"Av. Principal 123\",\n    \"birth_date\": \"1990-01-15\",\n    \"client_type\": \"persona\",\n    \"source\": \"referido\",\n    \"status\": \"nuevo\",\n    \"score\": 50,\n    \"notes\": \"Cliente interesado en lotes\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/clients",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "clients"]
+								}
+							}
+						},
+						{
+							"name": "Update Client",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Juan Pérez García\",\n    \"phone\": \"987654321\",\n    \"address\": \"Av. Principal 456\",\n    \"status\": \"contactado\",\n    \"score\": 75\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/clients/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "clients", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Client Options",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/clients/options",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "clients", "options"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Projects",
+					"item": [
+						{
+							"name": "List Projects",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/projects?per_page=15&page=1&search=&project_type=&lote_type=&stage=&legal_status=&status=&district=&province=&region=&has_available_units=false",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "projects"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "search",
+											"value": ""
+										},
+										{
+											"key": "project_type",
+											"value": ""
+										},
+										{
+											"key": "lote_type",
+											"value": ""
+										},
+										{
+											"key": "stage",
+											"value": ""
+										},
+										{
+											"key": "legal_status",
+											"value": ""
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "district",
+											"value": ""
+										},
+										{
+											"key": "province",
+											"value": ""
+										},
+										{
+											"key": "region",
+											"value": ""
+										},
+										{
+											"key": "has_available_units",
+											"value": "false"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Project",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/projects/:id?units_per_page=15&include_units=true",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "projects", ":id"],
+									"query": [
+										{
+											"key": "units_per_page",
+											"value": "15"
+										},
+										{
+											"key": "include_units",
+											"value": "true"
+										}
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Project Units",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/projects/:id/units?per_page=15&page=1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "projects", ":id", "units"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										}
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Reservations",
+					"item": [
+						{
+							"name": "List Reservations",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations?per_page=15&page=1",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Reservation",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Reservation",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"client_id\": 1,\n    \"project_id\": 1,\n    \"unit_id\": 1,\n    \"advisor_id\": 1,\n    \"reservation_date\": \"2024-12-01\",\n    \"expiration_date\": \"2024-12-15\",\n    \"reservation_amount\": 5000.00,\n    \"reservation_percentage\": 10.0,\n    \"payment_method\": \"transferencia\",\n    \"payment_reference\": \"TRF-123456\",\n    \"notes\": \"Reserva inicial\",\n    \"terms_conditions\": \"Términos y condiciones aceptados\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations"]
+								}
+							}
+						},
+						{
+							"name": "Update Reservation",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"reservation_amount\": 6000.00,\n    \"reservation_percentage\": 12.0,\n    \"payment_status\": \"parcial\",\n    \"payment_reference\": \"TRF-123456-UPDATED\",\n    \"notes\": \"Reserva actualizada\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Confirm Reservation",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"reservation_date\": \"2024-12-01\",\n    \"expiration_date\": \"2024-12-15\",\n    \"reservation_amount\": 5000.00,\n    \"reservation_percentage\": 10.0,\n    \"payment_method\": \"transferencia\",\n    \"payment_status\": \"pagado\",\n    \"payment_reference\": \"TRF-123456\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations/:id/confirm",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations", ":id", "confirm"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								},
+								"description": "Nota: Este endpoint requiere subir una imagen. En Postman, usa form-data en lugar de raw JSON para incluir el archivo 'image'."
+							}
+						},
+						{
+							"name": "Cancel Reservation",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"cancel_note\": \"Cliente decidió no continuar con la reserva por motivos personales\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations/:id/cancel",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations", ":id", "cancel"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Convert to Sale",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/cazador/reservations/:id/convert-to-sale",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "reservations", ":id", "convert-to-sale"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Documents",
+					"item": [
+						{
+							"name": "Search Document",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"document_type\": \"dni\",\n    \"document_number\": \"12345678\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/cazador/documents/search",
+									"host": ["{{base_url}}"],
+									"path": ["api", "cazador", "documents", "search"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Datero",
+			"item": [
+				{
+					"name": "Auth",
+					"item": [
+						{
+							"name": "Login",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"datero@example.com\",\n    \"password\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/auth/login",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "auth", "login"]
+								}
+							}
+						},
+						{
+							"name": "Me",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/auth/me",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "auth", "me"]
+								}
+							}
+						},
+						{
+							"name": "Logout",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/auth/logout",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "auth", "logout"]
+								}
+							}
+						},
+						{
+							"name": "Refresh Token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/auth/refresh",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "auth", "refresh"]
+								}
+							}
+						},
+						{
+							"name": "Change Password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"current_password\": \"password123\",\n    \"new_password\": \"newpassword123\",\n    \"new_password_confirmation\": \"newpassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/auth/change-password",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "auth", "change-password"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Clients",
+					"item": [
+						{
+							"name": "List Clients",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/clients?per_page=15&page=1&search=&status=&type=&source=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "clients"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "search",
+											"value": ""
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "type",
+											"value": ""
+										},
+										{
+											"key": "source",
+											"value": ""
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Client",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/clients/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "clients", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Create Client",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"María González\",\n    \"phone\": \"987654321\",\n    \"document_type\": \"DNI\",\n    \"document_number\": \"87654321\",\n    \"address\": \"Av. Secundaria 789\",\n    \"birth_date\": \"1985-05-20\",\n    \"client_type\": \"persona\",\n    \"source\": \"facebook\",\n    \"status\": \"nuevo\",\n    \"score\": 60,\n    \"notes\": \"Cliente potencial\",\n    \"assigned_advisor_id\": 2\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/clients",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "clients"]
+								}
+							}
+						},
+						{
+							"name": "Update Client",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"María González López\",\n    \"phone\": \"987654321\",\n    \"address\": \"Av. Secundaria 789\",\n    \"status\": \"contactado\",\n    \"score\": 80\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/clients/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "clients", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Client Options",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/clients/options",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "clients", "options"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Commissions",
+					"item": [
+						{
+							"name": "List Commissions",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/commissions?per_page=15&page=1&status=&commission_type=&start_date=&end_date=",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "commissions"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "commission_type",
+											"value": ""
+										},
+										{
+											"key": "start_date",
+											"value": ""
+										},
+										{
+											"key": "end_date",
+											"value": ""
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Commission",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/commissions/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "commissions", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Commission Stats",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/commissions/stats",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "commissions", "stats"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Profile",
+					"item": [
+						{
+							"name": "Get Profile",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/datero/profile",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "profile"]
+								}
+							}
+						},
+						{
+							"name": "Update Profile",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Nombre Actualizado\",\n    \"email\": \"nuevoemail@example.com\",\n    \"phone\": \"987654321\",\n    \"banco\": \"Banco de la Nación\",\n    \"cuenta_bancaria\": \"1234567890\",\n    \"cci_bancaria\": \"12345678901234567890\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/profile",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "profile"]
+								}
+							}
+						},
+						{
+							"name": "Change Password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"current_password\": \"password123\",\n    \"new_password\": \"newpassword123\",\n    \"new_password_confirmation\": \"newpassword123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/profile/change-password",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "profile", "change-password"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Documents",
+					"item": [
+						{
+							"name": "Search Document",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"document_type\": \"dni\",\n    \"document_number\": \"12345678\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/datero/documents/search",
+									"host": ["{{base_url}}"],
+									"path": ["api", "datero", "documents", "search"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Público",
+			"item": [
+				{
+					"name": "Projects",
+					"item": [
+						{
+							"name": "List Projects",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/projects?per_page=15&page=1&search=&project_type=&lote_type=&stage=&legal_status=&status=&district=&province=&region=&has_available_units=false",
+									"host": ["{{base_url}}"],
+									"path": ["api", "projects"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "search",
+											"value": ""
+										},
+										{
+											"key": "project_type",
+											"value": ""
+										},
+										{
+											"key": "lote_type",
+											"value": ""
+										},
+										{
+											"key": "stage",
+											"value": ""
+										},
+										{
+											"key": "legal_status",
+											"value": ""
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "district",
+											"value": ""
+										},
+										{
+											"key": "province",
+											"value": ""
+										},
+										{
+											"key": "region",
+											"value": ""
+										},
+										{
+											"key": "has_available_units",
+											"value": "false"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Project",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/projects/:id",
+									"host": ["{{base_url}}"],
+									"path": ["api", "projects", ":id"],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						},
+						{
+							"name": "Get Project Units",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/projects/:id/units?per_page=15&page=1&status=&unit_type=&min_price=&max_price=&min_area=&max_area=&bedrooms=&only_available=false",
+									"host": ["{{base_url}}"],
+									"path": ["api", "projects", ":id", "units"],
+									"query": [
+										{
+											"key": "per_page",
+											"value": "15"
+										},
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "status",
+											"value": ""
+										},
+										{
+											"key": "unit_type",
+											"value": ""
+										},
+										{
+											"key": "min_price",
+											"value": ""
+										},
+										{
+											"key": "max_price",
+											"value": ""
+										},
+										{
+											"key": "min_area",
+											"value": ""
+										},
+										{
+											"key": "max_area",
+											"value": ""
+										},
+										{
+											"key": "bedrooms",
+											"value": ""
+										},
+										{
+											"key": "only_available",
+											"value": "false"
+										}
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "1"
+										}
+									]
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
