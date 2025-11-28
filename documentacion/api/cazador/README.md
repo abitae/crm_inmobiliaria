@@ -108,6 +108,26 @@ Los endpoints que devuelven listas utilizan paginación. El formato de respuesta
 - `per_page`: Número de elementos por página (máximo 100, por defecto 15)
 - `page`: Número de página (por defecto 1)
 
+## 📬 Colección de Postman
+
+Para facilitar las pruebas de la API, se ha creado una colección completa de Postman que incluye todos los endpoints documentados.
+
+### Archivos Disponibles
+
+- **`Cazador_API.postman_collection.json`** - Colección completa con todos los endpoints
+- **`Cazador_API.postman_environment.json`** - Variables de entorno (opcional)
+- **`POSTMAN_IMPORT.md`** - Guía detallada de importación y uso
+
+### Importar en Postman
+
+1. Abre Postman
+2. Haz clic en **Import**
+3. Selecciona `Cazador_API.postman_collection.json`
+4. (Opcional) Importa también `Cazador_API.postman_environment.json`
+5. Configura la variable `base_url` con tu URL base
+
+Para más detalles, consulta [POSTMAN_IMPORT.md](./POSTMAN_IMPORT.md).
+
 ## 🚀 Inicio Rápido
 
 1. **Autenticarse**: Obtener token JWT
@@ -134,5 +154,5 @@ Consulta los archivos específicos para cada módulo:
 
 ---
 
-**Última actualización**: 2024-01-01
+**Última actualización**: 2024-12-19
 

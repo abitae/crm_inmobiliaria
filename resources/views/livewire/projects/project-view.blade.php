@@ -271,10 +271,10 @@
                             title="Agregar unidad">
                             Agregar
                         </flux:button>
-                        <flux:button size="xs" icon="arrow-up-tray" wire:click="importUnits()"
+                        <flux:button size="xs" icon="document-arrow-up" wire:click="importUnits()"
                             class="bg-green-600 hover:bg-green-700 text-white font-medium rounded-md px-3 py-1 transition-colors"
                             title="Importar unidades desde Excel">
-                            Importar
+                            Importar Excel
                         </flux:button>
                     </div>
                 </div>
@@ -1369,77 +1369,156 @@
     <!-- Modal compacto para Importar Unidades -->
     <flux:modal wire:model.self="showImportUnitsModal">
         <div class="p-4">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-base font-semibold text-gray-900">Importar Unidades</h3>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-900">Importar Unidades</h3>
+                <flux:icon name="document-arrow-up" class="h-5 w-5 text-blue-600" />
             </div>
-            <div class="text-xs text-gray-600 mb-2">
-                Sube un archivo <b>CSV</b> con las unidades del proyecto.<br>
-                <span class="text-blue-700">Campos requeridos:</span> <b>numero_unidad, tipo, area, precio_base,
-                    precio_total</b>.<br>
-                <span class="text-blue-700">Tipo válido:</span> lote (solo lotes).<br>
-                <span class="text-blue-700">Estados válidos:</span> disponible, reservado, vendido, transferido, cuotas.<br>
-                <span class="text-blue-700">Importante:</span> Solo se aceptan archivos CSV.
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="text-xs text-gray-700 space-y-1.5">
+                    <p class="font-medium text-blue-900 mb-2">📋 Información de Importación</p>
+                    <p>
+                        <span class="font-semibold text-blue-800">Formato aceptado:</span> 
+                        <span class="text-gray-700">Excel (.xlsx, .xls) únicamente</span>
+                    </p>
+                    <p>
+                        <span class="font-semibold text-blue-800">Campos requeridos:</span> 
+                        <span class="text-gray-700"><b>numero_unidad</b>, <b>tipo</b>, <b>area</b>, <b>precio_base</b>, <b>precio_total</b></span>
+                    </p>
+                    <p>
+                        <span class="font-semibold text-blue-800">Tipo válido:</span> 
+                        <span class="text-gray-700"><b>lote</b> (solo lotes)</span>
+                    </p>
+                    <p>
+                        <span class="font-semibold text-blue-800">Estados válidos:</span> 
+                        <span class="text-gray-700">disponible, reservado, vendido, transferido, cuotas</span>
+                    </p>
+                </div>
             </div>
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs text-gray-700">Descarga la plantilla:</span>
-                <flux:button wire:click="downloadTemplate" variant="outline" size="xs" icon="arrow-down-tray">
-                    Plantilla CSV
-                </flux:button>
+
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-700 mb-0.5">Descargar plantilla</p>
+                        <p class="text-xs text-gray-500">Archivo Excel con formato y ejemplo</p>
+                    </div>
+                    <flux:button wire:click="downloadTemplate" variant="outline" size="xs" icon="arrow-down-tray"
+                        class="shrink-0">
+                        Descargar Plantilla
+                    </flux:button>
+                </div>
             </div>
-            <div class="mb-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1">
-                    Archivo CSV
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Seleccionar archivo
                 </label>
-                <flux:input type="file" wire:model="importFile" accept=".csv" class="w-full" />
+                <div class="relative">
+                    <flux:input 
+                        type="file" 
+                        wire:model="importFile" 
+                        accept=".xlsx,.xls" 
+                        class="w-full"
+                        placeholder="Selecciona un archivo Excel" />
+                    <div class="mt-1 text-xs text-gray-500">
+                        Solo archivos Excel: .xlsx, .xls (máx. 10MB)
+                    </div>
+                </div>
                 @error('importFile')
-                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                    <p class="text-red-600 text-xs mt-1 flex items-center">
+                        <flux:icon name="exclamation-circle" class="h-3 w-3 mr-1" />
+                        {{ $message }}
+                    </p>
                 @enderror
             </div>
             @if ($importProgress > 0)
-                <div class="mb-2">
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Progreso</span>
-                        <span class="text-gray-900 font-medium">{{ $importProgress }}%</span>
+                <div class="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">Progreso de importación</span>
+                        <span class="text-sm font-bold text-blue-600">{{ $importProgress }}%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1">
-                        <div class="bg-blue-600 h-1 rounded-full transition-all duration-300"
-                            style="width: {{ $importProgress }}%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300 flex items-center justify-center"
+                            style="width: {{ $importProgress }}%">
+                        </div>
                     </div>
                     @if ($importStatus)
-                        <p class="text-xs text-gray-600 mt-1">{{ $importStatus }}</p>
+                        <p class="text-xs text-gray-600 flex items-center">
+                            <flux:icon name="information-circle" class="h-3 w-3 mr-1 text-blue-500" />
+                            {{ $importStatus }}
+                        </p>
                     @endif
                 </div>
             @endif
+
             @if ($importSuccessCount > 0 || $importErrorCount > 0)
-                <div class="mb-2 space-y-1">
+                <div class="mb-4 space-y-2">
                     @if ($importSuccessCount > 0)
-                        <div class="flex items-center text-green-600 text-xs">
-                            <flux:icon name="check-circle" class="h-4 w-4 mr-1" />
-                            {{ $importSuccessCount }} importadas
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div class="flex items-center text-green-700">
+                                <flux:icon name="check-circle" class="h-5 w-5 mr-2" />
+                                <span class="text-sm font-semibold">
+                                    {{ $importSuccessCount }} {{ $importSuccessCount === 1 ? 'unidad importada' : 'unidades importadas' }} exitosamente
+                                </span>
+                            </div>
                         </div>
                     @endif
+                    
                     @if ($importErrorCount > 0)
-                        <div class="flex items-center text-red-600 text-xs">
-                            <flux:icon name="exclamation-triangle" class="h-4 w-4 mr-1" />
-                            {{ $importErrorCount }} errores
-                        </div>
-                    @endif
-                    @if (!empty($importErrors))
-                        <div class="bg-red-50 border border-red-200 rounded p-2 max-h-20 overflow-y-auto">
-                            @foreach ($importErrors as $error)
-                                <p class="text-xs text-red-700 mb-0.5">{{ $error }}</p>
-                            @endforeach
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <div class="flex items-center text-red-700 mb-2">
+                                <flux:icon name="exclamation-triangle" class="h-5 w-5 mr-2" />
+                                <span class="text-sm font-semibold">
+                                    {{ $importErrorCount }} {{ $importErrorCount === 1 ? 'error encontrado' : 'errores encontrados' }}
+                                </span>
+                            </div>
+                            @if (!empty($importErrors))
+                                <div class="bg-white border border-red-200 rounded p-2 max-h-32 overflow-y-auto">
+                                    @foreach (array_slice($importErrors, 0, 10) as $error)
+                                        <p class="text-xs text-red-700 mb-1 flex items-start">
+                                            <flux:icon name="x-circle" class="h-3 w-3 mr-1 mt-0.5 shrink-0" />
+                                            <span>{{ $error }}</span>
+                                        </p>
+                                    @endforeach
+                                    @if (count($importErrors) > 10)
+                                        <p class="text-xs text-red-600 italic mt-1">
+                                            ... y {{ count($importErrors) - 10 }} error(es) más
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
             @endif
-            <div class="flex justify-end space-x-2 pt-2 border-t mt-2">
-                <flux:button icon="x-mark" variant="ghost" wire:click="closeImportUnitsModal" size="xs">
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200">
+                <flux:button 
+                    icon="x-mark" 
+                    variant="ghost" 
+                    wire:click="closeImportUnitsModal" 
+                    size="sm"
+                    :disabled="$importProgress > 0 && $importProgress < 100">
                     Cancelar
                 </flux:button>
-                <flux:button icon="arrow-up-tray" wire:click="processImport"
-                    :disabled="!$importFile || $importProgress > 0" variant="primary" size="xs">
-                    Importar
+                <flux:button 
+                    icon="arrow-up-tray" 
+                    wire:click="processImport"
+                    :disabled="!$importFile || ($importProgress > 0 && $importProgress < 100)" 
+                    variant="primary" 
+                    size="sm"
+                    class="min-w-[100px]">
+                    @if ($importProgress > 0 && $importProgress < 100)
+                        <span class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647A7.962 7.962 0 0112 20c4.418 0 8-3.582 8-8h-4a7.962 7.962 0 01-3 2.647z"></path>
+                            </svg>
+                            Importando...
+                        </span>
+                    @else
+                        Importar
+                    @endif
                 </flux:button>
             </div>
         </div>
