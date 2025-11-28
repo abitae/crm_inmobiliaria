@@ -64,22 +64,22 @@ class ReservationController extends Controller
             'created_at' => $reservation->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $reservation->updated_at->format('Y-m-d H:i:s'),
             // Relaciones
-            'client' => $reservation->relationLoaded('client') ? [
+            'client' => ($reservation->relationLoaded('client') && $reservation->client) ? [
                 'id' => $reservation->client->id,
                 'name' => $reservation->client->name,
                 'phone' => $reservation->client->phone,
             ] : null,
-            'project' => $reservation->relationLoaded('project') ? [
+            'project' => ($reservation->relationLoaded('project') && $reservation->project) ? [
                 'id' => $reservation->project->id,
                 'name' => $reservation->project->name,
             ] : null,
-            'unit' => $reservation->relationLoaded('unit') ? [
+            'unit' => ($reservation->relationLoaded('unit') && $reservation->unit) ? [
                 'id' => $reservation->unit->id,
                 'unit_manzana' => $reservation->unit->unit_manzana,
                 'unit_number' => $reservation->unit->unit_number,
                 'full_identifier' => $reservation->unit->full_identifier,
             ] : null,
-            'advisor' => $reservation->relationLoaded('advisor') ? [
+            'advisor' => ($reservation->relationLoaded('advisor') && $reservation->advisor) ? [
                 'id' => $reservation->advisor->id,
                 'name' => $reservation->advisor->name,
                 'email' => $reservation->advisor->email,
