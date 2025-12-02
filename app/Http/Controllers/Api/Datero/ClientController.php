@@ -262,7 +262,7 @@ class ClientController extends Controller
             
             // Asegurar que created_by se establezca con el datero autenticado
             $formData['created_by'] = Auth::id();
-            $formData['assigned_advisor_id'] = Auth::user()->assigned_advisor_id;
+            $formData['assigned_advisor_id'] = Auth::user()->lider_id ?? Auth::id();
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);
             
