@@ -25,11 +25,11 @@ Route::middleware(['throttle:120,1'])->prefix('projects')->group(function () {
     // Listar proyectos publicados
     Route::get('/', [ProjectController::class, 'index'])
         ->name('api.projects.index');
-
+    
     // Obtener unidades de un proyecto publicado
     Route::get('/{id}/units', [ProjectController::class, 'units'])
         ->name('api.projects.units');
-
+    
     // Ver un proyecto publicado específico
     Route::get('/{id}', [ProjectController::class, 'show'])
         ->name('api.projects.show');

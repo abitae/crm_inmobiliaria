@@ -987,7 +987,7 @@ class ProjectView extends Component
                 }
 
         $perPage = $this->perPage === 'all' ? 999999 : (int)$this->perPage;
-        return $query->orderBy('unit_number')->paginate($perPage);
+        return $query->orderBy('unit_manzana')->orderBy('unit_number')->paginate($perPage);
     }
     public function addUnit()
     {
