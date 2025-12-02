@@ -99,6 +99,9 @@
                                 Contacto
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                DNI
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Rol Actual
                             </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -136,6 +139,15 @@
                                     @if ($user->phone)
                                         <div class="text-xs text-gray-500">{{ $user->phone }}</div>
                                     @endif
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">
+                                        @if ($user->dni)
+                                            {{ $user->dni }}
+                                        @else
+                                            <span class="text-gray-400">Sin DNI</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     @if ($user->roles->isNotEmpty())
@@ -209,7 +221,7 @@
                                         </flux:button>
                                         <flux:button icon="key" size="xs" variant="outline" color="blue"
                                             wire:click="openPasswordModal({{ $user->id }})"
-                                            title="Cambiar contraseña">
+                                            title="Cambiar PIN">
                                         </flux:button>
 
                                         @if ($user->isActive())
@@ -228,7 +240,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="users" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron usuarios</p>
@@ -312,6 +324,9 @@
                                     <div>
                                         <div class="text-sm font-medium text-gray-900">{{ $selectedUser->name }}</div>
                                         <div class="text-xs text-gray-500">{{ $selectedUser->email }}</div>
+                                        @if ($selectedUser->dni)
+                                            <div class="text-xs text-gray-500">DNI: {{ $selectedUser->dni }}</div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -341,6 +356,16 @@
                                 <flux:input id="phone" wire:model="phone" size="xs" placeholder="Teléfono"
                                     class="w-full" />
                                 @error('phone')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <!-- DNI -->
+                            <div class="col-span-2">
+                                <flux:input id="dni" wire:model="dni" size="xs" placeholder="DNI *" 
+                                    class="w-full" maxlength="20" />
+                                <p class="text-xs text-gray-500 mt-1">Documento Nacional de Identidad (único)</p>
+                                @error('dni')
                                     <span class="text-red-500 text-xs">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -396,7 +421,9 @@
                             @if ($isCreating)
                                 <div class="col-span-2">
                                     <flux:input id="password" type="password" wire:model="password" size="xs"
-                                        placeholder="Contraseña *" class="w-full" />
+                                        placeholder="PIN (6 dígitos) *" class="w-full" maxlength="6" 
+                                        pattern="[0-9]{6}" />
+                                    <p class="text-xs text-gray-500 mt-1">Debe ser exactamente 6 dígitos numéricos. El PIN se sincronizará automáticamente.</p>
                                     @error('password')
                                         <span class="text-red-500 text-xs">{{ $message }}</span>
                                     @enderror
@@ -405,10 +432,24 @@
                                 <div class="col-span-2">
                                     <flux:input id="password_confirmation" type="password"
                                         wire:model="password_confirmation" size="xs"
-                                        placeholder="Confirmar contraseña *" class="w-full" />
+                                        placeholder="Confirmar PIN (6 dígitos) *" class="w-full" maxlength="6"
+                                        pattern="[0-9]{6}" />
                                     @error('password_confirmation')
                                         <span class="text-red-500 text-xs">{{ $message }}</span>
                                     @enderror
+                                </div>
+                            @else
+                                <!-- Campo de contraseña opcional para actualización -->
+                                <div class="col-span-2">
+                                    <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                                        <div class="flex">
+                                            <flux:icon name="information-circle" class="w-5 h-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+                                            <div class="text-sm text-blue-800">
+                                                <p class="font-medium">Actualizar contraseña y PIN:</p>
+                                                <p class="text-xs mt-1">Si deseas cambiar la contraseña y el PIN, usa el botón "Cambiar contraseña" en la tabla. La contraseña debe ser de 6 dígitos numéricos.</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -564,7 +605,7 @@
 
             <div class="text-center mb-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-2">
-                    Cambiar Contraseña
+                    Cambiar PIN
                 </h3>
 
                 @if ($userForPasswordChange)
@@ -584,36 +625,42 @@
                 @endif
 
                 <p class="text-sm text-gray-600 mb-4">
-                    Ingresa la nueva contraseña para este usuario. La contraseña debe tener al menos 6 caracteres.
+                    Ingresa el nuevo PIN para este usuario. El PIN debe ser exactamente 6 dígitos numéricos. 
+                    <span class="font-medium text-blue-600">Tanto la contraseña como el PIN se actualizarán con el mismo valor.</span>
                 </p>
             </div>
 
             <form wire:submit.prevent="changePassword">
                 <div class="space-y-4">
-                    <!-- Nueva Contraseña -->
+                    <!-- Nueva Contraseña/PIN -->
                     <div>
                         <flux:input 
                             id="new_password" 
                             type="password" 
                             wire:model="new_password" 
                             size="xs"
-                            placeholder="Nueva contraseña *" 
+                            placeholder="Nuevo PIN (6 dígitos) *" 
                             class="w-full" 
+                            maxlength="6"
+                            pattern="[0-9]{6}"
                         />
+                        <p class="text-xs text-gray-500 mt-1">Debe ser exactamente 6 dígitos numéricos (0-9)</p>
                         @error('new_password')
                             <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
 
-                    <!-- Confirmar Nueva Contraseña -->
+                    <!-- Confirmar Nueva Contraseña/PIN -->
                     <div>
                         <flux:input 
                             id="new_password_confirmation" 
                             type="password" 
                             wire:model="new_password_confirmation" 
                             size="xs"
-                            placeholder="Confirmar nueva contraseña *" 
+                            placeholder="Confirmar nuevo PIN (6 dígitos) *" 
                             class="w-full" 
+                            maxlength="6"
+                            pattern="[0-9]{6}"
                         />
                         @error('new_password_confirmation')
                             <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
@@ -626,7 +673,7 @@
                         <flux:icon name="information-circle" class="w-5 h-5 text-blue-400 mr-2 mt-0.5" />
                         <div class="text-sm text-blue-800">
                             <p class="font-medium">Nota importante:</p>
-                            <p class="text-xs mt-1">El usuario deberá usar esta nueva contraseña para iniciar sesión.</p>
+                            <p class="text-xs mt-1">El usuario deberá usar este nuevo PIN (6 dígitos) para iniciar sesión con su DNI. Tanto la contraseña como el PIN se actualizarán con el mismo valor.</p>
                         </div>
                     </div>
                 </div>
@@ -639,7 +686,7 @@
                     <flux:button icon="key" type="submit" color="blue" size="sm"
                         wire:loading.attr="disabled" wire:loading.class="opacity-50 cursor-not-allowed">
                         <span wire:loading.remove>
-                            Cambiar Contraseña
+                            Cambiar PIN
                         </span>
                         <span wire:loading>
                             <flux:icon name="arrow-path" class="w-4 h-4 animate-spin" />

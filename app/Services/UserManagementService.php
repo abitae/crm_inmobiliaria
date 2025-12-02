@@ -25,7 +25,8 @@ class UserManagementService
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', $searchTerm)
                     ->orWhere('email', 'like', $searchTerm)
-                    ->orWhere('phone', 'like', $searchTerm);
+                    ->orWhere('phone', 'like', $searchTerm)
+                    ->orWhere('dni', 'like', $searchTerm);
             });
         }
 
@@ -159,12 +160,17 @@ class UserManagementService
     public function createUser(array $userData): array
     {
         try {
+            $password = $userData['password'];
+            $pin = $userData['pin'] ?? $password; // Si no se proporciona pin, usar password
+            
             $user = User::create([
                 'name' => $userData['name'],
                 'email' => $userData['email'],
                 'phone' => $userData['phone'] ?: null,
+                'dni' => $userData['dni'] ?? null,
                 'lider_id' => $userData['lider_id'],
-                'password' => bcrypt($userData['password']),
+                'password' => bcrypt($password),
+                'pin' => $pin, // El cast 'hashed' del modelo hasheará automáticamente
                 'is_active' => true,
                 'banco' => $userData['banco'] ?? '',
                 'cuenta_bancaria' => $userData['cuenta_bancaria'] ?? '',
@@ -179,7 +185,7 @@ class UserManagementService
                 'user' => $user
             ];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Error al crear el usuario.'];
+            return ['success' => false, 'message' => 'Error al crear el usuario: ' . $e->getMessage()];
         }
     }
 
@@ -189,7 +195,7 @@ class UserManagementService
     public function updateUser(User $user, array $userData): array
     {
         try {
-            $user->update([
+            $updateData = [
                 'name' => $userData['name'],
                 'email' => $userData['email'],
                 'phone' => $userData['phone'] ?: null,
@@ -197,7 +203,22 @@ class UserManagementService
                 'banco' => $userData['banco'] ?? '',
                 'cuenta_bancaria' => $userData['cuenta_bancaria'] ?? '',
                 'cci_bancaria' => $userData['cci_bancaria'] ?? '',
-            ]);
+            ];
+
+            // Actualizar DNI si se proporciona
+            if (isset($userData['dni'])) {
+                $updateData['dni'] = $userData['dni'];
+            }
+
+            // Si se proporciona password, actualizar también password y PIN
+            if (isset($userData['password']) && !empty($userData['password'])) {
+                $password = $userData['password'];
+                $updateData['password'] = bcrypt($password);
+                // Sincronizar PIN con password (el cast 'hashed' hasheará automáticamente)
+                $updateData['pin'] = $password;
+            }
+
+            $user->update($updateData);
 
             $user->setRole($userData['selectedRole']);
 
@@ -207,7 +228,7 @@ class UserManagementService
                 'user' => $user
             ];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Error al actualizar el usuario.'];
+            return ['success' => false, 'message' => 'Error al actualizar el usuario: ' . $e->getMessage()];
         }
     }
 
@@ -226,11 +247,23 @@ class UserManagementService
             'cci_bancaria' => 'nullable|string|max:255',
         ];
 
+        // Validación de DNI
+        if ($isCreating) {
+            $rules['dni'] = 'required|string|unique:users,dni';
+        } else {
+            $rules['dni'] = 'required|string|unique:users,dni,' . $existingUser->id;
+        }
+
         if ($isCreating) {
             $rules['email'] = 'required|email|max:255|unique:users,email';
-            $rules['password'] = 'required|string|min:8|confirmed';
+            // Para dateros, la contraseña debe ser de 6 dígitos numéricos
+            $rules['password'] = 'required|string|size:6|regex:/^[0-9]{6}$/|confirmed';
         } else {
             $rules['email'] = 'required|email|max:255|unique:users,email,' . $existingUser->id;
+            // Si se proporciona password al actualizar, debe ser de 6 dígitos
+            if (isset($data['password']) && !empty($data['password'])) {
+                $rules['password'] = 'required|string|size:6|regex:/^[0-9]{6}$/|confirmed';
+            }
         }
 
         $validator = validator($data, $rules);
@@ -275,22 +308,25 @@ class UserManagementService
             return ['success' => false, 'message' => 'Las contraseñas no coinciden.'];
         }
 
-        // Validar longitud mínima
-        if (strlen($newPassword) < 6) {
-            return ['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.'];
+        // Validar que sea exactamente 6 dígitos numéricos
+        if (strlen($newPassword) !== 6 || !preg_match('/^[0-9]{6}$/', $newPassword)) {
+            return ['success' => false, 'message' => 'La contraseña debe tener exactamente 6 dígitos numéricos.'];
         }
 
         try {
+            // Actualizar password y PIN con el mismo valor
+            // El PIN se hasheará automáticamente por el cast 'hashed' del modelo
             $user->update([
-                'password' => bcrypt($newPassword)
+                'password' => bcrypt($newPassword),
+                'pin' => $newPassword // Sincronizar PIN con password (se hasheará automáticamente)
             ]);
 
             return [
                 'success' => true,
-                'message' => "Contraseña de {$user->name} actualizada correctamente."
+                'message' => "Contraseña y PIN de {$user->name} actualizados correctamente."
             ];
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Error al cambiar la contraseña.'];
+            return ['success' => false, 'message' => 'Error al cambiar la contraseña: ' . $e->getMessage()];
         }
     }
 }

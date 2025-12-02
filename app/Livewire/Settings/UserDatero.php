@@ -49,6 +49,8 @@ class UserDatero extends Component
     public $name = '';
     public $email = '';
     public $phone = '';
+    public $dni = '';
+    public $pin = '';
     public $lider_id = null;
     public $selectedRole = '';
     public $password = '';
@@ -230,6 +232,8 @@ class UserDatero extends Component
             'name',
             'email',
             'phone',
+            'dni',
+            'pin',
             'lider_id',
             'selectedRole',
             'password',
@@ -250,6 +254,8 @@ class UserDatero extends Component
         $this->name = $this->selectedUser->name;
         $this->email = $this->selectedUser->email;
         $this->phone = $this->selectedUser->phone ?? '';
+        $this->dni = $this->selectedUser->dni ?? '';
+        $this->pin = ''; // No mostrar el PIN por seguridad
         $this->lider_id = $this->selectedUser->lider_id;
         $this->selectedRole = $this->selectedUser->roles->first()?->name ?? '';
         $this->password = '';
@@ -268,6 +274,7 @@ class UserDatero extends Component
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+            'dni' => $this->dni,
             'lider_id' => $this->lider_id,
             'selectedRole' => $this->selectedRole,
             'password' => $this->password,
@@ -276,6 +283,11 @@ class UserDatero extends Component
             'cuenta_bancaria' => $this->cuenta_bancaria,
             'cci_bancaria' => $this->cci_bancaria,
         ];
+
+        // Sincronizar PIN con password si se proporciona password
+        if (!empty($this->password)) {
+            $userData['pin'] = $this->password;
+        }
 
         $validation = $this->getUserService()->validateUserForm($userData, $this->isCreating, $this->selectedUser);
         
