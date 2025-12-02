@@ -7,7 +7,6 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
@@ -104,49 +103,6 @@ class ProfileController extends Controller
 
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al actualizar el perfil');
-        }
-    }
-
-    /**
-     * Cambiar contraseña del usuario autenticado
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function changePassword(Request $request)
-    {
-        try {
-            $user = Auth::user();
-
-            // Validar datos
-            $validator = Validator::make($request->all(), [
-                'current_password' => 'required|string',
-                'new_password' => 'required|string|min:6|confirmed',
-            ], [
-                'current_password.required' => 'La contraseña actual es obligatoria.',
-                'new_password.required' => 'La nueva contraseña es obligatoria.',
-                'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
-                'new_password.confirmed' => 'La confirmación de contraseña no coincide.',
-            ]);
-
-            if ($validator->fails()) {
-                return $this->validationErrorResponse($validator->errors());
-            }
-
-            // Verificar contraseña actual
-            if (!Hash::check($request->current_password, $user->password)) {
-                return $this->errorResponse('La contraseña actual es incorrecta', null, 422);
-            }
-
-            // Actualizar contraseña
-            $user->update([
-                'password' => Hash::make($request->new_password)
-            ]);
-
-            return $this->successResponse(null, 'Contraseña actualizada exitosamente');
-
-        } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al cambiar la contraseña');
         }
     }
 }

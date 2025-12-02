@@ -89,6 +89,7 @@ class ClientController extends Controller
             // Sanitizar filtros
             $filters = [
                 'search' => trim($request->get('search', '')),
+                'dni' => trim($request->get('dni', '')), // Búsqueda específica por DNI
                 'status' => $request->get('status'),
                 'type' => $request->get('type'),
                 'source' => $request->get('source'),
@@ -112,7 +113,14 @@ class ClientController extends Controller
                 $query->bySource($filters['source']);
             }
 
-            if (!empty($filters['search'])) {
+            // Búsqueda específica por DNI (prioritaria)
+            if (!empty($filters['dni'])) {
+                $dni = preg_replace('/[^0-9]/', '', $filters['dni']);
+                if (!empty($dni)) {
+                    $query->where('document_number', 'like', "%{$dni}%");
+                }
+            } elseif (!empty($filters['search'])) {
+                // Búsqueda general (nombre, teléfono, DNI)
                 $search = trim($filters['search']);
                 // Sanitizar búsqueda para prevenir SQL injection
                 $search = preg_replace('/[^a-zA-Z0-9\s\-]/', '', $search);
@@ -251,6 +259,9 @@ class ClientController extends Controller
             // Establecer valores por defecto si no se proporcionan
             $formData['status'] = $formData['status'] ?? 'nuevo';
             $formData['score'] = isset($formData['score']) ? max(0, min(100, (int) $formData['score'])) : 0;
+            
+            // Asegurar que created_by se establezca con el datero autenticado
+            $formData['created_by'] = Auth::id();
 
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);

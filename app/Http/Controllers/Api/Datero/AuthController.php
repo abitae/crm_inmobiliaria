@@ -17,7 +17,7 @@ class AuthController extends Controller
     use ApiResponse;
 
     /**
-     * Inicio de sesión para usuarios datero
+     * Inicio de sesión para usuarios datero usando DNI y PIN
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -27,45 +27,40 @@ class AuthController extends Controller
         try {
             // Validar datos de entrada
             $validator = Validator::make($request->all(), [
-                'email' => 'required|email',
-                'password' => 'required|string|min:6',
+                'dni' => 'required|string',
+                'pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
             ], [
-                'email.required' => 'El email es obligatorio.',
-                'email.email' => 'El email debe ser una dirección válida.',
-                'password.required' => 'La contraseña es obligatoria.',
-                'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+                'dni.required' => 'El DNI es obligatorio.',
+                'pin.required' => 'El PIN es obligatorio.',
+                'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
+                'pin.regex' => 'El PIN debe contener solo números.',
             ]);
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Sanitizar email
-            $email = strtolower(trim($request->input('email')));
-            $credentials = [
-                'email' => $email,
-                'password' => $request->input('password')
-            ];
+            // Sanitizar DNI
+            $dni = trim($request->input('dni'));
+            $pin = $request->input('pin');
 
-            // Intentar autenticar
-            if (!$token = JWTAuth::attempt($credentials)) {
-                Log::warning('Intento de login fallido (Datero)', [
-                    'email' => $email,
+            // Buscar usuario por DNI
+            $user = User::where('dni', $dni)->first();
+
+            if (!$user) {
+                Log::warning('Intento de login fallido - DNI no encontrado (Datero)', [
+                    'dni' => $dni,
                     'ip' => $request->ip(),
                 ]);
                 
                 return $this->unauthorizedResponse('Credenciales inválidas');
             }
 
-            // Obtener el usuario autenticado
-            $user = auth()->user();
-
             // Verificar que el usuario tiene rol datero
             if (!$user->isDatero()) {
-                JWTAuth::invalidate($token);
                 Log::warning('Intento de acceso con rol incorrecto (Datero)', [
                     'user_id' => $user->id,
-                    'email' => $user->email,
+                    'dni' => $user->dni,
                     'role' => $user->getRoleName(),
                     'ip' => $request->ip(),
                 ]);
@@ -75,20 +70,33 @@ class AuthController extends Controller
 
             // Verificar que el usuario esté activo
             if (!$user->isActive()) {
-                JWTAuth::invalidate($token);
                 Log::warning('Intento de acceso con cuenta inactiva (Datero)', [
                     'user_id' => $user->id,
-                    'email' => $user->email,
+                    'dni' => $user->dni,
                     'ip' => $request->ip(),
                 ]);
                 
                 return $this->forbiddenResponse('Tu cuenta está desactivada. Contacta al administrador.');
             }
 
+            // Verificar PIN
+            if (!$user->pin || !Hash::check($pin, $user->pin)) {
+                Log::warning('Intento de login fallido - PIN incorrecto (Datero)', [
+                    'user_id' => $user->id,
+                    'dni' => $dni,
+                    'ip' => $request->ip(),
+                ]);
+                
+                return $this->unauthorizedResponse('Credenciales inválidas');
+            }
+
+            // Generar token JWT
+            $token = JWTAuth::fromUser($user);
+
             // Log de login exitoso
             Log::info('Login exitoso (Datero)', [
                 'user_id' => $user->id,
-                'email' => $user->email,
+                'dni' => $user->dni,
                 'ip' => $request->ip(),
             ]);
 
@@ -102,6 +110,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'phone' => $user->phone,
+                    'dni' => $user->dni,
                     'role' => $user->getRoleName(),
                     'is_active' => $user->isActive(),
                 ]
@@ -109,7 +118,7 @@ class AuthController extends Controller
 
         } catch (JWTException $e) {
             Log::error('Error JWT en login (Datero)', [
-                'email' => $request->input('email'),
+                'dni' => $request->input('dni'),
                 'error' => $e->getMessage(),
                 'ip' => $request->ip(),
             ]);
@@ -117,13 +126,130 @@ class AuthController extends Controller
             return $this->errorResponse('Error al generar el token', ['error' => 'No se pudo crear el token'], 500);
         } catch (\Exception $e) {
             Log::error('Error en login (Datero)', [
-                'email' => $request->input('email'),
+                'dni' => $request->input('dni'),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'ip' => $request->ip(),
             ]);
             
             return $this->serverErrorResponse($e, 'Error en el servidor');
+        }
+    }
+
+    /**
+     * Registro de nuevo usuario datero
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function register(Request $request)
+    {
+        try {
+            // Validar datos de entrada
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'phone' => 'required|string|max:20',
+                'dni' => 'required|string|unique:users,dni',
+                'pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
+                'lider_id' => 'required|exists:users,id',
+                'banco' => 'nullable|string|max:255',
+                'cuenta_bancaria' => 'nullable|string|max:255',
+                'cci_bancaria' => 'nullable|string|max:255',
+            ], [
+                'name.required' => 'El nombre es obligatorio.',
+                'email.required' => 'El email es obligatorio.',
+                'email.email' => 'El email debe ser una dirección válida.',
+                'email.unique' => 'Este email ya está registrado.',
+                'phone.required' => 'El teléfono es obligatorio.',
+                'dni.required' => 'El DNI es obligatorio.',
+                'dni.unique' => 'Este DNI ya está registrado.',
+                'pin.required' => 'El PIN es obligatorio.',
+                'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
+                'pin.regex' => 'El PIN debe contener solo números.',
+                'lider_id.required' => 'El cazador/líder asignado es obligatorio.',
+                'lider_id.exists' => 'El cazador/líder seleccionado no existe.',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->validationErrorResponse($validator->errors());
+            }
+
+            // Verificar que el lider_id sea un cazador o líder válido
+            $lider = User::find($request->lider_id);
+            if (!$lider) {
+                return $this->errorResponse('El cazador/líder seleccionado no existe', null, 404);
+            }
+
+            // Verificar que el lider tenga un rol válido (admin, lider o vendedor/cazador)
+            if (!$lider->canAccessCazadorApi()) {
+                return $this->errorResponse('El usuario seleccionado no puede ser asignado como cazador/líder. Debe ser Administrador, Líder o Cazador.', null, 422);
+            }
+
+            // Sanitizar datos
+            $dni = trim($request->input('dni'));
+            $email = strtolower(trim($request->input('email')));
+
+            // Crear el usuario
+            $user = User::create([
+                'name' => trim($request->input('name')),
+                'email' => $email,
+                'phone' => trim($request->input('phone')),
+                'dni' => $dni,
+                'pin' => Hash::make($request->input('pin')),
+                'password' => Hash::make($request->input('pin')), // También establecer password con el PIN por compatibilidad
+                'lider_id' => $request->lider_id,
+                'banco' => $request->input('banco'),
+                'cuenta_bancaria' => $request->input('cuenta_bancaria'),
+                'cci_bancaria' => $request->input('cci_bancaria'),
+                'is_active' => true, // Activar automáticamente
+            ]);
+
+            // Asignar rol datero
+            $user->setRole('datero');
+
+            // Generar token JWT
+            $token = JWTAuth::fromUser($user);
+
+            // Log de registro exitoso
+            Log::info('Datero registrado exitosamente', [
+                'user_id' => $user->id,
+                'dni' => $user->dni,
+                'email' => $user->email,
+                'lider_id' => $user->lider_id,
+                'ip' => $request->ip(),
+            ]);
+
+            // Retornar respuesta exitosa con token y datos del usuario
+            return $this->successResponse([
+                'token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => config('jwt.ttl') * 60, // en segundos
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'dni' => $user->dni,
+                    'role' => $user->getRoleName(),
+                    'is_active' => $user->isActive(),
+                    'lider' => [
+                        'id' => $lider->id,
+                        'name' => $lider->name,
+                        'email' => $lider->email,
+                    ],
+                ]
+            ], 'Registro exitoso. Bienvenido.', 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error al registrar datero', [
+                'data' => $request->except(['pin', 'password']),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'ip' => $request->ip(),
+            ]);
+            
+            return $this->serverErrorResponse($e, 'Error al registrar el usuario');
         }
     }
 
@@ -169,6 +295,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'dni' => $user->dni,
                 'role' => $user->getRoleName(),
                 'is_active' => $user->isActive(),
             ]);
@@ -202,12 +329,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Cambiar contraseña del usuario autenticado
+     * Cambiar PIN del usuario autenticado
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function changePassword(Request $request)
+    public function changePin(Request $request)
     {
         try {
             $user = auth()->user();
@@ -218,57 +345,65 @@ class AuthController extends Controller
 
             // Validar datos
             $validator = Validator::make($request->all(), [
-                'current_password' => 'required|string',
-                'new_password' => 'required|string|min:6|confirmed',
+                'current_pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
+                'new_pin' => 'required|string|size:6|regex:/^[0-9]{6}$/|confirmed',
             ], [
-                'current_password.required' => 'La contraseña actual es obligatoria.',
-                'new_password.required' => 'La nueva contraseña es obligatoria.',
-                'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
-                'new_password.confirmed' => 'La confirmación de contraseña no coincide.',
+                'current_pin.required' => 'El PIN actual es obligatorio.',
+                'current_pin.size' => 'El PIN actual debe tener exactamente 6 dígitos.',
+                'current_pin.regex' => 'El PIN actual debe contener solo números.',
+                'new_pin.required' => 'El nuevo PIN es obligatorio.',
+                'new_pin.size' => 'El nuevo PIN debe tener exactamente 6 dígitos.',
+                'new_pin.regex' => 'El nuevo PIN debe contener solo números.',
+                'new_pin.confirmed' => 'La confirmación de PIN no coincide.',
             ]);
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Verificar contraseña actual
-            if (!Hash::check($request->current_password, $user->password)) {
-                Log::warning('Intento de cambio de contraseña con contraseña actual incorrecta (Datero)', [
+            // Verificar que el usuario tenga un PIN configurado
+            if (!$user->pin) {
+                return $this->errorResponse('No tienes un PIN configurado. Contacta al administrador.', null, 422);
+            }
+
+            // Verificar PIN actual
+            if (!Hash::check($request->current_pin, $user->pin)) {
+                Log::warning('Intento de cambio de PIN con PIN actual incorrecto (Datero)', [
                     'user_id' => $user->id,
-                    'email' => $user->email,
+                    'dni' => $user->dni,
                     'ip' => $request->ip(),
                 ]);
                 
-                return $this->errorResponse('La contraseña actual es incorrecta', null, 422);
+                return $this->errorResponse('El PIN actual es incorrecto', null, 422);
             }
 
-            // Verificar que la nueva contraseña sea diferente a la actual
-            if (Hash::check($request->new_password, $user->password)) {
-                return $this->errorResponse('La nueva contraseña debe ser diferente a la contraseña actual', null, 422);
+            // Verificar que el nuevo PIN sea diferente al actual
+            if (Hash::check($request->new_pin, $user->pin)) {
+                return $this->errorResponse('El nuevo PIN debe ser diferente al PIN actual', null, 422);
             }
 
-            // Actualizar contraseña
+            // Actualizar PIN
             $user->update([
-                'password' => Hash::make($request->new_password)
+                'pin' => Hash::make($request->new_pin)
             ]);
 
-            Log::info('Contraseña cambiada exitosamente (Datero)', [
+            Log::info('PIN cambiado exitosamente (Datero)', [
                 'user_id' => $user->id,
-                'email' => $user->email,
+                'dni' => $user->dni,
                 'ip' => $request->ip(),
             ]);
 
-            return $this->successResponse(null, 'Contraseña actualizada exitosamente');
+            return $this->successResponse(null, 'PIN actualizado exitosamente');
 
         } catch (\Exception $e) {
-            Log::error('Error al cambiar contraseña (Datero)', [
+            Log::error('Error al cambiar PIN (Datero)', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'ip' => $request->ip(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al cambiar la contraseña');
+            return $this->serverErrorResponse($e, 'Error al cambiar el PIN');
         }
     }
 }

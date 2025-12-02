@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('datero')->group(function () {
     // Rutas de autenticación (públicas)
     Route::prefix('auth')->group(function () {
+        // Registro de dateros - Rate limit más restrictivo
+        Route::post('/register', [DateroAuthController::class, 'register'])
+            ->middleware('throttle:3,1')
+            ->name('api.datero.auth.register');
+
         // Login para dateros - Rate limit más restrictivo
         Route::post('/login', [DateroAuthController::class, 'login'])
             ->middleware('throttle:5,1')
@@ -35,8 +40,8 @@ Route::prefix('datero')->group(function () {
             Route::post('/refresh', [DateroAuthController::class, 'refresh'])
                 ->name('api.datero.auth.refresh');
 
-            Route::post('/change-password', [DateroAuthController::class, 'changePassword'])
-                ->name('api.datero.auth.change-password');
+            Route::post('/change-pin', [DateroAuthController::class, 'changePin'])
+                ->name('api.datero.auth.change-pin');
         });
     });
 
@@ -81,9 +86,6 @@ Route::prefix('datero')->group(function () {
 
         Route::patch('/', [DateroProfileController::class, 'update'])
             ->name('api.datero.profile.update');
-
-        Route::post('/change-password', [DateroProfileController::class, 'changePassword'])
-            ->name('api.datero.profile.change-password');
     });
 
     // Rutas de búsqueda de documentos (protegidas con JWT y middleware datero)
