@@ -219,15 +219,19 @@ trait ClientFormTrait
     /**
      * Parsear fecha de nacimiento desde API
      */
-    protected function parseApiBirthDate(string $fecha_nacimiento): string
+    protected function parseApiBirthDate(?string $fecha_nacimiento): ?string
     {
+        if (empty($fecha_nacimiento)) {
+            return null;
+        }
+
         try {
             return Carbon::createFromFormat('d/m/Y', $fecha_nacimiento)->format('Y-m-d');
         } catch (\Exception $e) {
             try {
                 return Carbon::parse($fecha_nacimiento)->format('Y-m-d');
             } catch (\Exception $e2) {
-                return '';
+                return null;
             }
         }
     }
@@ -298,8 +302,19 @@ trait ClientFormTrait
     protected function fillClientDataFromApi(object $data): void
     {
         $this->document_type = 'DNI';
-        $this->name = $data->nombre;
-        $this->birth_date = $this->parseApiBirthDate($data->fecha_nacimiento);
+        $this->name = $data->nombre ?? '';
+        
+        // Verificar fecha_nacimiento en diferentes formatos posibles
+        $fechaNacimiento = null;
+        if (isset($data->fecha_nacimiento)) {
+            $fechaNacimiento = $data->fecha_nacimiento;
+        } elseif (isset($data->fechaNacimiento)) {
+            $fechaNacimiento = $data->fechaNacimiento;
+        } elseif (isset($data->api->result->fechaNacimiento)) {
+            $fechaNacimiento = $data->api->result->fechaNacimiento;
+        }
+        
+        $this->birth_date = $fechaNacimiento ? $this->parseApiBirthDate($fechaNacimiento) : null;
     }
 
     /**

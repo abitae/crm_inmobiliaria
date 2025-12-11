@@ -6,10 +6,10 @@
                 <div class="flex-1">
                     <h1 class="text-base sm:text-lg font-semibold flex items-center gap-2">
                         <flux:icon name="user-plus" class="w-4 h-4 sm:w-5 sm:h-5" />
-                        Registro Cazador
+                        Cazador
                     </h1>
                     <p class="text-blue-100 text-xs sm:text-sm mt-1">
-                        Complete el formulario para registrar un nuevo cliente
+                        Completa el formulario para registrar un nuevo cliente
                     </p>
                 </div>
                 <div class="flex gap-2 justify-end sm:justify-start">

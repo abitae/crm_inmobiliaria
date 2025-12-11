@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use App\Traits\SearchDocument;
 use App\Models\Client;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -107,7 +108,6 @@ class DocumentController extends Controller
 
             // Realizar la búsqueda usando el trait
             $result = $this->searchComplete($tipo, $num_doc);
-
             // Si hay un error en la respuesta
             if (isset($result['respuesta']) && $result['respuesta'] === 'error') {
                 $errorMessage = $result['mensaje'] ?? 'Error al buscar el documento';
@@ -141,10 +141,12 @@ class DocumentController extends Controller
                     404
                 );
             }
-
+            
             // Formatear la respuesta exitosa
             $data = $result['data'] ?? null;
-            
+            if ($data !== null && !isset($data->fecha_nacimiento)) {
+                $data->fecha_nacimiento = now()->format('d/m/Y');
+            }
             $response = [
                 'found' => true,
                 'document_type' => $tipo,

@@ -181,7 +181,6 @@ trait SearchDocument
         $resp['api']        = true;
         $resp['data']       = json_decode($data);
         $resp['texto_ubigeo'] = $texto_ubigeo;
-
         return $resp;
     }
 }

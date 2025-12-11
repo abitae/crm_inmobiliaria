@@ -51,8 +51,18 @@ class ClientRegistroMasivo extends Component
     protected function messages()
     {
         return [
-            'phone.size' => 'El teléfono debe tener exactamente 9 dígitos.',
-            'document_number.size' => 'El número de documento debe tener exactamente 8 dígitos.',
+            'name.required' => 'El nombre es requerido.',
+            'phone.required' => 'El teléfono es requerido.',
+            'document_type.required' => 'El tipo de documento es requerido.',
+            'document_type.in' => 'El tipo de documento seleccionado no es válido.',
+            'document_number.required' => 'El número de documento es requerido.',
+            'document_number.max' => 'El número de documento no puede exceder 8 caracteres.',
+            'birth_date.required' => 'La fecha de nacimiento es requerida.',
+            'client_type.required' => 'El tipo de cliente es requerido.',
+            'source.required' => 'La fuente es requerida.',
+            'status.required' => 'El estado es requerido.',
+            'score.required' => 'La puntuación es requerida.',
+            'notes.required' => 'Las notas son requeridas.',
         ];
     }
 
