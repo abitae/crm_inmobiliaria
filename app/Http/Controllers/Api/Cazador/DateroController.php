@@ -37,6 +37,11 @@ class DateroController extends Controller
             $validator = Validator::make($request->all(), $this->getRegisterValidationRules(), $this->getValidationMessages());
 
             if ($validator->fails()) {
+                Log::warning('Validación fallida al registrar datero (API Cazador)', [
+                    'user_id' => $currentUser->id,
+                    'errors' => $validator->errors()->toArray(),
+                    'ip' => $request->ip(),
+                ]);
                 return $this->validationErrorResponse($validator->errors());
             }
 
@@ -110,6 +115,15 @@ class DateroController extends Controller
                 return $this->formatUserResponse($user, $currentUser);
             });
 
+            Log::info('Dateros listados desde API Cazador', [
+                'user_id' => $currentUser->id,
+                'total' => $dateros->total(),
+                'per_page' => $perPage,
+                'search' => $search ?: null,
+                'is_active' => $isActive,
+                'ip' => $request->ip(),
+            ]);
+
             return $this->successResponse([
                 'dateros' => $data,
                 'pagination' => $this->formatPagination($dateros),
@@ -141,6 +155,14 @@ class DateroController extends Controller
             if ($user instanceof \Illuminate\Http\JsonResponse) {
                 return $user;
             }
+
+            Log::info('Datero obtenido desde API Cazador', [
+                'datero_id' => $id,
+                'datero_name' => $user->name,
+                'datero_email' => $user->email,
+                'user_id' => $currentUser->id,
+                'ip' => request()->ip(),
+            ]);
 
             return $this->successResponse([
                 'user' => $this->formatUserResponse($user, $currentUser),
@@ -185,11 +207,44 @@ class DateroController extends Controller
             $validator = Validator::make($request->all(), $this->getUpdateValidationRules($user), $this->getValidationMessages());
 
             if ($validator->fails()) {
+                Log::warning('Validación fallida al actualizar datero (API Cazador)', [
+                    'datero_id' => $id,
+                    'user_id' => $currentUser->id,
+                    'errors' => $validator->errors()->toArray(),
+                    'ip' => $request->ip(),
+                ]);
                 return $this->validationErrorResponse($validator->errors());
             }
 
+            // Guardar datos originales para el log
+            $originalData = [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'dni' => $user->dni,
+                'ocupacion' => $user->ocupacion,
+                'is_active' => $user->is_active,
+            ];
+
             // Actualizar usuario
             $this->updateDatero($user, $request);
+
+            // Recargar usuario actualizado
+            $user->refresh();
+
+            Log::info('Datero actualizado desde API Cazador', [
+                'datero_id' => $id,
+                'datero_name' => $user->name,
+                'datero_email' => $user->email,
+                'updated_by' => $currentUser->id,
+                'updated_by_email' => $currentUser->email,
+                'original_data' => $originalData,
+                'updated_fields' => array_keys($request->only([
+                    'name', 'email', 'phone', 'dni', 'ocupacion', 
+                    'banco', 'cuenta_bancaria', 'cci_bancaria', 'is_active', 'pin'
+                ])),
+                'ip' => $request->ip(),
+            ]);
 
             return $this->successResponse([
                 'user' => $this->formatUserResponse($user->fresh(), $currentUser),
@@ -210,10 +265,19 @@ class DateroController extends Controller
         $currentUser = auth()->user();
 
         if (!$currentUser) {
+            Log::warning('Intento de acceso sin autenticación (API Cazador - Datero)', [
+                'ip' => request()->ip(),
+            ]);
             return $this->unauthorizedResponse('Usuario no autenticado');
         }
 
         if (!$currentUser->canAccessCazadorApi()) {
+            Log::warning('Intento de acceso sin permisos (API Cazador - Datero)', [
+                'user_id' => $currentUser->id,
+                'user_email' => $currentUser->email,
+                'role' => $currentUser->getRoleName(),
+                'ip' => request()->ip(),
+            ]);
             return $this->forbiddenResponse('No tienes permiso para realizar esta acción.');
         }
 
@@ -232,10 +296,21 @@ class DateroController extends Controller
         $user = User::bySingleRole('datero')->find($id);
 
         if (!$user) {
+            Log::warning('Intento de acceso a datero inexistente (API Cazador)', [
+                'datero_id' => $id,
+                'user_id' => $currentUser->id,
+                'ip' => request()->ip(),
+            ]);
             return $this->notFoundResponse('Datero');
         }
 
         if ($user->lider_id !== $currentUser->id) {
+            Log::warning('Intento de acceso a datero de otro cazador (API Cazador)', [
+                'datero_id' => $id,
+                'datero_lider_id' => $user->lider_id,
+                'user_id' => $currentUser->id,
+                'ip' => request()->ip(),
+            ]);
             return $this->forbiddenResponse('No tienes permiso para acceder a este datero.');
         }
 
