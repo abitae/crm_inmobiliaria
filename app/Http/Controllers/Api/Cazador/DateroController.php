@@ -85,7 +85,7 @@ class DateroController extends Controller
             $isActive = $this->getIsActiveFilter($request);
 
             // Construir query
-            $query = User::bySingleRole('Datero')
+            $query = User::bySingleRole('datero')
                 ->where('lider_id', $currentUser->id);
 
             // Aplicar filtros
@@ -229,7 +229,7 @@ class DateroController extends Controller
      */
     protected function findDateroAndCheckOwnership(int $id, User $currentUser)
     {
-        $user = User::bySingleRole('Datero')->find($id);
+        $user = User::bySingleRole('datero')->find($id);
 
         if (!$user) {
             return $this->notFoundResponse('Datero');
@@ -270,7 +270,7 @@ class DateroController extends Controller
         ]);
 
         // Asignar rol datero
-        $user->setRole('Datero');
+        $user->setRole('datero');
 
         return $user;
     }
