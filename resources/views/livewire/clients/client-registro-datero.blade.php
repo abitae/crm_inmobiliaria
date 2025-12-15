@@ -112,6 +112,10 @@
                             autocomplete="tel"
                         />
 
+                        <!-- Ocupación -->
+                        <flux:input label="Ocupación" wire:model="ocupacion"
+                            placeholder="Ingrese la ocupación" size="xs" />
+
                         <!-- Fecha de Nacimiento -->
                         <flux:input label="Fecha de Nacimiento" type="date" wire:model="birth_date" disabled
                             size="xs" />

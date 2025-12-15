@@ -26,68 +26,24 @@ class DateroController extends Controller
     public function register(Request $request)
     {
         try {
+            // Verificar autenticación y permisos
+            if ($error = $this->checkAuthAndPermissions()) {
+                return $error;
+            }
+
             $currentUser = auth()->user();
 
-            if (!$currentUser) {
-                return $this->unauthorizedResponse('Usuario no autenticado');
-            }
-
-            // Sólo usuarios que pueden acceder al API de Cazador pueden crear dateros
-            if (!$currentUser->canAccessCazadorApi()) {
-                return $this->forbiddenResponse('No tienes permiso para registrar dateros.');
-            }
-
             // Validar datos de entrada
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'phone' => 'required|string|max:20',
-                'dni' => 'required|string|size:8|regex:/^[0-9]{8}$/|unique:users,dni',
-                'pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
-                'banco' => 'nullable|string|max:255',
-                'cuenta_bancaria' => 'nullable|string|max:255',
-                'cci_bancaria' => 'nullable|string|max:255',
-            ], [
-                'name.required' => 'El nombre es obligatorio.',
-                'email.required' => 'El email es obligatorio.',
-                'email.email' => 'El email debe ser una dirección válida.',
-                'email.unique' => 'Este email ya está registrado.',
-                'phone.required' => 'El teléfono es obligatorio.',
-                'dni.required' => 'El DNI es obligatorio.',
-                'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
-                'dni.regex' => 'El DNI debe contener solo números.',
-                'dni.unique' => 'Este DNI ya está registrado.',
-                'pin.required' => 'El PIN es obligatorio.',
-                'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
-                'pin.regex' => 'El PIN debe contener solo números.',
-            ]);
+            $validator = Validator::make($request->all(), $this->getRegisterValidationRules(), $this->getValidationMessages());
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Sanitizar datos
-            $dni = trim($request->input('dni'));
-            $email = strtolower(trim($request->input('email')));
+            // Crear el usuario Datero
+            $user = $this->createDatero($request, $currentUser);
 
-            // Crear el usuario Datero, usando como lider_id al usuario autenticado
-            $user = User::create([
-                'name' => trim($request->input('name')),
-                'email' => $email,
-                'phone' => trim($request->input('phone')),
-                'dni' => $dni,
-                'pin' => Hash::make($request->input('pin')),
-                'password' => Hash::make($request->input('pin')), // También establecer password con el PIN por compatibilidad
-                'lider_id' => $currentUser->id,
-                'banco' => $request->input('banco'),
-                'cuenta_bancaria' => $request->input('cuenta_bancaria'),
-                'cci_bancaria' => $request->input('cci_bancaria'),
-                'is_active' => true, // Activar automáticamente
-            ]);
-
-            // Asignar rol datero
-            $user->setRole('datero');
-
+            // Log de registro exitoso
             Log::info('Datero registrado desde API Cazador', [
                 'user_id' => $user->id,
                 'dni' => $user->dni,
@@ -99,60 +55,40 @@ class DateroController extends Controller
             ]);
 
             return $this->successResponse([
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'dni' => $user->dni,
-                    'role' => $user->getRoleName(),
-                    'is_active' => $user->isActive(),
-                    'lider' => [
-                        'id' => $currentUser->id,
-                        'name' => $currentUser->name,
-                        'email' => $currentUser->email,
-                    ],
-                ],
+                'user' => $this->formatUserResponse($user, $currentUser),
             ], 'Datero registrado exitosamente.', 201);
 
         } catch (\Exception $e) {
-            Log::error('Error al registrar datero desde API Cazador', [
-                'data' => $request->except(['pin', 'password']),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => auth()->id(),
-                'ip' => $request->ip(),
-            ]);
-
-            return $this->serverErrorResponse($e, 'Error al registrar el datero');
+            return $this->handleException($e, 'Error al registrar el datero', $request);
         }
     }
 
     /**
      * Listar dateros del cazador/líder autenticado
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
         try {
+            // Verificar autenticación y permisos
+            if ($error = $this->checkAuthAndPermissions()) {
+                return $error;
+            }
+
             $currentUser = auth()->user();
 
-            if (!$currentUser) {
-                return $this->unauthorizedResponse('Usuario no autenticado');
-            }
-
-            if (!$currentUser->canAccessCazadorApi()) {
-                return $this->forbiddenResponse('No tienes permiso para listar dateros.');
-            }
-
-            $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
+            // Obtener parámetros de paginación y filtros
+            $perPage = $this->getPerPage($request);
             $search = trim((string) $request->get('search', ''));
-            $isActive = $request->has('is_active')
-                ? filter_var($request->get('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
-                : null;
+            $isActive = $this->getIsActiveFilter($request);
 
-            $query = User::bySingleRole('datero')
+            // Construir query
+            $query = User::bySingleRole('Datero')
                 ->where('lider_id', $currentUser->id);
 
+            // Aplicar filtros
             if ($isActive !== null) {
                 $query->byActiveStatus($isActive);
             }
@@ -166,96 +102,50 @@ class DateroController extends Controller
                 });
             }
 
+            // Paginar resultados
             $dateros = $query->orderBy('name')->paginate($perPage);
 
+            // Formatear respuesta
             $data = $dateros->map(function (User $user) use ($currentUser) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'dni' => $user->dni,
-                    'role' => $user->getRoleName(),
-                    'is_active' => $user->isActive(),
-                    'banco' => $user->banco,
-                    'cuenta_bancaria' => $user->cuenta_bancaria,
-                    'cci_bancaria' => $user->cci_bancaria,
-                    'lider' => [
-                        'id' => $currentUser->id,
-                        'name' => $currentUser->name,
-                        'email' => $currentUser->email,
-                    ],
-                ];
+                return $this->formatUserResponse($user, $currentUser);
             });
 
             return $this->successResponse([
                 'dateros' => $data,
-                'pagination' => [
-                    'current_page' => $dateros->currentPage(),
-                    'per_page' => $dateros->PerPage(),
-                    'total' => $dateros->total(),
-                    'last_page' => $dateros->lastPage(),
-                    'from' => $dateros->firstItem(),
-                    'to' => $dateros->lastItem(),
-                ],
+                'pagination' => $this->formatPagination($dateros),
             ], 'Dateros obtenidos exitosamente');
-        } catch (\Exception $e) {
-            Log::error('Error al listar dateros desde API Cazador', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => auth()->id(),
-                'ip' => $request->ip(),
-            ]);
 
-            return $this->serverErrorResponse($e, 'Error al obtener los dateros');
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Error al obtener los dateros', $request);
         }
     }
 
     /**
      * Ver detalle de un datero del cazador/líder autenticado
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(int $id)
     {
         try {
+            // Verificar autenticación y permisos
+            if ($error = $this->checkAuthAndPermissions()) {
+                return $error;
+            }
+
             $currentUser = auth()->user();
 
-            if (!$currentUser) {
-                return $this->unauthorizedResponse('Usuario no autenticado');
-            }
-
-            if (!$currentUser->canAccessCazadorApi()) {
-                return $this->forbiddenResponse('No tienes permiso para ver dateros.');
-            }
-
-            $user = User::bySingleRole('datero')->find($id);
-
-            if (!$user) {
-                return $this->notFoundResponse('Datero');
-            }
-
-            if ($user->lider_id !== $currentUser->id) {
-                return $this->forbiddenResponse('No tienes permiso para acceder a este datero.');
+            // Buscar datero y verificar propiedad
+            $user = $this->findDateroAndCheckOwnership($id, $currentUser);
+            if ($user instanceof \Illuminate\Http\JsonResponse) {
+                return $user;
             }
 
             return $this->successResponse([
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'dni' => $user->dni,
-                    'role' => $user->getRoleName(),
-                    'is_active' => $user->isActive(),
-                    'banco' => $user->banco,
-                    'cuenta_bancaria' => $user->cuenta_bancaria,
-                    'cci_bancaria' => $user->cci_bancaria,
-                    'lider' => [
-                        'id' => $currentUser->id,
-                        'name' => $currentUser->name,
-                        'email' => $currentUser->email,
-                    ],
-                ],
+                'user' => $this->formatUserResponse($user, $currentUser),
             ], 'Datero obtenido exitosamente');
+
         } catch (\Exception $e) {
             Log::error('Error al obtener datero desde API Cazador', [
                 'datero_id' => $id,
@@ -270,139 +160,364 @@ class DateroController extends Controller
 
     /**
      * Actualizar datos de un datero del cazador/líder autenticado
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, int $id)
     {
         try {
+            // Verificar autenticación y permisos
+            if ($error = $this->checkAuthAndPermissions()) {
+                return $error;
+            }
+
             $currentUser = auth()->user();
 
-            if (!$currentUser) {
-                return $this->unauthorizedResponse('Usuario no autenticado');
+            // Buscar datero y verificar propiedad
+            $user = $this->findDateroAndCheckOwnership($id, $currentUser);
+            if ($user instanceof \Illuminate\Http\JsonResponse) {
+                return $user;
             }
 
-            if (!$currentUser->canAccessCazadorApi()) {
-                return $this->forbiddenResponse('No tienes permiso para editar dateros.');
-            }
-
-            $user = User::bySingleRole('datero')->find($id);
-
-            if (!$user) {
-                return $this->notFoundResponse('Datero');
-            }
-
-            if ($user->lider_id !== $currentUser->id) {
-                return $this->forbiddenResponse('No tienes permiso para editar este datero.');
-            }
-
-            $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
-                'email' => [
-                    'sometimes',
-                    'required',
-                    'email',
-                    'max:255',
-                    Rule::unique('users', 'email')->ignore($user->id),
-                ],
-                'phone' => 'sometimes|required|string|max:20',
-                'dni' => [
-                    'sometimes',
-                    'required',
-                    'size:8',
-                    'regex:/^[0-9]{8}$/',
-                    Rule::unique('users', 'dni')->ignore($user->id),
-                ],
-                'pin' => 'sometimes|required|string|size:6|regex:/^[0-9]{6}$/',
-                'banco' => 'nullable|string|max:255',
-                'cuenta_bancaria' => 'nullable|string|max:255',
-                'cci_bancaria' => 'nullable|string|max:255',
-                'is_active' => 'sometimes|boolean',
-            ], [
-                'name.required' => 'El nombre es obligatorio.',
-                'email.required' => 'El email es obligatorio.',
-                'email.email' => 'El email debe ser una dirección válida.',
-                'email.unique' => 'Este email ya está registrado.',
-                'phone.required' => 'El teléfono es obligatorio.',
-                'dni.required' => 'El DNI es obligatorio.',
-                'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
-                'dni.regex' => 'El DNI debe contener solo números.',
-                'dni.unique' => 'Este DNI ya está registrado.',
-                'pin.required' => 'El PIN es obligatorio.',
-                'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
-                'pin.regex' => 'El PIN debe contener solo números.',
-            ]);
+            // Validar datos
+            $validator = Validator::make($request->all(), $this->getUpdateValidationRules($user), $this->getValidationMessages());
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            $data = $request->only([
-                'name',
-                'email',
-                'phone',
-                'dni',
-                'banco',
-                'cuenta_bancaria',
-                'cci_bancaria',
-                'is_active',
-            ]);
-
-            if ($request->filled('name')) {
-                $data['name'] = trim($request->input('name'));
-            }
-
-            if ($request->filled('email')) {
-                $data['email'] = strtolower(trim($request->input('email')));
-            }
-
-            if ($request->filled('dni')) {
-                $data['dni'] = trim($request->input('dni'));
-            }
-
-            if ($request->filled('phone')) {
-                $data['phone'] = trim($request->input('phone'));
-            }
-
-            if ($request->filled('pin')) {
-                $pin = $request->input('pin');
-                $data['pin'] = Hash::make($pin);
-                $data['password'] = Hash::make($pin);
-            }
-
-            $user->update($data);
+            // Actualizar usuario
+            $this->updateDatero($user, $request);
 
             return $this->successResponse([
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'dni' => $user->dni,
-                    'role' => $user->getRoleName(),
-                    'is_active' => $user->isActive(),
-                    'banco' => $user->banco,
-                    'cuenta_bancaria' => $user->cuenta_bancaria,
-                    'cci_bancaria' => $user->cci_bancaria,
-                    'lider' => [
-                        'id' => $currentUser->id,
-                        'name' => $currentUser->name,
-                        'email' => $currentUser->email,
-                    ],
-                ],
+                'user' => $this->formatUserResponse($user->fresh(), $currentUser),
             ], 'Datero actualizado exitosamente');
-        } catch (\Exception $e) {
-            Log::error('Error al actualizar datero desde API Cazador', [
-                'datero_id' => $id,
-                'data' => $request->except(['pin', 'password']),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => auth()->id(),
-                'ip' => $request->ip(),
-            ]);
 
-            return $this->serverErrorResponse($e, 'Error al actualizar el datero');
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Error al actualizar el datero', $request, ['datero_id' => $id]);
         }
     }
 
+    /**
+     * Verificar autenticación y permisos del usuario actual
+     *
+     * @return \Illuminate\Http\JsonResponse|null
+     */
+    protected function checkAuthAndPermissions(): ?\Illuminate\Http\JsonResponse
+    {
+        $currentUser = auth()->user();
+
+        if (!$currentUser) {
+            return $this->unauthorizedResponse('Usuario no autenticado');
+        }
+
+        if (!$currentUser->canAccessCazadorApi()) {
+            return $this->forbiddenResponse('No tienes permiso para realizar esta acción.');
+        }
+
+        return null;
+    }
+
+    /**
+     * Buscar datero y verificar que pertenezca al usuario autenticado
+     *
+     * @param  int  $id
+     * @param  User  $currentUser
+     * @return User|\Illuminate\Http\JsonResponse
+     */
+    protected function findDateroAndCheckOwnership(int $id, User $currentUser)
+    {
+        $user = User::bySingleRole('Datero')->find($id);
+
+        if (!$user) {
+            return $this->notFoundResponse('Datero');
+        }
+
+        if ($user->lider_id !== $currentUser->id) {
+            return $this->forbiddenResponse('No tienes permiso para acceder a este datero.');
+        }
+
+        return $user;
+    }
+
+    /**
+     * Crear un nuevo usuario datero
+     *
+     * @param  Request  $request
+     * @param  User  $currentUser
+     * @return User
+     */
+    protected function createDatero(Request $request, User $currentUser): User
+    {
+        $data = $this->sanitizeUserData($request->all());
+        $pin = $request->input('pin');
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'dni' => $data['dni'],
+            'pin' => Hash::make($pin),
+            'password' => Hash::make($pin), // Compatibilidad
+            'lider_id' => $currentUser->id,
+            'ocupacion' => $data['ocupacion'] ?? null,
+            'banco' => $data['banco'] ?? null,
+            'cuenta_bancaria' => $data['cuenta_bancaria'] ?? null,
+            'cci_bancaria' => $data['cci_bancaria'] ?? null,
+            'is_active' => true,
+        ]);
+
+        // Asignar rol datero
+        $user->setRole('Datero');
+
+        return $user;
+    }
+
+    /**
+     * Actualizar datos de un datero
+     *
+     * @param  User  $user
+     * @param  Request  $request
+     * @return void
+     */
+    protected function updateDatero(User $user, Request $request): void
+    {
+        $data = $request->only([
+            'name',
+            'email',
+            'phone',
+            'dni',
+            'ocupacion',
+            'banco',
+            'cuenta_bancaria',
+            'cci_bancaria',
+            'is_active',
+        ]);
+
+        // Sanitizar datos proporcionados
+        if ($request->filled('name')) {
+            $data['name'] = trim($request->input('name'));
+        }
+
+        if ($request->filled('email')) {
+            $data['email'] = strtolower(trim($request->input('email')));
+        }
+
+        if ($request->filled('dni')) {
+            $data['dni'] = trim($request->input('dni'));
+        }
+
+        if ($request->filled('phone')) {
+            $data['phone'] = trim($request->input('phone'));
+        }
+
+        if ($request->filled('ocupacion')) {
+            $data['ocupacion'] = trim($request->input('ocupacion'));
+        }
+
+        // Actualizar PIN si se proporciona
+        if ($request->filled('pin')) {
+            $pin = $request->input('pin');
+            $data['pin'] = Hash::make($pin);
+            $data['password'] = Hash::make($pin);
+        }
+
+        $user->update($data);
+    }
+
+    /**
+     * Formatear respuesta del usuario para API
+     *
+     * @param  User  $user
+     * @param  User  $currentUser
+     * @return array
+     */
+    protected function formatUserResponse(User $user, User $currentUser): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'dni' => $user->dni,
+            'ocupacion' => $user->ocupacion,
+            'role' => $user->getRoleName(),
+            'is_active' => $user->isActive(),
+            'banco' => $user->banco,
+            'cuenta_bancaria' => $user->cuenta_bancaria,
+            'cci_bancaria' => $user->cci_bancaria,
+            'lider' => [
+                'id' => $currentUser->id,
+                'name' => $currentUser->name,
+                'email' => $currentUser->email,
+            ],
+        ];
+    }
+
+    /**
+     * Formatear información de paginación
+     *
+     * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator  $paginator
+     * @return array
+     */
+    protected function formatPagination($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'last_page' => $paginator->lastPage(),
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+        ];
+    }
+
+    /**
+     * Sanitizar datos del usuario
+     *
+     * @param  array  $data
+     * @return array
+     */
+    protected function sanitizeUserData(array $data): array
+    {
+        return [
+            'name' => trim($data['name'] ?? ''),
+            'email' => strtolower(trim($data['email'] ?? '')),
+            'phone' => trim($data['phone'] ?? ''),
+            'dni' => trim($data['dni'] ?? ''),
+            'ocupacion' => isset($data['ocupacion']) ? trim($data['ocupacion']) : null,
+            'banco' => $data['banco'] ?? null,
+            'cuenta_bancaria' => $data['cuenta_bancaria'] ?? null,
+            'cci_bancaria' => $data['cci_bancaria'] ?? null,
+        ];
+    }
+
+    /**
+     * Obtener reglas de validación para registro
+     *
+     * @return array
+     */
+    protected function getRegisterValidationRules(): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'required|string|max:20',
+            'dni' => 'required|string|size:8|regex:/^[0-9]{8}$/|unique:users,dni',
+            'pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
+            'ocupacion' => 'nullable|string|max:255',
+            'banco' => 'nullable|string|max:255',
+            'cuenta_bancaria' => 'nullable|string|max:255',
+            'cci_bancaria' => 'nullable|string|max:255',
+        ];
+    }
+
+    /**
+     * Obtener reglas de validación para actualización
+     *
+     * @param  User  $user
+     * @return array
+     */
+    protected function getUpdateValidationRules(User $user): array
+    {
+        return [
+            'name' => 'sometimes|required|string|max:255',
+            'email' => [
+                'sometimes',
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'phone' => 'sometimes|required|string|max:20',
+            'dni' => [
+                'sometimes',
+                'required',
+                'size:8',
+                'regex:/^[0-9]{8}$/',
+                Rule::unique('users', 'dni')->ignore($user->id),
+            ],
+            'pin' => 'sometimes|required|string|size:6|regex:/^[0-9]{6}$/',
+            'ocupacion' => 'nullable|string|max:255',
+            'banco' => 'nullable|string|max:255',
+            'cuenta_bancaria' => 'nullable|string|max:255',
+            'cci_bancaria' => 'nullable|string|max:255',
+            'is_active' => 'sometimes|boolean',
+        ];
+    }
+
+    /**
+     * Obtener mensajes de validación personalizados
+     *
+     * @return array
+     */
+    protected function getValidationMessages(): array
+    {
+        return [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El email es obligatorio.',
+            'email.email' => 'El email debe ser una dirección válida.',
+            'email.unique' => 'Este email ya está registrado.',
+            'phone.required' => 'El teléfono es obligatorio.',
+            'dni.required' => 'El DNI es obligatorio.',
+            'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
+            'dni.regex' => 'El DNI debe contener solo números.',
+            'dni.unique' => 'Este DNI ya está registrado.',
+            'pin.required' => 'El PIN es obligatorio.',
+            'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
+            'pin.regex' => 'El PIN debe contener solo números.',
+        ];
+    }
+
+    /**
+     * Obtener valor de per_page validado
+     *
+     * @param  Request  $request
+     * @return int
+     */
+    protected function getPerPage(Request $request): int
+    {
+        return min(max((int) $request->get('per_page', 15), 1), 100);
+    }
+
+    /**
+     * Obtener filtro de is_active
+     *
+     * @param  Request  $request
+     * @return bool|null
+     */
+    protected function getIsActiveFilter(Request $request): ?bool
+    {
+        if (!$request->has('is_active')) {
+            return null;
+        }
+
+        return filter_var($request->get('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+
+    /**
+     * Manejar excepciones de manera consistente
+     *
+     * @param  \Exception  $e
+     * @param  string  $message
+     * @param  Request  $request
+     * @param  array  $additionalData
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function handleException(\Exception $e, string $message, Request $request, array $additionalData = []): \Illuminate\Http\JsonResponse
+    {
+        $logData = array_merge([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'user_id' => auth()->id(),
+            'ip' => $request->ip(),
+            'data' => $request->except(['pin', 'password']),
+        ], $additionalData);
+
+        Log::error($message . ' (API Cazador)', $logData);
+
+        return $this->serverErrorResponse($e, $message);
+    }
 }
-
-

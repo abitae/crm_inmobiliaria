@@ -28,6 +28,7 @@ class ClientRegistroDatero extends Component
     public string $document_number = '';
     public ?string $address = null;
     public ?string $birth_date = null;
+    public ?string $ocupacion = null;
     public string $client_type = 'comprador';
     public string $source = 'formulario_web';
     public string $status = 'nuevo';
@@ -86,6 +87,7 @@ class ClientRegistroDatero extends Component
         'document_number' => 'required|string|size:8',
         'address' => 'nullable|string|max:500',
         'birth_date' => 'required|date',
+        'ocupacion' => 'nullable|string|max:255',
         'client_type' => 'required|in:inversor,comprador,empresa,constructor',
         'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
         'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
@@ -171,6 +173,13 @@ class ClientRegistroDatero extends Component
                 }
             }
 
+            // Construir notas incluyendo ocupación si existe
+            $notes = $this->notes;
+            if ($this->ocupacion) {
+                $ocupacionText = "Ocupación: {$this->ocupacion}";
+                $notes = $notes ? "{$notes}\n{$ocupacionText}" : $ocupacionText;
+            }
+
             $data = [
                 'name' => $this->name,
                 'phone' => $this->phone,
@@ -182,7 +191,7 @@ class ClientRegistroDatero extends Component
                 'source' => $this->source,
                 'status' => $this->status,
                 'score' => $this->score,
-                'notes' => $this->notes,
+                'notes' => $notes,
                 'assigned_advisor_id' => $this->assigned_advisor_id,
                 'created_by' => $this->assigned_advisor_id,
                 'updated_by' => $this->assigned_advisor_id,
@@ -210,6 +219,7 @@ class ClientRegistroDatero extends Component
             'document_number',
             'address',
             'birth_date',
+            'ocupacion',
             'client_type',
             'source',
             'status',
