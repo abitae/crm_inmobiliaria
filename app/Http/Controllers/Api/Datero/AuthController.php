@@ -27,10 +27,12 @@ class AuthController extends Controller
         try {
             // Validar datos de entrada
             $validator = Validator::make($request->all(), [
-                'dni' => 'required|string',
+                'dni' => 'required|string|size:8|regex:/^[0-9]{8}$/',
                 'pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
             ], [
                 'dni.required' => 'El DNI es obligatorio.',
+                'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
+                'dni.regex' => 'El DNI debe contener solo números.',
                 'pin.required' => 'El PIN es obligatorio.',
                 'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
                 'pin.regex' => 'El PIN debe contener solo números.',
@@ -150,7 +152,7 @@ class AuthController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'phone' => 'required|string|max:20',
-                'dni' => 'required|string|unique:users,dni',
+                'dni' => 'required|string|size:8|regex:/^[0-9]{8}$/|unique:users,dni',
                 'pin' => 'required|string|size:6|regex:/^[0-9]{6}$/',
                 'lider_id' => 'required|exists:users,id',
                 'banco' => 'nullable|string|max:255',
@@ -163,6 +165,8 @@ class AuthController extends Controller
                 'email.unique' => 'Este email ya está registrado.',
                 'phone.required' => 'El teléfono es obligatorio.',
                 'dni.required' => 'El DNI es obligatorio.',
+                'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
+                'dni.regex' => 'El DNI debe contener solo números.',
                 'dni.unique' => 'Este DNI ya está registrado.',
                 'pin.required' => 'El PIN es obligatorio.',
                 'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',

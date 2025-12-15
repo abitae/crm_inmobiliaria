@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Cazador\AuthController as CazadorAuthController;
 use App\Http\Controllers\Api\Cazador\ClientController as CazadorClientController;
 use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectController;
 use App\Http\Controllers\Api\Cazador\ReservationController as CazadorReservationController;
+use App\Http\Controllers\Api\Cazador\DateroController as CazadorDateroController;
 use App\Http\Controllers\Api\DocumentController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +70,21 @@ Route::prefix('cazador')->group(function () {
 
         Route::get('/{id}/units', [CazadorProjectController::class, 'units'])
             ->name('api.cazador.projects.units');
+    });
+
+    // Rutas de dateros (protegidas con JWT y middleware cazador)
+    Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('dateros')->group(function () {
+        Route::get('/', [CazadorDateroController::class, 'index'])
+            ->name('api.cazador.dateros.index');
+
+        Route::post('/', [CazadorDateroController::class, 'register'])
+            ->name('api.cazador.dateros.store');
+
+        Route::get('/{id}', [CazadorDateroController::class, 'show'])
+            ->name('api.cazador.dateros.show');
+
+        Route::match(['put', 'patch'], '/{id}', [CazadorDateroController::class, 'update'])
+            ->name('api.cazador.dateros.update');
     });
 
     // Rutas de reservas (protegidas con JWT y middleware cazador)
