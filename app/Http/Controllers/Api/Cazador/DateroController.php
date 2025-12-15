@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class DateroController extends Controller
 {
@@ -344,8 +345,8 @@ class DateroController extends Controller
             'is_active' => true,
         ]);
 
-        // Asignar rol datero
-        $user->setRole('datero');
+        // Asignar rol datero usando el guard 'web'
+        $user->assignRole(Role::findByName('datero', 'web'));
 
         return $user;
     }
