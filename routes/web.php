@@ -38,6 +38,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy-policy');
+
 Route::get('/home', function () {
     return redirect()->route('dashboard');
 })->name('home');
