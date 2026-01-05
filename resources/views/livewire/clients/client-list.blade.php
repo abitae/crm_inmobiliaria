@@ -58,7 +58,7 @@
                 </div>
                 <div>
                     <flux:select size="xs" wire:model.live="advisorFilter">
-                        @if (Auth::user()->isAdmin() || Auth::user()->isLider())
+                        @if (Auth::user()->isAdmin())
                             <option value="">Todos los asesores</option>
                         @endif
                         @foreach ($advisors as $advisor)

@@ -66,7 +66,7 @@ class ClientList extends Component
     {
         $this->advisors = User::getAvailableAdvisors(Auth::user());
         $user = Auth::user();
-        $this->advisorFilter = ($user->isAdmin() || $user->isLider()) ? '' : $user->id;
+        $this->advisorFilter = $user->id;
         $this->status = 'nuevo';
     }
 
@@ -95,6 +95,7 @@ class ClientList extends Component
     public function clearFilters()
     {
         $this->reset(['search', 'statusFilter', 'typeFilter', 'sourceFilter', 'advisorFilter']);
+        $this->advisorFilter = Auth::user()->id;
         $this->resetPage();
     }
 
