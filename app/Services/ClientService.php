@@ -20,7 +20,13 @@ class ClientService
     public function getAllClients(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         try {
-            $query = Client::with(['assignedAdvisor', 'createdBy'])
+            $query = Client::with([
+                'assignedAdvisor',
+                'createdBy',
+                'activities' => function ($q) {
+                    $q->latest('start_date')->limit(1);
+                }
+            ])
                 ->withCount(['opportunities', 'activities', 'tasks'])
                 ->whereDoesntHave('createdBy', function ($q) {
                     $q->whereHas('roles', function ($roleQuery) {
@@ -42,7 +48,13 @@ class ClientService
     public function getClientsByDateros(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         try {
-            $query = Client::with(['assignedAdvisor', 'createdBy'])
+            $query = Client::with([
+                'assignedAdvisor',
+                'createdBy',
+                'activities' => function ($q) {
+                    $q->latest('start_date')->limit(1);
+                }
+            ])
                 ->withCount(['opportunities', 'activities', 'tasks'])
                 ->whereHas('createdBy', function ($q) {
                     $q->whereHas('roles', function ($roleQuery) {

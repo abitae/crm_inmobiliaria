@@ -152,11 +152,6 @@ class RolePermissionSeeder extends Seeder
             'edit_documents',
             'view_reports',
             'export_reports',
-            'view_users',
-            'create_users', // Para crear vendedores y dateros de su equipo
-            'edit_users',   // Para gestionar su equipo
-            'view_settings',
-            'view_logs',    // Para ver logs del sistema
             // Permisos específicos de liderazgo
             'view_team_metrics',
             'manage_team_members',

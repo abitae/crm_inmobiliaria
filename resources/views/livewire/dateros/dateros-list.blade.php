@@ -53,7 +53,6 @@
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Contacto</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Vendedor</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Estado</th>
-                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Información Bancaria</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Registro</th>
                         </tr>
                     </thead>
@@ -109,20 +108,6 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 whitespace-nowrap">
-                                    @if($datero->banco || $datero->cuenta_bancaria)
-                                        <div class="text-gray-900">
-                                            @if($datero->banco)
-                                                <div class="text-xs">{{ $datero->banco }}</div>
-                                            @endif
-                                            @if($datero->cuenta_bancaria)
-                                                <div class="text-xs text-gray-500">{{ $datero->cuenta_bancaria }}</div>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
                                     <div class="text-xs">
                                         {{ $datero->created_at->format('d/m/Y') }}
@@ -134,7 +119,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="5" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="user-group" class="w-12 h-12 text-gray-400 mb-2" />
                                         <p class="text-sm">No se encontraron dateros</p>

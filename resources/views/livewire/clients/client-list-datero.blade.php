@@ -47,7 +47,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
-                    <flux:input size="xs" wire:model.live="search" placeholder="Buscar clientes..." />
+                    <flux:input size="xs" wire:model.debounce.500ms="search" placeholder="Buscar clientes..." />
                 </div>
                 <div>
                     <flux:select size="xs" wire:model.live="statusFilter">
@@ -80,7 +80,7 @@
                 </div>
                 <div>
                     <flux:select size="xs" wire:model.live="advisorFilter">
-                        @if (Auth::user()->isAdmin() || Auth::user()->isLider())
+                        @if (Auth::user()->isAdmin())
                             <option value="">Todos los asesores</option>
                         @endif
                         @foreach ($advisors as $advisor)
@@ -177,10 +177,13 @@
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
-                                    {{ optional($client->activities->last())->title ?? 'Sin actividad' }}
-                                    <br>
-                                    {{ optional(optional($client->activities->last())->start_date)->format('d/m/Y') }}
-                                    
+                                    @if($client->activities && $client->activities->count() > 0)
+                                        {{ $client->activities->first()->title ?? 'Sin actividad' }}
+                                        <br>
+                                        {{ optional($client->activities->first()->start_date)->format('d/m/Y') }}
+                                    @else
+                                        Sin actividad
+                                    @endif
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap font-medium">
                                     <div class="flex space-x-1">
@@ -240,20 +243,45 @@
                                 placeholder="Número de documento" wire:model="document_number" size="xs" />
                             @if ($document_type == 'DNI')
                                 <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
-                                    label="Buscar" size="xs" class="self-end" />
+                                    size="xs" class="self-end" 
+                                    wire:loading.attr="disabled"
+                                    wire:target="buscarDocumento"
+                                    title="Buscar datos del documento">
+                                    <span wire:loading.remove wire:target="buscarDocumento">
+                                        <flux:icon name="magnifying-glass" class="w-3 h-3" />
+                                    </span>
+                                    <span wire:loading wire:target="buscarDocumento">
+                                        <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
+                                    </span>
+                                </flux:button>
+                                @if($name || $birth_date)
+                                    <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
+                                        size="xs" class="self-end" 
+                                        title="Limpiar datos de búsqueda">
+                                    </flux:button>
+                                @endif
                             @endif
                         </flux:input.group>
+                        @error('document_number')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                     <!-- Nombre -->
                     <div class="col-span-2">
-                        <flux:input label="Nombre completo" wire:model="name" size="xs" disabled
+                        <flux:input label="Nombre completo" wire:model="name" size="xs"
                             placeholder="Nombre completo *" class="w-full" />
+                        @error('name')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Fecha de Nacimiento -->
                     <div class="col-span-2">
-                        <flux:input label="Fecha de nacimiento" type="date" wire:model="birth_date" disabled
+                        <flux:input label="Fecha de nacimiento" type="date" wire:model="birth_date"
                             size="xs" placeholder="Fecha de nacimiento" class="w-full" />
+                        @error('birth_date')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Teléfono -->

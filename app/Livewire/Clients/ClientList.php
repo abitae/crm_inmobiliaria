@@ -4,12 +4,13 @@ namespace App\Livewire\Clients;
 
 use App\Models\Client;
 use App\Services\ClientService;
+use App\Services\DocumentSearchService;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Traits\SearchDocument;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use Mary\Traits\Toast;
@@ -18,7 +19,6 @@ class ClientList extends Component
 {
     use Toast;
     use WithPagination;
-    use SearchDocument;
     // Filtros
     public $search = '';
     public $statusFilter = '';
@@ -45,7 +45,9 @@ class ClientList extends Component
     public $assigned_advisor_id = '';
 
     protected $clientService;
+    protected $documentSearchService;
     public $advisors = [];
+    public $searchingDocument = false;
 
     public function getRules(): array
     {
@@ -57,15 +59,21 @@ class ClientList extends Component
         return $this->clientService->getValidationMessages();
     }
 
-    public function boot(ClientService $clientService)
+    public function boot(ClientService $clientService, DocumentSearchService $documentSearchService)
     {
         $this->clientService = $clientService;
+        $this->documentSearchService = $documentSearchService;
     }
 
     public function mount()
     {
-        $this->advisors = User::getAvailableAdvisors(Auth::user());
         $user = Auth::user();
+        $cacheKey = 'available_advisors_' . $user->id;
+        
+        $this->advisors = Cache::remember($cacheKey, 300, function () use ($user) {
+            return User::getAvailableAdvisors($user);
+        });
+        
         $this->advisorFilter = $user->id;
         $this->status = 'nuevo';
     }
@@ -103,28 +111,9 @@ class ClientList extends Component
     {
         try {
             if ($clientId) {
-                Log::info('Abriendo modal para editar cliente', [
-                    'client_id' => $clientId,
-                    'user_id' => Auth::id()
-                ]);
-                
-                $this->editingClient = $this->clientService->getClientById($clientId);
-                if ($this->editingClient) {
-                    $this->fillFormFromClient($this->editingClient);
-                } else {
-                    Log::warning('Cliente no encontrado al intentar editar', [
-                        'client_id' => $clientId,
-                        'user_id' => Auth::id()
-                    ]);
-                    $this->error('Cliente no encontrado.');
-                    return;
-                }
+                $this->openEditModal($clientId);
             } else {
-                Log::info('Abriendo modal para crear nuevo cliente', [
-                    'user_id' => Auth::id()
-                ]);
-                $this->resetForm();
-                $this->editingClient = null;
+                $this->openNewModal();
             }
             $this->showFormModal = true;
         } catch (\Exception $e) {
@@ -135,6 +124,35 @@ class ClientList extends Component
             ]);
             $this->error('Error al abrir el formulario: ' . $e->getMessage());
         }
+    }
+
+    private function openEditModal($clientId): void
+    {
+        Log::info('Abriendo modal para editar cliente', [
+            'client_id' => $clientId,
+            'user_id' => Auth::id()
+        ]);
+        
+        $this->editingClient = $this->clientService->getClientById($clientId);
+        if (!$this->editingClient) {
+            Log::warning('Cliente no encontrado al intentar editar', [
+                'client_id' => $clientId,
+                'user_id' => Auth::id()
+            ]);
+            $this->error('Cliente no encontrado.');
+            return;
+        }
+        
+        $this->fillFormFromClient($this->editingClient);
+    }
+
+    private function openNewModal(): void
+    {
+        Log::info('Abriendo modal para crear nuevo cliente', [
+            'user_id' => Auth::id()
+        ]);
+        $this->resetForm();
+        $this->editingClient = null;
     }
 
 
@@ -353,12 +371,15 @@ class ClientList extends Component
     }
     public function buscarDocumento()
     {
+        $this->searchingDocument = true;
+        
         try {
             $tipo = strtolower($this->document_type);
             $num_doc = trim($this->document_number);
             
             if (empty($num_doc)) {
                 $this->error('Ingrese un número de documento');
+                $this->searchingDocument = false;
                 return;
             }
             
@@ -370,6 +391,7 @@ class ClientList extends Component
                     'user_id' => Auth::id()
                 ]);
                 $this->error('Ingrese un número de DNI válido (8 dígitos)');
+                $this->searchingDocument = false;
                 return;
             }
             
@@ -381,31 +403,11 @@ class ClientList extends Component
             
             $this->info('Buscando documento en la base de datos...');
             
-            // Verificar si el cliente ya existe
-            if ($this->clientExists($tipo, $num_doc)) {
-                return;
-            }
+            // Usar el servicio para buscar
+            $result = $this->documentSearchService->searchAndProcessClient($tipo, $num_doc);
             
-            // Buscar en API externa
-            $this->searchClientData($tipo, $num_doc);
-        } catch (\Exception $e) {
-            Log::error('Error al buscar documento', [
-                'document_type' => $this->document_type,
-                'document_number' => $this->document_number,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->error('Error al buscar el documento: ' . $e->getMessage());
-        }
-    }
-    private function clientExists(string $tipo, string $num_doc): bool
-    {
-        try {
-            // El servicio ya carga la relación assignedAdvisor
-            $client = $this->clientService->clientExists($tipo, $num_doc);
-                
-            if ($client) {
+            if ($result['exists_in_db']) {
+                $client = $result['client'];
                 $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
                 
                 Log::info('Cliente ya existe en la base de datos', [
@@ -417,27 +419,13 @@ class ClientList extends Component
                 ]);
                 
                 $this->warning('Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
-                return true;
+                $this->searchingDocument = false;
+                return;
             }
             
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Error al verificar existencia de cliente', [
-                'document_type' => $tipo,
-                'document_number' => $num_doc,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-    private function searchClientData(string $tipo, string $num_doc): void
-    {
-        try {
-            $result = $this->searchComplete($tipo, $num_doc);
-            
-            if ($result['encontrado'] ?? false) {
-                $this->fillClientData($result['data']);
+            if ($result['found'] && $result['data']) {
+                $clientData = $this->documentSearchService->extractClientData($result['data']);
+                $this->fillClientDataFromApi($clientData);
                 
                 Log::info('Cliente encontrado en API externa', [
                     'document_type' => $tipo,
@@ -456,48 +444,30 @@ class ClientList extends Component
                 $this->error('Documento no encontrado en la base de datos. Por favor, complete los datos manualmente.');
             }
         } catch (\Exception $e) {
-            Log::error('Error al buscar datos del cliente en API', [
-                'document_type' => $tipo,
-                'document_number' => $num_doc,
+            Log::error('Error al buscar documento', [
+                'document_type' => $this->document_type,
+                'document_number' => $this->document_number,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            $this->error('Error al buscar los datos del cliente. Por favor, complete los datos manualmente.');
+            $this->error('Error al buscar el documento: ' . $e->getMessage());
+        } finally {
+            $this->searchingDocument = false;
         }
     }
-    private function fillClientData(object $data): void
+
+    private function fillClientDataFromApi(array $clientData): void
     {
         $this->document_type = 'DNI';
-        $this->name = $data->nombre ?? '';
-        
-        // Verificar fecha_nacimiento en diferentes formatos posibles
-        $fechaNacimiento = null;
-        if (isset($data->fecha_nacimiento)) {
-            $fechaNacimiento = $data->fecha_nacimiento;
-        } elseif (isset($data->fechaNacimiento)) {
-            $fechaNacimiento = $data->fechaNacimiento;
-        } elseif (isset($data->api->result->fechaNacimiento)) {
-            $fechaNacimiento = $data->api->result->fechaNacimiento;
-        }
-        
-        $this->birth_date = $fechaNacimiento ? $this->parseApiBirthDate($fechaNacimiento) : null;
+        $this->name = $clientData['name'] ?? '';
+        $this->birth_date = $clientData['birth_date'] ?? null;
     }
-    private function parseApiBirthDate(?string $fecha_nacimiento): ?string
-    {
-        if (empty($fecha_nacimiento)) {
-            return null;
-        }
 
-        try {
-            return Carbon::createFromFormat('d/m/Y', $fecha_nacimiento)->format('Y-m-d');
-        } catch (\Exception $e) {
-            try {
-                return Carbon::parse($fecha_nacimiento)->format('Y-m-d');
-            } catch (\Exception $e2) {
-                return null;
-            }
-        }
+    public function clearSearchData(): void
+    {
+        $this->name = '';
+        $this->birth_date = '';
     }
     public function render()
     {
