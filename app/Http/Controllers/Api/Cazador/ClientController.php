@@ -39,6 +39,7 @@ class ClientController extends Controller
             'client_type' => $client->client_type,
             'source' => $client->source,
             'status' => $client->status,
+            'create_type' => $client->create_type,
             'score' => $client->score,
             'notes' => $client->notes,
             'created_at' => $client->created_at->format('Y-m-d H:i:s'),
@@ -200,6 +201,7 @@ class ClientController extends Controller
                 'client_type',
                 'source',
                 'status',
+                'create_type',
                 'score',
                 'notes'
             ]);
@@ -297,6 +299,7 @@ class ClientController extends Controller
                 'client_type',
                 'source',
                 'status',
+                'create_type',
                 'score',
                 'notes'
             ]);
