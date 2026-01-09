@@ -22,6 +22,7 @@ class Client extends Model
         'birth_date', // fecha de nacimiento
         'client_type', // inversor, comprador, empresa, constructor
         'source', // redes_sociales, ferias, referidos, formulario_web, publicidad
+        'create_type', // datero, propio
         'status', // nuevo, contacto_inicial, en_seguimiento, cierre, perdido
         'score', // scoring del lead
         'notes',

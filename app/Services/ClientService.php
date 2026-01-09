@@ -61,7 +61,7 @@ class ClientService
                         $roleQuery->where('name', 'datero');
                     });
                 });
-            
+
             $this->applyFilters($query, $filters);
 
             return $query->orderBy('created_at', 'desc')->paginate($perPage);
@@ -258,12 +258,12 @@ class ClientService
                 ->groupBy('status')
                 ->pluck('count', 'status')
                 ->toArray();
-            
+
             $clientsByType = Client::selectRaw('client_type, COUNT(*) as count')
                 ->groupBy('client_type')
                 ->pluck('count', 'client_type')
                 ->toArray();
-            
+
             $clientsBySource = Client::selectRaw('source, COUNT(*) as count')
                 ->groupBy('source')
                 ->pluck('count', 'source')
@@ -395,6 +395,14 @@ class ClientService
             // Al crear un nuevo cliente
             $data['created_by'] = Auth::id();
             $data['updated_by'] = Auth::id();
+
+            // Establecer create_type basándose en el rol del usuario autenticado
+            $user = Auth::user();
+            if ($user && method_exists($user, 'isDatero') && $user->isDatero()) {
+                $data['create_type'] = 'datero';
+            } else {
+                $data['create_type'] = 'propio';
+            }
         } else {
             // Al actualizar un cliente existente
             $data['updated_by'] = Auth::id();
