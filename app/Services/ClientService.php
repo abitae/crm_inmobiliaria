@@ -128,10 +128,10 @@ class ClientService
     /**
      * Crear nuevo cliente
      */
-    public function createClient(array $formData): Client
+    public function createClient(array $formData, ?int $createdById = null): Client
     {
         try {
-            $data = $this->prepareFormData($formData);
+            $data = $this->prepareFormData($formData, $createdById);
             $this->validateClientData($data);
 
             $client = Client::create($data);
@@ -373,7 +373,7 @@ class ClientService
     /**
      * Preparar datos del formulario para crear/actualizar cliente
      */
-    public function prepareFormData(array $formData, ?Client $editingClient = null): array
+    public function prepareFormData(array $formData, ?int $createdById = null, ?Client $editingClient = null): array
     {
         $data = [
             'name' => $formData['name'],
@@ -394,7 +394,7 @@ class ClientService
         if (!$editingClient) {
             // Al crear un nuevo cliente
             // Usar created_by del formData si existe y no es null, sino usar Auth::id()
-            $data['created_by'] = $formData['created_by'] ?? Auth::id();
+            $data['created_by'] = $createdById ?? Auth::id();
             $data['updated_by'] = $formData['updated_by'] ?? Auth::id();
 
             // Validar que created_by no sea null

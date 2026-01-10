@@ -266,7 +266,7 @@ class ClientController extends Controller
             $formData['created_by'] = Auth::id();
             $formData['assigned_advisor_id'] = Auth::user()->lider_id ?? Auth::id();
             // Crear el cliente usando el servicio
-            $client = $this->clientService->createClient($formData);
+            $client = $this->clientService->createClient($formData, Auth::id());
             
             // Recargar con relaciones necesarias
             $client->load('assignedAdvisor:id,name,email');
