@@ -393,19 +393,32 @@ class ClientService
         // Agregar campos de auditoría
         if (!$editingClient) {
             // Al crear un nuevo cliente
-            $data['created_by'] = Auth::id();
-            $data['updated_by'] = Auth::id();
+            // Usar created_by del formData si existe y no es null, sino usar Auth::id()
+            $data['created_by'] = $formData['created_by'] ?? Auth::id();
+            $data['updated_by'] = $formData['updated_by'] ?? Auth::id();
 
-            // Establecer create_type basándose en el rol del usuario autenticado
-            $user = Auth::user();
-            if ($user && method_exists($user, 'isDatero') && $user->isDatero()) {
-                $data['create_type'] = 'datero';
+            // Validar que created_by no sea null
+            if ($data['created_by'] === null) {
+                throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
+            }
+
+            // Establecer create_type basándose en el rol del usuario
+            // Si ya viene en formData, respetarlo; sino determinarlo automáticamente
+            if (isset($formData['create_type']) && in_array($formData['create_type'], ['datero', 'propio'])) {
+                $data['create_type'] = $formData['create_type'];
             } else {
-                $data['create_type'] = 'propio';
+                // Determinar create_type basándose en el usuario que crea el cliente
+                $userId = $data['created_by'];
+                $user = User::find($userId);
+                if ($user && method_exists($user, 'isDatero') && $user->isDatero()) {
+                    $data['create_type'] = 'datero';
+                } else {
+                    $data['create_type'] = 'propio';
+                }
             }
         } else {
             // Al actualizar un cliente existente
-            $data['updated_by'] = Auth::id();
+            $data['updated_by'] = $formData['updated_by'] ?? Auth::id();
         }
 
         return $data;
