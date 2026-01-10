@@ -387,33 +387,54 @@ class ClientService
             'status' => $formData['status'],
             'score' => $formData['score'],
             'notes' => $formData['notes'],
-            'assigned_advisor_id' => $formData['assigned_advisor_id'] ?: null,
+            'assigned_advisor_id' => $formData['assigned_advisor_id'] ?? null,
         ];
 
         // Agregar campos de auditoría
         if (!$editingClient) {
             // Al crear un nuevo cliente
             // Usar created_by del formData si existe y no es null, sino usar Auth::id()
-            $data['created_by'] = $createdById ?? Auth::id();
-            $data['updated_by'] = $formData['updated_by'] ?? Auth::id();
+            $userId = $createdById ?? Auth::id();
 
-            // Validar que created_by no sea null
-            if ($data['created_by'] === null) {
+            // Validar que userId no sea null
+            if ($userId === null) {
                 throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
             }
 
-            // Establecer create_type basándose en el rol del usuario
-            // Si ya viene en formData, respetarlo; sino determinarlo automáticamente
-            if (isset($formData['create_type']) && in_array($formData['create_type'], ['datero', 'propio'])) {
-                $data['create_type'] = $formData['create_type'];
+            // Obtener el usuario para determinar si es datero
+            $user = User::find($userId);
+            if (!$user) {
+                throw new \Exception('Usuario creador no encontrado');
+            }
+
+            $isDatero = $user->isDatero();
+
+            // Aplicar lógica según el tipo de usuario
+            if ($isDatero) {
+                // Si es datero: assigned_advisor_id = lider_id del datero
+                if (!$user->lider_id) {
+                    throw new \Exception('El datero debe tener un líder asignado para crear clientes');
+                }
+                $data['assigned_advisor_id'] = $user->lider_id;
+                $data['created_by'] = $userId;
+                $data['updated_by'] = $userId;
+                $data['create_type'] = 'datero';
             } else {
-                // Determinar create_type basándose en el usuario que crea el cliente
-                $userId = $data['created_by'];
-                $user = User::find($userId);
-                if ($user && method_exists($user, 'isDatero') && $user->isDatero()) {
-                    $data['create_type'] = 'datero';
-                } else {
-                    $data['create_type'] = 'propio';
+                // Si no es datero: assigned_advisor_id, created_by y updated_by = id del usuario
+                // Solo establecer assigned_advisor_id si no viene en formData
+                if (!isset($formData['assigned_advisor_id']) || $formData['assigned_advisor_id'] === null) {
+                    $data['assigned_advisor_id'] = $userId;
+                }
+                $data['created_by'] = $userId;
+                $data['updated_by'] = $userId;
+                $data['create_type'] = 'propio';
+            }
+
+            // Si create_type viene explícitamente en formData, respetarlo (pero solo si no es datero)
+            if (isset($formData['create_type']) && in_array($formData['create_type'], ['datero', 'propio'])) {
+                // Solo permitir cambiar create_type si no es datero (para mantener consistencia)
+                if (!$isDatero) {
+                    $data['create_type'] = $formData['create_type'];
                 }
             }
         } else {

@@ -86,7 +86,7 @@ class ClientController extends Controller
             // Validar y sanitizar parámetros de paginación
             $perPage = min(max((int) $request->get('per_page', 15), 1), 100);
             $page = max((int) $request->get('page', 1), 1);
-            
+
             // Sanitizar filtros
             $filters = [
                 'search' => trim($request->get('search', '')),
@@ -125,7 +125,7 @@ class ClientController extends Controller
                 $search = trim($filters['search']);
                 // Sanitizar búsqueda para prevenir SQL injection
                 $search = preg_replace('/[^a-zA-Z0-9\s\-]/', '', $search);
-                
+
                 if (!empty($search)) {
                     $query->where(function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
@@ -155,14 +155,13 @@ class ClientController extends Controller
                     'to' => $clients->lastItem(),
                 ]
             ], 'Clientes obtenidos exitosamente');
-
         } catch (\Exception $e) {
             Log::error('Error al obtener clientes (Datero)', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $this->serverErrorResponse($e, 'Error al obtener los clientes');
         }
     }
@@ -180,8 +179,8 @@ class ClientController extends Controller
                 'assignedAdvisor:id,name,email',
                 'opportunities.project:id,name',
             ])
-            ->withCount(['opportunities', 'activities', 'tasks'])
-            ->find($id);
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->find($id);
 
             if (!$client) {
                 return $this->notFoundResponse('Cliente');
@@ -198,7 +197,6 @@ class ClientController extends Controller
             $clientData['tasks_count'] = $client->tasks_count;
 
             return $this->successResponse(['client' => $clientData], 'Cliente obtenido exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener el cliente');
         }
@@ -261,13 +259,12 @@ class ClientController extends Controller
             // Establecer valores por defecto si no se proporcionan
             $formData['status'] = $formData['status'] ?? 'nuevo';
             $formData['score'] = isset($formData['score']) ? max(0, min(100, (int) $formData['score'])) : 0;
-            
-            // Asegurar que created_by se establezca con el datero autenticado
-            $formData['created_by'] = Auth::id();
-            $formData['assigned_advisor_id'] = Auth::user()->lider_id ?? Auth::id();
+
+            // El servicio se encargará de establecer assigned_advisor_id, created_by y updated_by
+            // basándose en el lider_id del datero autenticado
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData, Auth::id());
-            
+
             // Recargar con relaciones necesarias
             $client->load('assignedAdvisor:id,name,email');
 
@@ -276,7 +273,6 @@ class ClientController extends Controller
                 'Cliente creado exitosamente',
                 201
             );
-
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
@@ -286,7 +282,7 @@ class ClientController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $this->serverErrorResponse($e, 'Error al crear el cliente');
         }
     }
@@ -354,7 +350,6 @@ class ClientController extends Controller
                 ['client' => $this->formatClient($client)],
                 'Cliente actualizado exitosamente'
             );
-
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
@@ -373,10 +368,8 @@ class ClientController extends Controller
             $options = $this->clientService->getFormOptions();
 
             return $this->successResponse($options, 'Opciones obtenidas exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener las opciones');
         }
     }
 }
-

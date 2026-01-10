@@ -20,7 +20,7 @@ class ClientRegistroDatero extends Component
     private const DEFAULT_SCORE = 50;
     private const QR_SIZE = 150;
     private const DATE_FORMATS = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
-    
+
     // Propiedades del formulario
     public string $name = '';
     public string $phone = '';
@@ -134,12 +134,11 @@ class ClientRegistroDatero extends Component
         $user = User::find($id);
         if (!$user->isDatero()) {
             abort(404);
-        }else{
-        // Asignar automáticamente el usuario como asesor 
-        $this->assigned_advisor_id = $user->assigned_advisor_id;
-        // Inicializar campos de auditoría con el assigned_advisor_id
-        $this->created_by = $user->id;
-        $this->updated_by = $user->id;
+        } else {
+            // El servicio establecerá assigned_advisor_id automáticamente basándose en lider_id
+            // Inicializar campos de auditoría con el id del datero
+            $this->created_by = $user->id;
+            $this->updated_by = $user->id;
         }
     }
 
@@ -156,7 +155,7 @@ class ClientRegistroDatero extends Component
                 // Intentar diferentes formatos de fecha
                 $formats = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
                 $birthDate = null;
-                
+
                 foreach ($formats as $format) {
                     try {
                         $birthDate = Carbon::createFromFormat($format, $this->birth_date)->format('Y-m-d');
@@ -165,7 +164,7 @@ class ClientRegistroDatero extends Component
                         continue; // Intentar el siguiente formato
                     }
                 }
-                
+
                 // Si ningún formato funcionó, intentar parse automático
                 if (!$birthDate) {
                     try {
@@ -196,12 +195,11 @@ class ClientRegistroDatero extends Component
                 'status' => $this->status,
                 'score' => $this->score,
                 'notes' => $notes,
-                'assigned_advisor_id' => $this->assigned_advisor_id,
-                'created_by' => $this->assigned_advisor_id,
-                'updated_by' => $this->assigned_advisor_id,
             ];
 
-            $client = $this->clientService->createClient($data);
+            // El servicio establecerá assigned_advisor_id, created_by y updated_by automáticamente
+            // basándose en el lider_id del datero
+            $client = $this->clientService->createClient($data, $this->created_by);
 
             $this->resetForm();
             $this->showSuccessMessage = true;
@@ -240,9 +238,8 @@ class ClientRegistroDatero extends Component
         $this->source = 'formulario_web';
         $this->status = 'nuevo';
         $this->score = 50;
-        // Mantener los campos de auditoría con el assigned_advisor_id
-        $this->created_by = $this->assigned_advisor_id;
-        $this->updated_by = $this->assigned_advisor_id;
+        // Mantener los campos de auditoría con el id del datero (ya establecido en mount)
+        // No es necesario resetearlos ya que se mantienen del mount
     }
 
     public function closeMessages()
@@ -255,12 +252,12 @@ class ClientRegistroDatero extends Component
     {
         $tipo = strtolower($this->document_type);
         $num_doc = $this->document_number;
-        
+
         // Verificar si el cliente ya existe
         if ($this->clientExists($tipo, $num_doc)) {
             return;
         }
-        
+
         if ($tipo === 'dni' && strlen($num_doc) === 8) {
             $this->searchClientData($tipo, $num_doc);
         } else {
@@ -282,19 +279,19 @@ class ClientRegistroDatero extends Component
         $client = Client::where('document_number', $num_doc)
             ->where('document_type', $tipo)
             ->first();
-            
+
         if ($client) {
             $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
             $this->handleError('Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
             return true;
         }
-        
+
         return false;
     }
     private function searchClientData(string $tipo, string $num_doc): void
     {
         $result = $this->searchComplete($tipo, $num_doc);
-        
+
         if ($result['encontrado']) {
             $this->fillClientData($result['data']);
             $this->showSuccessMessage = true;
@@ -311,7 +308,7 @@ class ClientRegistroDatero extends Component
     {
         $this->document_type = 'DNI';
         $this->name = $data->nombre ?? '';
-        
+
         // Verificar fecha_nacimiento en diferentes formatos posibles
         $fechaNacimiento = null;
         if (isset($data->fecha_nacimiento)) {
@@ -321,7 +318,7 @@ class ClientRegistroDatero extends Component
         } elseif (isset($data->api->result->fechaNacimiento)) {
             $fechaNacimiento = $data->api->result->fechaNacimiento;
         }
-        
+
         $this->birth_date = $fechaNacimiento ? $this->parseApiBirthDate($fechaNacimiento) : null;
     }
 
@@ -369,12 +366,12 @@ class ClientRegistroDatero extends Component
     }
     public function render()
     {
-        $url = url('clients/registro-datero/'.$this->assigned_advisor_id);
+        $url = url('clients/registro-datero/' . $this->assigned_advisor_id);
         $qrcode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)
-                            ->color(0, 0, 0)
-                            ->margin(2)
-                            ->backgroundColor(255, 255, 255)
-                            ->generate($url);
-        return view('livewire.clients.client-registro-datero',compact('qrcode'));
+            ->color(0, 0, 0)
+            ->margin(2)
+            ->backgroundColor(255, 255, 255)
+            ->generate($url);
+        return view('livewire.clients.client-registro-datero', compact('qrcode'));
     }
 }
