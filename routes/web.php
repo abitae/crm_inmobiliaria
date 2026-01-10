@@ -95,8 +95,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/users-datero', UserDatero::class)->middleware('permission:view_users')->name('users-datero');
 
     // Registro de Dateros y Clientes
-    Route::get('/clients/registro-datero/{id}', ClientRegistroDatero::class)->middleware('permission:create_clients')->name('clients.registro-datero');
+    
     Route::get('/register-datero', RegisterDatero::class)->middleware('permission:create_users')->name('register-datero');
 });
-
+Route::get('/clients/registro-datero/{id}', ClientRegistroDatero::class)->name('clients.registro-datero');
 require __DIR__ . '/auth.php';
