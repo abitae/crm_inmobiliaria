@@ -31,6 +31,7 @@ class ClientRegistroDatero extends Component
     public ?string $ocupacion = null;
     public string $client_type = 'comprador';
     public string $source = 'formulario_web';
+    public string $create_type = 'propio';
     public string $status = 'nuevo';
     public int $score = self::DEFAULT_SCORE;
     public ?string $notes = null;
@@ -90,6 +91,7 @@ class ClientRegistroDatero extends Component
         'ocupacion' => 'nullable|string|max:255',
         'client_type' => 'required|in:inversor,comprador,empresa,constructor',
         'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
+        'create_type' => 'nullable|in:datero,propio',
         'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
         'score' => 'required|integer|min:0|max:100',
         'notes' => 'nullable|string',
@@ -112,6 +114,8 @@ class ClientRegistroDatero extends Component
         'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
         'source.required' => 'La fuente es obligatoria.',
         'source.in' => 'La fuente seleccionada no es válida.',
+        'create_type.nullable' => 'El tipo de creación es opcional.',
+        'create_type.in' => 'El tipo de creación seleccionado no es válido.',
         'status.required' => 'El estado es obligatorio.',
         'status.in' => 'El estado seleccionado no es válido.',
         'score.required' => 'El puntaje es obligatorio.',
@@ -131,8 +135,8 @@ class ClientRegistroDatero extends Component
         if (!$user->isDatero()) {
             abort(404);
         }else{
-        // Asignar automáticamente el usuario como asesor
-        $this->assigned_advisor_id = $user->id;
+        // Asignar automáticamente el usuario como asesor 
+        $this->assigned_advisor_id = $user->assigned_advisor_id;
         // Inicializar campos de auditoría con el assigned_advisor_id
         $this->created_by = $user->id;
         $this->updated_by = $user->id;
