@@ -51,6 +51,7 @@ class UserList extends Component
     public $name = '';
     public $email = '';
     public $phone = '';
+    public $dni = '';
     public $lider_id = null;
     public $selectedRole = '';
     public $password = '';
@@ -66,10 +67,10 @@ class UserList extends Component
     public $leaders;
     public $qrcode;
     protected $cachedQRCode = null;
-    
+
     // Roles permitidos para este componente
     protected $allowedRoles = ['admin', 'lider', 'vendedor'];
-    
+
     /**
      * Obtiene el servicio de gestión de usuarios
      */
@@ -77,7 +78,7 @@ class UserList extends Component
     {
         return app(UserManagementService::class);
     }
-    
+
     /**
      * Inicializa el componente con datos necesarios
      */
@@ -130,7 +131,7 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $this->selectedUser = $this->getUserService()->findUser($userId);
             if (!$this->selectedUser) {
                 Log::warning('Usuario no encontrado al intentar editar', [
@@ -232,7 +233,7 @@ class UserList extends Component
                 'user_name' => $this->userToModify->name,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             if ($this->actionType === 'activate') {
                 $this->userToModify->activate();
                 Log::info('Usuario activado exitosamente', [
@@ -271,6 +272,7 @@ class UserList extends Component
             'name',
             'email',
             'phone',
+            'dni',
             'lider_id',
             'selectedRole',
             'password',
@@ -291,6 +293,7 @@ class UserList extends Component
         $this->name = $this->selectedUser->name;
         $this->email = $this->selectedUser->email;
         $this->phone = $this->selectedUser->phone ?? '';
+        $this->dni = $this->selectedUser->dni ?? '';
         $this->lider_id = $this->selectedUser->lider_id;
         $this->selectedRole = $this->selectedUser->roles->first()?->name ?? '';
         $this->password = '';
@@ -310,6 +313,7 @@ class UserList extends Component
                 'name' => $this->name,
                 'email' => $this->email,
                 'phone' => $this->phone,
+                'dni' => $this->dni,
                 'lider_id' => $this->lider_id,
                 'selectedRole' => $this->selectedRole,
                 'password' => $this->password,
@@ -327,15 +331,23 @@ class UserList extends Component
             ]);
 
             $validation = $this->getUserService()->validateUserForm($userData, $this->isCreating, $this->selectedUser);
-            
+
             if (!$validation['success']) {
+                $errorMessage = $validation['message'];
+                // Si hay errores específicos, agregarlos al mensaje
+                if (isset($validation['errors']) && $validation['errors']->any()) {
+                    $errorDetails = $validation['errors']->all();
+                    $errorMessage .= ': ' . implode(', ', $errorDetails);
+                }
+
                 Log::warning('Error de validación al guardar usuario', [
                     'is_creating' => $this->isCreating,
                     'user_id' => $this->selectedUser->id ?? null,
                     'current_user_id' => Auth::id(),
-                    'validation_message' => $validation['message']
+                    'validation_message' => $errorMessage,
+                    'validation_errors' => isset($validation['errors']) ? $validation['errors']->toArray() : []
                 ]);
-                $this->error($validation['message']);
+                $this->error($errorMessage);
                 return;
             }
 
@@ -386,7 +398,7 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $user = $this->getUserService()->findUser($userId);
 
             if (!$user) {
@@ -430,7 +442,7 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $user = $this->getUserService()->findUser($userId);
 
             if (!$user) {
@@ -483,9 +495,9 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $result = $this->getUserService()->activateUser($userId);
-            
+
             if ($result['success']) {
                 Log::info('Usuario activado exitosamente', [
                     'user_id' => $userId,
@@ -522,9 +534,9 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $result = $this->getUserService()->desactivateUser($userId);
-            
+
             if ($result['success']) {
                 Log::info('Usuario desactivado exitosamente', [
                     'user_id' => $userId,
@@ -581,7 +593,7 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $this->selectedUser = $this->getUserService()->findUser($userId);
             if (!$this->selectedUser) {
                 Log::warning('Usuario no encontrado al intentar ver QR', [
@@ -591,7 +603,7 @@ class UserList extends Component
                 $this->error('Usuario no encontrado.');
                 return;
             }
-            
+
             $this->qrcode = $this->getQRCode();
             $this->showQRModal = true;
         } catch (\Exception $e) {
@@ -603,13 +615,13 @@ class UserList extends Component
             $this->error('Error al generar el código QR: ' . $e->getMessage());
         }
     }
-    
+
     public function closeQRModal(): void
     {
         $this->showQRModal = false;
         $this->selectedUser = null;
     }
-    
+
     public function getQRCode(): string
     {
         if ($this->cachedQRCode === null) {
@@ -628,7 +640,7 @@ class UserList extends Component
                 'user_id' => $userId,
                 'current_user_id' => Auth::id()
             ]);
-            
+
             $this->userForPasswordChange = $this->getUserService()->findUser($userId);
             if (!$this->userForPasswordChange) {
                 Log::warning('Usuario no encontrado al intentar cambiar contraseña', [

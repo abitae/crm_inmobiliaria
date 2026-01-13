@@ -247,11 +247,11 @@ class UserManagementService
             'cci_bancaria' => 'nullable|string|max:255',
         ];
 
-        // Validación de DNI
+        // Validación de DNI - debe tener exactamente 8 dígitos numéricos
         if ($isCreating) {
-            $rules['dni'] = 'required|string|unique:users,dni';
+            $rules['dni'] = 'required|string|size:8|regex:/^[0-9]{8}$/|unique:users,dni';
         } else {
-            $rules['dni'] = 'required|string|unique:users,dni,' . $existingUser->id;
+            $rules['dni'] = 'required|string|size:8|regex:/^[0-9]{8}$/|unique:users,dni,' . $existingUser->id;
         }
 
         if ($isCreating) {
@@ -266,7 +266,25 @@ class UserManagementService
             }
         }
 
-        $validator = validator($data, $rules);
+        // Mensajes de validación personalizados
+        $messages = [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'El correo electrónico debe ser una dirección válida.',
+            'email.unique' => 'Este correo electrónico ya está registrado.',
+            'dni.required' => 'El DNI es obligatorio.',
+            'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
+            'dni.regex' => 'El DNI debe contener solo números.',
+            'dni.unique' => 'Este DNI ya está registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.size' => 'La contraseña debe tener exactamente 6 dígitos.',
+            'password.regex' => 'La contraseña debe contener solo números.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'selectedRole.required' => 'Debe seleccionar un rol.',
+            'selectedRole.exists' => 'El rol seleccionado no es válido.',
+        ];
+
+        $validator = validator($data, $rules, $messages);
 
         if ($validator->fails()) {
             return [

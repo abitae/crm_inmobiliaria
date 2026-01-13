@@ -345,6 +345,17 @@
                                 @enderror
                             </div>
 
+                            <!-- DNI -->
+                            <div class="col-span-2">
+                                <flux:input id="dni" wire:model="dni" size="xs" placeholder="DNI (8 dígitos) *"
+                                    class="w-full" type="text" maxlength="8" pattern="[0-9]{8}" 
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                                @error('dni')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">Ingrese 8 dígitos numéricos</p>
+                            </div>
+
                             <!-- Líder Asignado -->
                             <div class="col-span-2">
                                 <flux:select id="lider_id" wire:model="lider_id" size="xs" class="w-full">
