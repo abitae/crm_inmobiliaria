@@ -8,7 +8,8 @@
                     <p class="text-sm text-gray-600">Gestión de actividades del CRM</p>
                 </div>
                 <div class="flex space-x-2">
-                    <flux:button icon="plus" size="xs" color="primary" wire:click="$dispatch('show-info', { message: 'Crear actividad aún no implementado' })">
+                    <flux:button icon="plus" size="xs" color="primary"
+                        wire:click="$dispatch('show-info', { message: 'Crear actividad aún no implementado' })">
                         Nueva Actividad
                     </flux:button>
                 </div>
@@ -21,12 +22,13 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
-                    <flux:input size="xs" icon="magnifying-glass" type="search" label="Buscar" placeholder="Título o descripción" wire:model.debounce.400ms="search" />
+                    <flux:input size="xs" icon="magnifying-glass" type="search" label="Buscar"
+                        placeholder="Título o descripción" wire:model.live.debounce.400ms="search" />
                 </div>
                 <div>
                     <flux:select size="xs" icon="users" label="Cliente" wire:model.live="clientFilter">
                         <option value="">Todos los clientes</option>
-                        @foreach($clients as $client)
+                        @foreach ($clients as $client)
                             <option value="{{ $client->id }}">{{ $client->name }}</option>
                         @endforeach
                     </flux:select>
@@ -77,12 +79,14 @@
                             <tr wire:key="activity-{{ $activity->id }}" class="hover:bg-gray-50">
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-600">
                                     <div class="font-medium">{{ $activity->start_date?->format('d/m/Y') }}</div>
-                                    <div class="text-[10px] text-gray-400">{{ $activity->start_date?->format('H:i') }}</div>
+                                    <div class="text-[10px] text-gray-400">{{ $activity->start_date?->format('H:i') }}
+                                    </div>
                                 </td>
                                 <td class="px-2 py-2">
                                     <div class="font-medium text-gray-900">{{ $activity->title }}</div>
-                                    @if($activity->description)
-                                        <div class="text-[10px] text-gray-400 truncate max-w-xs">{{ Str::limit($activity->description, 50) }}</div>
+                                    @if ($activity->description)
+                                        <div class="text-[10px] text-gray-400 truncate max-w-xs">
+                                            {{ Str::limit($activity->description, 50) }}</div>
                                     @endif
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-600">
@@ -92,7 +96,8 @@
                                     {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }}
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
                                         {{ $activity->status === 'programada'
                                             ? 'bg-blue-100 text-blue-800'
                                             : ($activity->status === 'en_progreso'
@@ -105,10 +110,12 @@
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
                                     <div class="flex justify-end space-x-1">
-                                        <flux:button size="xs" variant="outline" wire:click="$dispatch('show-info', { message: 'Detalle aún no implementado' })">
+                                        <flux:button size="xs" variant="outline"
+                                            wire:click="$dispatch('show-info', { message: 'Detalle aún no implementado' })">
                                             <flux:icon name="eye" class="w-3 h-3" />
                                         </flux:button>
-                                        <flux:button size="xs" variant="danger" color="danger" wire:click="confirmDelete({{ $activity->id }})">
+                                        <flux:button size="xs" variant="danger" color="danger"
+                                            wire:click="confirmDelete({{ $activity->id }})">
                                             <flux:icon name="trash" class="w-3 h-3" />
                                         </flux:button>
                                     </div>
@@ -139,17 +146,21 @@
     <flux:modal wire:model="showDeleteModal" class="w-96">
         <div class="p-4">
             <h3 class="text-base font-semibold text-gray-900 mb-2">Confirmar eliminación</h3>
-            <p class="text-sm text-gray-600">¿Seguro que deseas eliminar esta actividad? Esta acción no se puede deshacer.</p>
+            <p class="text-sm text-gray-600">¿Seguro que deseas eliminar esta actividad? Esta acción no se puede
+                deshacer.</p>
             <div class="mt-4 flex justify-end space-x-2">
-                <flux:button size="xs" variant="outline" icon="x-mark" wire:click="closeDeleteModal">Cancelar</flux:button>
-                <flux:button size="xs" color="danger" icon="trash" wire:click="deleteActivity">Eliminar</flux:button>
+                <flux:button size="xs" variant="outline" icon="x-mark" wire:click="closeDeleteModal">Cancelar
+                </flux:button>
+                <flux:button size="xs" color="danger" icon="trash" wire:click="deleteActivity">Eliminar
+                </flux:button>
             </div>
         </div>
     </flux:modal>
 
     <!-- Notificaciones - Parte superior derecha -->
     <div id="notification-container" class="fixed top-4 right-4 z-[9999] hidden">
-        <div id="notification-content" class="bg-white rounded-lg shadow-2xl max-w-md w-full transform transition-all duration-300 translate-x-full opacity-0">
+        <div id="notification-content"
+            class="bg-white rounded-lg shadow-2xl max-w-md w-full transform transition-all duration-300 translate-x-full opacity-0">
             <div class="p-6 border-l-4" id="notification-border">
                 <div class="flex items-start space-x-4">
                     <div id="notification-icon" class="flex-shrink-0">
@@ -159,9 +170,11 @@
                         <h3 id="notification-title" class="text-lg font-semibold mb-1"></h3>
                         <p id="notification-message" class="text-gray-600 text-sm"></p>
                     </div>
-                    <button id="notification-close" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                    <button id="notification-close"
+                        class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>

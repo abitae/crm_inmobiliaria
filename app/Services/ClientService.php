@@ -15,24 +15,66 @@ use Illuminate\Validation\ValidationException;
 class ClientService
 {
     /**
+     * Construir la consulta base de clientes.
+     */
+    private function baseClientsQuery(bool $onlyDatero = false, bool $forExport = false)
+    {
+        $query = Client::query();
+
+        if (!$forExport) {
+            $query->select([
+                'id',
+                'name',
+                'phone',
+                'document_type',
+                'document_number',
+                'birth_date',
+                'client_type',
+                'source',
+                'status',
+                'score',
+                'assigned_advisor_id',
+                'created_by',
+            ])->with([
+                'assignedAdvisor:id,name',
+                'createdBy:id,name',
+                'activities' => function ($q) {
+                    $q->select('id', 'client_id', 'title', 'start_date')
+                        ->latest('start_date')
+                        ->limit(1);
+                }
+            ]);
+        } else {
+            $query->with([
+                'assignedAdvisor:id,name',
+                'createdBy:id,name',
+            ]);
+        }
+
+        if ($onlyDatero) {
+            $query->whereHas('createdBy', function ($q) {
+                $q->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->where('name', 'datero');
+                });
+            });
+        } else {
+            $query->whereDoesntHave('createdBy', function ($q) {
+                $q->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->where('name', 'datero');
+                });
+            });
+        }
+
+        return $query;
+    }
+
+    /**
      * Obtener todos los clientes con paginación y filtros (excluyendo clientes creados por usuarios datero)
      */
     public function getAllClients(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         try {
-            $query = Client::with([
-                'assignedAdvisor',
-                'createdBy',
-                'activities' => function ($q) {
-                    $q->latest('start_date')->limit(1);
-                }
-            ])
-                ->withCount(['opportunities', 'activities', 'tasks'])
-                ->whereDoesntHave('createdBy', function ($q) {
-                    $q->whereHas('roles', function ($roleQuery) {
-                        $roleQuery->where('name', 'datero');
-                    });
-                });
+            $query = $this->baseClientsQuery(false);
             $this->applyFilters($query, $filters);
 
             return $query->orderBy('created_at', 'desc')->paginate($perPage);
@@ -48,19 +90,7 @@ class ClientService
     public function getClientsByDateros(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         try {
-            $query = Client::with([
-                'assignedAdvisor',
-                'createdBy',
-                'activities' => function ($q) {
-                    $q->latest('start_date')->limit(1);
-                }
-            ])
-                ->withCount(['opportunities', 'activities', 'tasks'])
-                ->whereHas('createdBy', function ($q) {
-                    $q->whereHas('roles', function ($roleQuery) {
-                        $roleQuery->where('name', 'datero');
-                    });
-                });
+            $query = $this->baseClientsQuery(true);
 
             $this->applyFilters($query, $filters);
 
@@ -68,6 +98,22 @@ class ClientService
         } catch (\Exception $e) {
             Log::error('Error al obtener clientes de dateros: ' . $e->getMessage());
             throw new \Exception('Error al obtener la lista de clientes de dateros');
+        }
+    }
+
+    /**
+     * Obtener todos los clientes filtrados sin paginación (para exportación).
+     */
+    public function getClientsForExport(array $filters = []): Collection
+    {
+        try {
+            $query = $this->baseClientsQuery(false, true);
+            $this->applyFilters($query, $filters);
+
+            return $query->orderBy('created_at', 'desc')->get();
+        } catch (\Exception $e) {
+            Log::error('Error al obtener clientes para exportación: ' . $e->getMessage());
+            throw new \Exception('Error al obtener clientes para exportación');
         }
     }
 
@@ -159,7 +205,7 @@ class ClientService
                 throw new \Exception('Cliente no encontrado');
             }
 
-            $data = $this->prepareFormData($formData, $client);
+            $data = $this->prepareFormData($formData, null, $client);
             $this->validateClientData($data, $id);
 
             $updated = $client->update($data);

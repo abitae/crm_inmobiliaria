@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\Cazador\AuthController as CazadorAuthController;
 use App\Http\Controllers\Api\Cazador\ClientController as CazadorClientController;
+use App\Http\Controllers\Api\Cazador\ClientActivityController;
+use App\Http\Controllers\Api\Cazador\ClientTaskController;
 use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectController;
 use App\Http\Controllers\Api\Cazador\ReservationController as CazadorReservationController;
 use App\Http\Controllers\Api\Cazador\DateroController as CazadorDateroController;
@@ -58,6 +60,12 @@ Route::prefix('cazador')->group(function () {
 
         Route::match(['put', 'patch'], '/{id}', [CazadorClientController::class, 'update'])
             ->name('api.cazador.clients.update');
+
+        Route::post('/{client}/activities', [ClientActivityController::class, 'store'])
+            ->name('api.cazador.clients.activities.store');
+
+        Route::post('/{client}/tasks', [ClientTaskController::class, 'store'])
+            ->name('api.cazador.clients.tasks.store');
     });
 
     // Rutas de proyectos (protegidas con JWT y middleware cazador)

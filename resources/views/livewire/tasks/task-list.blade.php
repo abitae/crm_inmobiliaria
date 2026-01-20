@@ -21,7 +21,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
-                    <flux:input size="xs" icon="magnifying-glass" type="search" label="Buscar" placeholder="Título o descripción" wire:model.debounce.400ms="search" />
+                    <flux:input size="xs" icon="magnifying-glass" type="search" label="Buscar" placeholder="Título o descripción" wire:model.live.debounce.400ms="search" />
                 </div>
                 <div>
                     <flux:select size="xs" icon="users" label="Cliente" wire:model.live="clientFilter">

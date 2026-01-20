@@ -2,9 +2,8 @@
 
 namespace App\Livewire\Actividades;
 
-use App\Models\Activity;
 use App\Models\Client;
-use App\Models\User;
+use App\Services\ActivityService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -19,6 +18,7 @@ class ActivityList extends Component
     public $typeFilter = '';
     public $showDeleteModal = false;
     public $activityToDeleteId = null;
+    protected $activityService;
 
     protected $queryString = [
         'clientFilter' => ['except' => ''],
@@ -40,6 +40,11 @@ class ActivityList extends Component
         return Client::orderBy('name')->get(['id', 'name']);
     }
 
+    public function boot(ActivityService $activityService)
+    {
+        $this->activityService = $activityService;
+    }
+
     public function confirmDelete(int $activityId): void
     {
         $this->activityToDeleteId = $activityId;
@@ -53,14 +58,13 @@ class ActivityList extends Component
             return;
         }
 
-        $activity = Activity::find($this->activityToDeleteId);
-        if (!$activity) {
+        $deleted = $this->activityService->deleteActivity($this->activityToDeleteId);
+        if (!$deleted) {
             $this->dispatch('show-error', message: 'La actividad no existe');
             $this->closeDeleteModal();
             return;
         }
 
-        $activity->delete();
         $this->dispatch('show-success', message: 'Actividad eliminada correctamente');
         $this->closeDeleteModal();
     }
@@ -80,95 +84,17 @@ class ActivityList extends Component
     public function render()
     {
         $user = Auth::user();
-        
-        $activities = Activity::with(['client', 'project', 'opportunity'])
-            ->when($this->shouldFilterByRole($user), function ($q) use ($user) {
-                $this->applyRoleFilter($q, $user);
-            })
-            ->when($this->clientFilter !== '', function ($q) {
-                $q->where('client_id', $this->clientFilter);
-            })
-            ->when($this->statusFilter !== '', function ($q) {
-                $q->where('status', $this->statusFilter);
-            })
-            ->when($this->typeFilter !== '', function ($q) {
-                $q->where('activity_type', $this->typeFilter);
-            })
-            ->when($this->search !== '', function ($q) {
-                $q->where(function ($qq) {
-                    $qq->where('title', 'like', "%{$this->search}%")
-                        ->orWhere('description', 'like', "%{$this->search}%")
-                        ->orWhereHas('client', function ($qClient) {
-                            $qClient->where('name', 'like', "%{$this->search}%");
-                        });
-                });
-            })
-            ->orderByDesc('start_date')
-            ->paginate(10);
+
+        $activities = $this->activityService->getActivitiesPaginated([
+            'client_id' => $this->clientFilter,
+            'status' => $this->statusFilter,
+            'type' => $this->typeFilter,
+            'search' => $this->search,
+        ], $user, 10);
 
         return view('livewire.actividades.activity-list', [
             'activities' => $activities,
             'clients' => $this->clients,
         ]);
-    }
-
-    /**
-     * Determina si se debe aplicar filtro por rol
-     */
-    protected function shouldFilterByRole(?User $user): bool
-    {
-        if (!$user) {
-            return false;
-        }
-
-        // Solo aplicar filtro si NO es admin
-        return !$user->isAdmin();
-    }
-
-    /**
-     * Aplica filtros según el rol del usuario
-     */
-    protected function applyRoleFilter($query, User $user): void
-    {
-        if ($user->isLider()) {
-            // Líder: ver actividades de su equipo
-            $teamUserIds = $this->getTeamUserIds($user);
-            $query->where(function ($q) use ($teamUserIds) {
-                $q->whereIn('assigned_to', $teamUserIds)
-                  ->orWhereIn('advisor_id', $teamUserIds);
-            });
-        } elseif ($user->isAdvisor()) {
-            // Vendedor: ver solo sus propias actividades
-            $query->where(function ($q) use ($user) {
-                $q->where('assigned_to', $user->id)
-                  ->orWhere('advisor_id', $user->id);
-            });
-        } else {
-            // Otros roles: ver solo sus propias actividades
-            $query->where(function ($q) use ($user) {
-                $q->where('assigned_to', $user->id)
-                  ->orWhere('advisor_id', $user->id);
-            });
-        }
-    }
-
-    /**
-     * Obtiene los IDs de usuarios del equipo (para líderes)
-     */
-    protected function getTeamUserIds(User $leader): array
-    {
-        $userIds = [$leader->id]; // Incluir al líder
-        
-        // Obtener vendedores a cargo
-        $vendedoresIds = User::where('lider_id', $leader->id)
-            ->whereHas('roles', function($query) {
-                $query->where('name', 'vendedor');
-            })
-            ->pluck('id')
-            ->toArray();
-        
-        $userIds = array_merge($userIds, $vendedoresIds);
-        
-        return array_unique($userIds);
     }
 }

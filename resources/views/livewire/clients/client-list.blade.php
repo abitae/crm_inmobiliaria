@@ -12,6 +12,9 @@
                         href="{{ route('clients.registro-masivo') }}">
                         Registro masivo
                     </flux:button>
+                    <flux:button icon="arrow-down-tray" size="xs" variant="outline" wire:click="exportClients">
+                        Exportar Excel
+                    </flux:button>
                     <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal">
                         Nuevo Cliente
                     </flux:button>
@@ -25,7 +28,13 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
-                    <flux:input size="xs" wire:model.debounce.500ms="search" placeholder="Buscar clientes..." />
+                    <flux:input size="xs" wire:model.live.debounce.500ms="search" placeholder="Buscar clientes..."
+                        type="search" />
+                    @if ($search && strlen(trim($search)) < $searchMinLength)
+                        <div class="mt-1 text-[10px] text-gray-400">
+                            Escribe al menos {{ $searchMinLength }} caracteres para filtrar.
+                        </div>
+                    @endif
                 </div>
                 <div>
                     <flux:select size="xs" wire:model.live="statusFilter">
@@ -76,7 +85,8 @@
 
         <!-- Tabla de Clientes Compacta -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto" wire:loading.class="opacity-60"
+                wire:target="search,statusFilter,sourceFilter,typeFilter,advisorFilter,clearFilters">
                 <table class="min-w-full divide-y divide-gray-200 text-xs">
                     <thead class="bg-gray-50">
                         <tr>
@@ -153,7 +163,7 @@
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
-                                    @if($client->activities && $client->activities->count() > 0)
+                                    @if ($client->activities && $client->activities->count() > 0)
                                         {{ $client->activities->first()->title ?? 'Sin actividad' }}
                                         <br>
                                         {{ optional($client->activities->first()->start_date)->format('d/m/Y') }}
@@ -163,6 +173,15 @@
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap font-medium">
                                     <div class="flex space-x-1">
+                                        <flux:button size="xs" variant="outline"
+                                            wire:click="openActivityModal({{ $client->id }})"
+                                            title="Nueva actividad">
+                                            <flux:icon name="calendar" class="w-3 h-3" />
+                                        </flux:button>
+                                        <flux:button size="xs" variant="outline"
+                                            wire:click="openTaskModal({{ $client->id }})" title="Nueva tarea">
+                                            <flux:icon name="clipboard-document-list" class="w-3 h-3" />
+                                        </flux:button>
                                         <flux:button size="xs" variant="outline"
                                             wire:click="openCreateModal({{ $client->id }})">
                                             <flux:icon name="pencil" class="w-3 h-3" />
@@ -186,6 +205,10 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="px-2 py-1 text-[11px] text-gray-500" wire:loading
+                wire:target="search,statusFilter,sourceFilter,typeFilter,advisorFilter,clearFilters">
+                Buscando...
             </div>
             <!-- Paginación -->
             @if ($clients->hasPages())
@@ -219,10 +242,8 @@
                                 placeholder="Número de documento" wire:model="document_number" size="xs" />
                             @if ($document_type == 'DNI')
                                 <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
-                                    size="xs" class="self-end" 
-                                    wire:loading.attr="disabled"
-                                    wire:target="buscarDocumento"
-                                    title="Buscar datos del documento">
+                                    size="xs" class="self-end" wire:loading.attr="disabled"
+                                    wire:target="buscarDocumento" title="Buscar datos del documento">
                                     <span wire:loading.remove wire:target="buscarDocumento">
                                         <flux:icon name="magnifying-glass" class="w-3 h-3" />
                                     </span>
@@ -230,10 +251,9 @@
                                         <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
                                     </span>
                                 </flux:button>
-                                @if($name || $birth_date)
+                                @if ($name || $birth_date)
                                     <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
-                                        size="xs" class="self-end" 
-                                        title="Limpiar datos de búsqueda">
+                                        size="xs" class="self-end" title="Limpiar datos de búsqueda">
                                     </flux:button>
                                 @endif
                             @endif
@@ -354,8 +374,241 @@
                     </flux:button>
                 </div>
             </form>
+
         </div>
     </flux:modal>
 
+    <!-- Modal de Nueva Actividad -->
+    <flux:modal wire:model="showActivityModal" size="md">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-base font-semibold text-gray-900">Nueva actividad</h3>
+            </div>
+            <form wire:submit.prevent="createActivity">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div class="col-span-2">
+                        <flux:input label="Titulo" wire:model="activity_title" size="xs"
+                            placeholder="Titulo de la actividad *" class="w-full" />
+                        @error('activity_title')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <flux:select label="Tipo" wire:model="activity_type" size="xs" class="w-full">
+                            <option value="llamada">Llamada</option>
+                            <option value="reunion">Reunion</option>
+                            <option value="visita">Visita</option>
+                            <option value="seguimiento">Seguimiento</option>
+                            <option value="tarea">Tarea</option>
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select label="Prioridad" wire:model="activity_priority" size="xs" class="w-full">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select label="Estado" wire:model="activity_status" size="xs" class="w-full">
+                            <option value="programada">Programada</option>
+                            <option value="en_progreso">En progreso</option>
+                            <option value="completada">Completada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:input label="Fecha y hora" type="datetime-local" wire:model="activity_start_date"
+                            size="xs" class="w-full" />
+                        @error('activity_start_date')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="col-span-2">
+                        <div class="text-gray-900">
+                            Asesor:
+                            {{ $activity_assigned_to ? optional($advisors->firstWhere('id', $activity_assigned_to))->name : '-' }}
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <flux:textarea label="Notas" wire:model="activity_notes" rows="2"
+                            placeholder="Notas adicionales"
+                            class="w-full text-xs px-2 py-1 border border-gray-200 rounded">
+                        </flux:textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
+                    <flux:button type="button" variant="outline" size="xs" wire:click="closeActionModals">
+                        Cancelar
+                    </flux:button>
+                    <flux:button type="submit" color="primary" size="xs" wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed">
+                        Guardar
+                    </flux:button>
+                </div>
+            </form>
+
+            <div class="mt-4 border-t border-gray-100 pt-3">
+                <h4 class="text-xs font-semibold text-gray-700 uppercase">Actividades del cliente</h4>
+                <div class="mt-2 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-[11px]">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Fecha</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Titulo</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Tipo</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                            @if ($clientActivities && count($clientActivities) > 0)
+                                @foreach ($clientActivities as $activity)
+                                    <tr>
+                                        <td class="px-2 py-1 text-gray-600 whitespace-nowrap">
+                                            {{ optional($activity->start_date)->format('d/m/Y H:i') }}
+                                        </td>
+                                        <td class="px-2 py-1 text-gray-900">{{ $activity->title }}</td>
+                                        <td class="px-2 py-1 text-gray-600">
+                                            {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }}
+                                        </td>
+                                        <td class="px-2 py-1 text-gray-600">
+                                            {{ ucfirst(str_replace('_', ' ', $activity->status)) }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="4" class="px-2 py-2 text-gray-400">
+                                        Sin actividades registradas
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+                @if ($clientActivities instanceof \Illuminate\Pagination\LengthAwarePaginator && $clientActivities->hasPages())
+                    <div class="mt-2">
+                        {{ $clientActivities->links() }}
+                    </div>
+                @endif
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal de Nueva Tarea -->
+    <flux:modal wire:model="showTaskModal" size="md">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-base font-semibold text-gray-900">Nueva tarea</h3>
+            </div>
+            <form wire:submit.prevent="createTask">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div class="col-span-2">
+                        <flux:input label="Titulo" wire:model="task_title" size="xs"
+                            placeholder="Titulo de la tarea *" class="w-full" />
+                        @error('task_title')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <flux:select label="Tipo" wire:model="task_type" size="xs" class="w-full">
+                            <option value="seguimiento">Seguimiento</option>
+                            <option value="visita">Visita</option>
+                            <option value="llamada">Llamada</option>
+                            <option value="documento">Documento</option>
+                            <option value="otros">Otros</option>
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select label="Prioridad" wire:model="task_priority" size="xs" class="w-full">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:select label="Estado" wire:model="task_status" size="xs" class="w-full">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="en_progreso">En progreso</option>
+                            <option value="completada">Completada</option>
+                            <option value="cancelada">Cancelada</option>
+                        </flux:select>
+                    </div>
+                    <div>
+                        <flux:input label="Vence" type="datetime-local" wire:model="task_due_date" size="xs"
+                            class="w-full" />
+                    </div>
+                    <div class="col-span-2">
+                        <div class="text-gray-900">
+                            Asesor:
+                            {{ $task_assigned_to ? optional($advisors->firstWhere('id', $task_assigned_to))->name : '-' }}
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <flux:textarea label="Notas" wire:model="task_notes" rows="2"
+                            placeholder="Notas adicionales"
+                            class="w-full text-xs px-2 py-1 border border-gray-200 rounded">
+                        </flux:textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
+                    <flux:button type="button" variant="outline" size="xs" wire:click="closeActionModals">
+                        Cancelar
+                    </flux:button>
+                    <flux:button type="submit" color="primary" size="xs" wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed">
+                        Guardar
+                    </flux:button>
+                </div>
+            </form>
+
+            <div class="mt-4 border-t border-gray-100 pt-3">
+                <h4 class="text-xs font-semibold text-gray-700 uppercase">Tareas del cliente</h4>
+                <div class="mt-2 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-[11px]">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Vence</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Titulo</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Prioridad</th>
+                                <th class="px-2 py-1 text-left font-semibold text-gray-500 uppercase">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+                            @if ($clientTasks && count($clientTasks) > 0)
+                                @foreach ($clientTasks as $task)
+                                    <tr>
+                                        <td class="px-2 py-1 text-gray-600 whitespace-nowrap">
+                                            {{ optional($task->due_date)->format('d/m/Y') ?? 'Sin fecha' }}
+                                        </td>
+                                        <td class="px-2 py-1 text-gray-900">{{ $task->title }}</td>
+                                        <td class="px-2 py-1 text-gray-600">
+                                            {{ ucfirst($task->priority) }}
+                                        </td>
+                                        <td class="px-2 py-1 text-gray-600">
+                                            {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="4" class="px-2 py-2 text-gray-400">
+                                        Sin tareas registradas
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+                @if ($clientTasks instanceof \Illuminate\Pagination\LengthAwarePaginator && $clientTasks->hasPages())
+                    <div class="mt-2">
+                        {{ $clientTasks->links() }}
+                    </div>
+                @endif
+            </div>
+        </div>
+    </flux:modal>
 
 </div>

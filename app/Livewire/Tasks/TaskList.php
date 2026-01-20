@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Tasks;
 
-use App\Models\Task;
 use App\Models\Client;
+use App\Services\TaskService;
 use Livewire\Component;
 use Livewire\WithPagination;
 class TaskList extends Component
@@ -15,6 +15,7 @@ class TaskList extends Component
     public $clientFilter = '';
     public $showDeleteModal = false;
     public $taskToDeleteId = null;
+    protected $taskService;
 
     protected $queryString = [
         'clientFilter' => ['except' => ''],
@@ -36,6 +37,11 @@ class TaskList extends Component
         return Client::orderBy('name')->get(['id', 'name']);
     }
 
+    public function boot(TaskService $taskService)
+    {
+        $this->taskService = $taskService;
+    }
+
     public function confirmDelete(int $taskId): void
     {
         $this->taskToDeleteId = $taskId;
@@ -49,14 +55,13 @@ class TaskList extends Component
             return;
         }
 
-        $task = Task::find($this->taskToDeleteId);
-        if (!$task) {
+        $deleted = $this->taskService->deleteTask($this->taskToDeleteId);
+        if (!$deleted) {
             $this->dispatch('show-error', message: 'La tarea no existe');
             $this->closeDeleteModal();
             return;
         }
 
-        $task->delete();
         $this->dispatch('show-success', message: 'Tarea eliminada correctamente');
         $this->closeDeleteModal();
     }
@@ -75,24 +80,12 @@ class TaskList extends Component
 
     public function render()
     {
-        $tasks = Task::with(['client'])
-            ->when($this->clientFilter !== '', function ($q) {
-                $q->where('client_id', $this->clientFilter);
-            })
-            ->when($this->statusFilter !== '', function ($q) {
-                $q->where('status', $this->statusFilter);
-            })
-            ->when($this->priorityFilter !== '', function ($q) {
-                $q->where('priority', $this->priorityFilter);
-            })
-            ->when($this->search !== '', function ($q) {
-                $q->where(function ($qq) {
-                    $qq->where('title', 'like', "%{$this->search}%")
-                        ->orWhere('description', 'like', "%{$this->search}%");
-                });
-            })
-            ->orderBy('due_date', 'asc')
-            ->paginate(10);
+        $tasks = $this->taskService->getTasksPaginated([
+            'client_id' => $this->clientFilter,
+            'status' => $this->statusFilter,
+            'priority' => $this->priorityFilter,
+            'search' => $this->search,
+        ], 10);
 
         return view('livewire.tasks.task-list', [
             'tasks' => $tasks,

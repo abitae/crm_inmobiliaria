@@ -4,6 +4,8 @@ namespace App\Livewire\Clients;
 
 use App\Models\Client;
 use App\Services\ClientService;
+use App\Services\ActivityService;
+use App\Services\TaskService;
 use App\Services\DocumentSearchService;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -26,10 +28,16 @@ class ClientListDatero extends Component
     public $typeFilter = '';
     public $sourceFilter = '';
     public $advisorFilter = '';
+    public $searchMinLength = 2;
 
     // Modales
     public $showFormModal = false;
     public $editingClient = null;
+    public $showActivityModal = false;
+    public $showTaskModal = false;
+    public $selectedClientId = null;
+    public $activityPage = 1;
+    public $taskPage = 1;
 
     // Campos del formulario
     public $name = '';
@@ -45,8 +53,28 @@ class ClientListDatero extends Component
     public $notes = '';
     public $assigned_advisor_id = '';
 
+    // Campos de actividad
+    public $activity_title = '';
+    public $activity_type = 'llamada';
+    public $activity_status = 'programada';
+    public $activity_priority = 'media';
+    public $activity_start_date = '';
+    public $activity_assigned_to = '';
+    public $activity_notes = '';
+
+    // Campos de tarea
+    public $task_title = '';
+    public $task_type = 'seguimiento';
+    public $task_status = 'pendiente';
+    public $task_priority = 'media';
+    public $task_due_date = '';
+    public $task_assigned_to = '';
+    public $task_notes = '';
+
     protected $clientService;
     protected $documentSearchService;
+    protected $activityService;
+    protected $taskService;
     public $advisors = [];
     public $searchingDocument = false;
 
@@ -60,10 +88,17 @@ class ClientListDatero extends Component
         return $this->clientService->getValidationMessages();
     }
 
-    public function boot(ClientService $clientService, DocumentSearchService $documentSearchService)
+    public function boot(
+        ClientService $clientService,
+        DocumentSearchService $documentSearchService,
+        ActivityService $activityService,
+        TaskService $taskService
+    )
     {
         $this->clientService = $clientService;
         $this->documentSearchService = $documentSearchService;
+        $this->activityService = $activityService;
+        $this->taskService = $taskService;
     }
 
     public function mount()
@@ -162,6 +197,16 @@ class ClientListDatero extends Component
         $this->resetForm();
     }
 
+    public function closeActionModals(): void
+    {
+        $this->reset(['showActivityModal', 'showTaskModal', 'selectedClientId']);
+        $this->resetPage('activityPage');
+        $this->resetPage('taskPage');
+        $this->resetActivityForm();
+        $this->resetTaskForm();
+        $this->resetErrorBag();
+    }
+
     public function resetForm()
     {
         $this->reset([
@@ -185,6 +230,39 @@ class ClientListDatero extends Component
         $this->score = 0;
     }
 
+    private function resetActivityForm(): void
+    {
+        $this->reset([
+            'activity_title',
+            'activity_type',
+            'activity_status',
+            'activity_priority',
+            'activity_start_date',
+            'activity_assigned_to',
+            'activity_notes',
+        ]);
+        $this->activity_type = 'llamada';
+        $this->activity_status = 'programada';
+        $this->activity_priority = 'media';
+        $this->activity_start_date = Carbon::now()->format('Y-m-d\TH:i');
+    }
+
+    private function resetTaskForm(): void
+    {
+        $this->reset([
+            'task_title',
+            'task_type',
+            'task_status',
+            'task_priority',
+            'task_due_date',
+            'task_assigned_to',
+            'task_notes',
+        ]);
+        $this->task_type = 'seguimiento';
+        $this->task_status = 'pendiente';
+        $this->task_priority = 'media';
+    }
+
     public function fillFormFromClient($client)
     {
         $this->name = $client->name;
@@ -199,6 +277,76 @@ class ClientListDatero extends Component
         $this->score = $client->score;
         $this->notes = $client->notes;
         $this->assigned_advisor_id = $client->assigned_advisor_id;
+    }
+
+    public function openActivityModal(int $clientId): void
+    {
+        $this->resetErrorBag();
+        $this->resetActivityForm();
+        $this->selectedClientId = $clientId;
+        $this->activity_assigned_to = $this->getClientAssignedAdvisorId($clientId) ?? '';
+        $this->resetPage('activityPage');
+        $this->showActivityModal = true;
+    }
+
+    public function openTaskModal(int $clientId): void
+    {
+        $this->resetErrorBag();
+        $this->resetTaskForm();
+        $this->selectedClientId = $clientId;
+        $this->task_assigned_to = $this->getClientAssignedAdvisorId($clientId) ?? '';
+        $this->resetPage('taskPage');
+        $this->showTaskModal = true;
+    }
+
+    public function createActivity(): void
+    {
+        if (!$this->selectedClientId) {
+            $this->warning('No se encontro cliente para la actividad.');
+            return;
+        }
+
+        $this->validate($this->getActivityRules(), $this->getActivityMessages());
+
+        $data = $this->getActivityData();
+        $data['client_id'] = $this->selectedClientId;
+
+        try {
+            $this->activityService->createActivity($data, Auth::id());
+            $this->showActivityModal = false;
+            $this->closeActionModals();
+            $this->resetPage();
+            $this->success('Actividad creada correctamente.');
+        } catch (ValidationException $e) {
+            $this->error('Error de validacion al crear la actividad.');
+        } catch (\Exception $e) {
+            $this->error('Error al crear la actividad: ' . $e->getMessage());
+        }
+    }
+
+    public function createTask(): void
+    {
+        if (!$this->selectedClientId) {
+            $this->warning('No se encontro cliente para la tarea.');
+            return;
+        }
+
+        $this->validate($this->getTaskRules(), $this->getTaskMessages());
+
+        $data = $this->getTaskData();
+        $data['client_id'] = $this->selectedClientId;
+
+        try {
+            $this->taskService->createTask($data, Auth::id());
+            $this->showTaskModal = false;
+            $this->closeActionModals();
+            $this->resetPage();
+            $this->success('Tarea creada correctamente.');
+        } catch (ValidationException $e) {
+            $this->error('Error de validacion al crear la tarea.');
+        } catch (\Exception $e) {
+            $this->error('Error al crear la tarea: ' . $e->getMessage());
+        }
     }
 
     public function createClient()
@@ -368,6 +516,108 @@ class ClientListDatero extends Component
             'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
         ];
     }
+
+    private function getActivityData(): array
+    {
+        return [
+            'title' => $this->activity_title,
+            'activity_type' => $this->activity_type,
+            'status' => $this->activity_status,
+            'priority' => $this->activity_priority,
+            'start_date' => $this->activity_start_date,
+            'assigned_to' => $this->activity_assigned_to ?: null,
+            'notes' => $this->activity_notes,
+        ];
+    }
+
+    private function getTaskData(): array
+    {
+        return [
+            'title' => $this->task_title,
+            'task_type' => $this->task_type,
+            'status' => $this->task_status,
+            'priority' => $this->task_priority,
+            'due_date' => $this->task_due_date ?: null,
+            'assigned_to' => $this->task_assigned_to ?: null,
+            'notes' => $this->task_notes,
+        ];
+    }
+
+    private function getActivityRules(): array
+    {
+        return [
+            'activity_title' => 'required|string|max:255',
+            'activity_type' => 'required|in:llamada,reunion,visita,seguimiento,tarea',
+            'activity_status' => 'required|in:programada,en_progreso,completada,cancelada',
+            'activity_priority' => 'required|in:baja,media,alta,urgente',
+            'activity_start_date' => 'required|date',
+            'activity_assigned_to' => 'nullable|exists:users,id',
+            'activity_notes' => 'nullable|string',
+        ];
+    }
+
+    private function getActivityMessages(): array
+    {
+        return [
+            'activity_title.required' => 'El titulo es obligatorio.',
+            'activity_type.required' => 'El tipo es obligatorio.',
+            'activity_status.required' => 'El estado es obligatorio.',
+            'activity_priority.required' => 'La prioridad es obligatoria.',
+            'activity_start_date.required' => 'La fecha es obligatoria.',
+        ];
+    }
+
+    private function getTaskRules(): array
+    {
+        return [
+            'task_title' => 'required|string|max:255',
+            'task_type' => 'required|in:seguimiento,visita,llamada,documento,otros',
+            'task_status' => 'required|in:pendiente,en_progreso,completada,cancelada',
+            'task_priority' => 'required|in:baja,media,alta,urgente',
+            'task_due_date' => 'nullable|date',
+            'task_assigned_to' => 'nullable|exists:users,id',
+            'task_notes' => 'nullable|string',
+        ];
+    }
+
+    private function getTaskMessages(): array
+    {
+        return [
+            'task_title.required' => 'El titulo es obligatorio.',
+            'task_type.required' => 'El tipo es obligatorio.',
+            'task_status.required' => 'El estado es obligatorio.',
+            'task_priority.required' => 'La prioridad es obligatoria.',
+        ];
+    }
+
+    private function getClientAssignedAdvisorId(int $clientId): ?int
+    {
+        $client = Client::select('assigned_advisor_id')->find($clientId);
+        if (!$client) {
+            return null;
+        }
+
+        return $client->assigned_advisor_id;
+    }
+
+    private function getClientActivitiesPaginator()
+    {
+        if (!$this->showActivityModal || !$this->selectedClientId) {
+            return collect();
+        }
+
+        return $this->activityService->getClientActivitiesPaginated($this->selectedClientId, 5, 'activityPage');
+    }
+
+    private function getClientTasksPaginator()
+    {
+        if (!$this->showTaskModal || !$this->selectedClientId) {
+            return collect();
+        }
+
+        return $this->taskService->getClientTasksPaginated($this->selectedClientId, 5, 'taskPage');
+    }
+
     
     public function buscarDocumento()
     {
@@ -471,19 +721,47 @@ class ClientListDatero extends Component
     }
     public function render()
     {
-        $filters = [
-            'search' => $this->search,
-            'status' => $this->statusFilter,
-            'type' => $this->typeFilter,
-            'source' => $this->sourceFilter,
-            'advisor_id' => $this->advisorFilter,
-        ];
+        $filters = $this->buildFilters();
 
         // Usar el nuevo método para obtener solo clientes de dateros
         $clients = $this->clientService->getClientsByDateros(15, $filters);
 
         return view('livewire.clients.client-list-datero', [
-            'clients' => $clients
+            'clients' => $clients,
+            'clientActivities' => $this->getClientActivitiesPaginator(),
+            'clientTasks' => $this->getClientTasksPaginator(),
         ]);
+    }
+
+    private function buildFilters(): array
+    {
+        $search = $this->normalizeSearch($this->search);
+        $length = function_exists('mb_strlen') ? mb_strlen($search) : strlen($search);
+        $searchIsReady = $search !== '' && $length >= $this->searchMinLength;
+
+        return [
+            'search' => $searchIsReady ? $search : '',
+            'status' => $this->statusFilter,
+            'type' => $this->typeFilter,
+            'source' => $this->sourceFilter,
+            'advisor_id' => $this->advisorFilter,
+        ];
+    }
+
+    private function normalizeSearch(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_replace('/\s+/', ' ', $value);
+
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value);
+        }
+
+        return strtolower($value);
     }
 }
