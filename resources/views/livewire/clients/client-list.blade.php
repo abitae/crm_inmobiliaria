@@ -183,6 +183,11 @@
                                             <flux:icon name="clipboard-document-list" class="w-3 h-3" />
                                         </flux:button>
                                         <flux:button size="xs" variant="outline"
+                                            wire:click="openReservationModal({{ $client->id }})"
+                                            title="Nueva reserva">
+                                            <flux:icon name="bookmark" class="w-3 h-3" />
+                                        </flux:button>
+                                        <flux:button size="xs" variant="outline"
                                             wire:click="openCreateModal({{ $client->id }})">
                                             <flux:icon name="pencil" class="w-3 h-3" />
                                         </flux:button>
@@ -608,6 +613,65 @@
                     </div>
                 @endif
             </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal de Nueva Reserva -->
+    <flux:modal wire:model="showReservationModal" size="md">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-base font-semibold text-gray-900">Nueva reserva</h3>
+            </div>
+            <form wire:submit.prevent="createReservationFromClient">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div class="col-span-2 text-xs text-gray-600">
+                        Cliente: <span class="font-medium text-gray-900">{{ $reservationClientName ?: 'Sin cliente' }}</span>
+                    </div>
+                    <div>
+                        <flux:select label="Proyecto" wire:model.live="reservation_project_id" size="xs" class="w-full">
+                            <option value="">Seleccionar proyecto</option>
+                            @foreach ($reservation_projects as $project)
+                                <option value="{{ $project->id }}">{{ $project->name }}</option>
+                            @endforeach
+                        </flux:select>
+                        @error('reservation_project_id')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <flux:select label="Unidad" wire:model="reservation_unit_id" size="xs" class="w-full">
+                            <option value="">Seleccionar unidad</option>
+                            @foreach ($reservation_units as $unit)
+                                <option value="{{ $unit->id }}">
+                                    {{ $unit->unit_manzana }} - {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}
+                                </option>
+                            @endforeach
+                        </flux:select>
+                        @error('reservation_unit_id')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <flux:input label="Monto de reserva" type="number" step="0.01"
+                            wire:model="reservation_amount" size="xs" class="w-full" />
+                        @error('reservation_amount')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                <div class="mt-3 text-[11px] text-gray-500">
+                    Al crear, la reserva quedará en estado <span class="font-medium">activa</span> con fecha automática y vencimiento al final del día. Luego podrás confirmarla desde el módulo de reservas.
+                </div>
+                <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
+                    <flux:button type="button" variant="outline" size="xs" wire:click="closeReservationModal">
+                        Cancelar
+                    </flux:button>
+                    <flux:button type="submit" color="primary" size="xs" wire:loading.attr="disabled"
+                        wire:loading.class="opacity-50 cursor-not-allowed">
+                        Guardar
+                    </flux:button>
+                </div>
+            </form>
         </div>
     </flux:modal>
 

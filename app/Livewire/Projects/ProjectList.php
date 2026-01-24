@@ -78,7 +78,7 @@ class ProjectList extends Component
     public $currentAdvisors = [];
 
     // ==================== DEPENDENCIAS ====================
-    protected $projectService;
+    protected ProjectService $projectService;
     public $advisors = [];
 
     // ==================== REGLAS DE VALIDACIÓN ====================

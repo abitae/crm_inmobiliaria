@@ -3,13 +3,9 @@
 namespace App\Livewire\Reservations;
 
 use App\Models\Reservation;
-use App\Models\Client;
-use App\Models\Project;
-use App\Models\Unit;
 use App\Models\User;
+use App\Services\ReservationService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -72,30 +68,43 @@ class ReservationList extends Component
     public $units = [];
     public $advisors = [];
 
-    protected $rules = [
-        'client_id' => 'required|exists:clients,id',
-        'project_id' => 'required|exists:projects,id',
-        'unit_id' => 'required|exists:units,id',
-        'advisor_id' => 'required|exists:users,id',
-        'reservation_type' => 'required|in:pre_reserva,reserva_firmada,reserva_confirmada',
-        'status' => 'required|in:activa,confirmada,cancelada,vencida,convertida_venta',
-        'reservation_date' => 'required|date',
-        'expiration_date' => 'nullable|date|after:reservation_date',
-        'reservation_amount' => 'required|numeric|min:0',
-        'reservation_percentage' => 'nullable|numeric|min:0|max:100',
-        'payment_method' => 'nullable|string|max:255',
-        'payment_status' => 'required|in:pendiente,pagado,parcial',
-        'payment_reference' => 'nullable|string|max:255',
-        'notes' => 'nullable|string',
-        'terms_conditions' => 'nullable|string',
-        // 'image' removido - solo se sube desde el modal de confirmación
-    ];
+    protected ReservationService $reservationService;
+
+    protected function rules(): array
+    {
+        $baseRules = [
+            'client_id' => 'required|exists:clients,id',
+            'project_id' => 'required|exists:projects,id',
+            'unit_id' => 'required|exists:units,id',
+            'advisor_id' => 'required|exists:users,id',
+            'reservation_amount' => 'required|numeric|min:0',
+            'payment_method' => 'nullable|string|max:255',
+            'payment_reference' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'terms_conditions' => 'nullable|string',
+        ];
+
+        if ($this->editingReservation) {
+            $baseRules['reservation_type'] = 'required|in:pre_reserva,reserva_firmada,reserva_confirmada';
+            $baseRules['status'] = 'required|in:activa,confirmada,cancelada,vencida,convertida_venta';
+            $baseRules['reservation_date'] = 'required|date';
+            $baseRules['expiration_date'] = 'nullable|date|after:reservation_date';
+            $baseRules['payment_status'] = 'required|in:pendiente,pagado,parcial';
+        }
+
+        return $baseRules;
+    }
+
+    public function boot(ReservationService $reservationService)
+    {
+        $this->reservationService = $reservationService;
+    }
 
     public function mount()
     {
         $this->advisors = User::getAvailableAdvisors(Auth::user());
-        $this->projects = Project::active()->get();
-        $this->clients = Client::active()->get();
+        $this->projects = $this->reservationService->getActiveProjects();
+        $this->clients = $this->reservationService->getActiveClients();
         $user = Auth::user();
         $this->advisorFilter = ($user->isAdmin() || $user->isLider()) ? '' : $user->id;
         $this->reservation_date = now()->format('Y-m-d');
@@ -104,19 +113,8 @@ class ReservationList extends Component
     public function updatedProjectId()
     {
         if ($this->project_id) {
-            // Cargar solo unidades libres (disponibles) del proyecto seleccionado
-            $query = Unit::where('project_id', $this->project_id)
-                ->where('status', 'disponible');
-            
-            // Si estamos editando y la unidad actual pertenece a esta reserva, incluirla aunque esté reservada
-            if ($this->editingReservation && $this->editingReservation->unit_id) {
-                $query->orWhere('id', $this->editingReservation->unit_id);
-            }
-            
-            // Ordenar primero por manzana y luego por número de unidad
-            $this->units = $query->orderBy('unit_manzana')
-                ->orderBy('unit_number')
-                ->get();
+            $includeUnitId = $this->editingReservation ? $this->editingReservation->unit_id : null;
+            $this->units = $this->reservationService->getAvailableUnitsForProject($this->project_id, $includeUnitId);
         } else {
             $this->units = [];
         }
@@ -312,15 +310,10 @@ class ReservationList extends Component
 
         // Cargar unidades del proyecto (disponibles + la unidad actual si está reservada)
         if ($this->project_id) {
-            $unitId = $reservation->unit_id;
-            $this->units = Unit::where('project_id', $this->project_id)
-                ->where(function($q) use ($unitId) {
-                    $q->where('status', 'disponible')
-                      ->orWhere('id', $unitId);
-                })
-                ->orderBy('unit_manzana')
-                ->orderBy('unit_number')
-                ->get();
+            $this->units = $this->reservationService->getAvailableUnitsForProject(
+                $this->project_id,
+                $reservation->unit_id
+            );
         }
     }
 
@@ -328,54 +321,24 @@ class ReservationList extends Component
     {
         $this->validate();
 
-        // Validar que la unidad esté disponible
-        $unit = Unit::find($this->unit_id);
-        if (!$unit) {
-            $this->error('La unidad seleccionada no existe.');
-            return;
-        }
-
-        if ($unit->status !== 'disponible') {
-            $this->error('La unidad seleccionada no está disponible.');
-            return;
-        }
-
         try {
-            DB::beginTransaction();
-
-            // Al crear, siempre será 'activa' y 'pre_reserva'
-            // El estado y estado de pago se fuerzan a los valores por defecto
-            // La imagen solo se sube a través del modal de confirmación
-            $reservation = Reservation::create([
+            $this->reservationService->createReservation([
                 'client_id' => $this->client_id,
                 'project_id' => $this->project_id,
                 'unit_id' => $this->unit_id,
                 'advisor_id' => $this->advisor_id,
-                'reservation_type' => 'pre_reserva', // Siempre 'pre_reserva' al crear
-                'status' => 'activa', // Siempre 'activa' al crear (forzado)
-                'payment_status' => 'pendiente', // Siempre 'pendiente' al crear (forzado)
-                'reservation_date' => $this->reservation_date,
-                'expiration_date' => $this->expiration_date,
                 'reservation_amount' => $this->reservation_amount,
-                'reservation_percentage' => $this->reservation_percentage,
                 'payment_method' => $this->payment_method,
                 'payment_reference' => $this->payment_reference,
                 'notes' => $this->notes,
                 'terms_conditions' => $this->terms_conditions,
-                'image' => null, // No se sube imagen al crear
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-
-            // NO reservar la unidad al crear (solo cuando se confirma con imagen)
-            // La unidad permanece disponible hasta que se confirme la reserva
-
-            DB::commit();
+            ], Auth::id());
 
             $this->closeModals();
             $this->success('Reserva creada exitosamente. Para confirmarla, use el botón "Subir imagen de confirmación".');
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage());
         } catch (\Exception $e) {
-            DB::rollBack();
             $this->error('Error al crear la reserva: ' . $e->getMessage());
         }
     }
@@ -395,46 +358,25 @@ class ReservationList extends Component
         $originalUnitId = $this->editingReservation->unit_id;
 
         try {
-            DB::beginTransaction();
-
-            // Mantener imagen existente (no se puede cambiar desde aquí)
-            // La imagen solo se cambia desde el modal de confirmación
-            $imagePath = $this->editingReservation->image;
-
-            // Mantener el status actual (no se puede editar)
-            // El status solo cambia automáticamente cuando se confirma con imagen, cancela, etc.
-            $status = $this->editingReservation->status; // No usar $this->status, mantener el actual
-
-            $updateData = [
+            $this->reservationService->updateReservation($this->editingReservation, [
                 'client_id' => $this->client_id,
-                'project_id' => $originalProjectId, // Mantener proyecto original (no editable)
-                'unit_id' => $originalUnitId, // Mantener unidad original (no editable)
+                'project_id' => $originalProjectId,
+                'unit_id' => $originalUnitId,
                 'advisor_id' => $this->advisor_id,
                 'reservation_type' => $this->reservation_type,
-                'status' => $status, // Mantener status actual
                 'reservation_date' => $this->reservation_date,
                 'expiration_date' => $this->expiration_date,
                 'reservation_amount' => $this->reservation_amount,
-                'reservation_percentage' => $this->reservation_percentage,
                 'payment_method' => $this->payment_method,
                 'payment_status' => $this->payment_status,
                 'payment_reference' => $this->payment_reference,
                 'notes' => $this->notes,
                 'terms_conditions' => $this->terms_conditions,
-                'image' => $imagePath, // Mantener imagen existente
-                'updated_by' => Auth::id(),
-            ];
-
-            $this->editingReservation->update($updateData);
-
-            // No se gestiona cambio de unidad porque no se puede cambiar
-
-            DB::commit();
+            ], Auth::id());
 
             $this->closeModals();
             $this->success('Reserva actualizada exitosamente.');
         } catch (\Exception $e) {
-            DB::rollBack();
             $this->error('Error al actualizar la reserva: ' . $e->getMessage());
         }
     }
@@ -470,7 +412,6 @@ class ReservationList extends Component
             'confirmation_reservation_date' => 'required|date',
             'confirmation_expiration_date' => 'nullable|date|after:confirmation_reservation_date',
             'confirmation_reservation_amount' => 'required|numeric|min:0',
-            'confirmation_reservation_percentage' => 'nullable|numeric|min:0|max:100',
             'confirmation_payment_method' => 'nullable|string|max:255',
             'confirmation_payment_status' => 'required|in:pendiente,pagado,parcial',
             'confirmation_payment_reference' => 'nullable|string|max:255',
@@ -483,51 +424,18 @@ class ReservationList extends Component
         }
 
         try {
-            DB::beginTransaction();
-
-            // Procesar imagen
-            $imagePath = null;
-            if ($this->confirmation_image) {
-                // Eliminar imagen anterior si existe
-                if ($this->confirmingReservation->image && Storage::disk('public')->exists($this->confirmingReservation->image)) {
-                    Storage::disk('public')->delete($this->confirmingReservation->image);
-                }
-                $imagePath = $this->confirmation_image->store('reservations', 'public');
-            }
-
-            // Actualizar la reserva con los datos y la imagen
-            $this->confirmingReservation->update([
+            $this->reservationService->confirmReservationWithImage($this->confirmingReservation, [
                 'reservation_date' => $this->confirmation_reservation_date,
                 'expiration_date' => $this->confirmation_expiration_date,
                 'reservation_amount' => $this->confirmation_reservation_amount,
-                'reservation_percentage' => $this->confirmation_reservation_percentage,
                 'payment_method' => $this->confirmation_payment_method,
                 'payment_status' => $this->confirmation_payment_status,
                 'payment_reference' => $this->confirmation_payment_reference,
-                'image' => $imagePath,
-                'status' => 'confirmada', // Cambiar status a confirmada cuando se sube la imagen
-                'updated_by' => Auth::id(),
-            ]);
-
-            // Actualizar estado de la unidad a 'reservado'
-            if ($this->confirmingReservation->unit) {
-                $unit = $this->confirmingReservation->unit;
-                if ($unit->status !== 'reservado') {
-                    $unit->update(['status' => 'reservado']);
-                    $unit->project->updateUnitCounts();
-                }
-            }
-
-            DB::commit();
+            ], $this->confirmation_image, Auth::id());
 
             $this->closeModals();
             $this->success('Reserva confirmada exitosamente con la imagen del comprobante.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            // Eliminar imagen si se subió pero falló la actualización
-            if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
-            }
             $this->error('Error al confirmar la reserva: ' . $e->getMessage());
         }
     }
@@ -559,28 +467,11 @@ class ReservationList extends Component
         }
 
         try {
-            DB::beginTransaction();
-
-            // Actualizar la reserva con la nota de cancelación
-            $this->cancelingReservation->update([
-                'status' => 'cancelada',
-                'notes' => ($this->cancelingReservation->notes ?? '') . "\n\n[Cancelada] " . $this->cancel_note,
-                'updated_by' => Auth::id(),
-            ]);
-
-            // Actualizar la unidad a 'disponible'
-            if ($this->cancelingReservation->unit) {
-                $unit = $this->cancelingReservation->unit;
-                $unit->update(['status' => 'disponible']);
-                $unit->project->updateUnitCounts();
-            }
-
-            DB::commit();
+            $this->reservationService->cancelReservation($this->cancelingReservation, $this->cancel_note, Auth::id());
 
             $this->closeModals();
             $this->success('Reserva cancelada exitosamente y unidad liberada.');
         } catch (\Exception $e) {
-            DB::rollBack();
             $this->error('Error al cancelar la reserva: ' . $e->getMessage());
         }
     }
@@ -618,43 +509,14 @@ class ReservationList extends Component
 
     public function render()
     {
-        $query = Reservation::with(['client', 'project', 'unit', 'advisor'])
-            ->orderBy('created_at', 'desc');
-
-        // Aplicar filtros
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('reservation_number', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('client', function($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%');
-                    })
-                    ->orWhereHas('project', function($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%');
-                    });
-            });
-        }
-
-        if ($this->statusFilter) {
-            $query->byStatus($this->statusFilter);
-        }
-
-        if ($this->advisorFilter) {
-            $query->byAdvisor($this->advisorFilter);
-        }
-
-        if ($this->projectFilter) {
-            $query->byProject($this->projectFilter);
-        }
-
-        if ($this->clientFilter) {
-            $query->byClient($this->clientFilter);
-        }
-
-        if ($this->paymentStatusFilter) {
-            $query->byPaymentStatus($this->paymentStatusFilter);
-        }
-
-        $reservations = $query->paginate(15);
+        $reservations = $this->reservationService->getReservationsPaginated([
+            'search' => $this->search,
+            'status' => $this->statusFilter,
+            'advisor_id' => $this->advisorFilter,
+            'project_id' => $this->projectFilter,
+            'client_id' => $this->clientFilter,
+            'payment_status' => $this->paymentStatusFilter,
+        ]);
 
         return view('livewire.reservations.reservation-list', [
             'reservations' => $reservations,

@@ -5,20 +5,23 @@ namespace App\Http\Controllers\Api\Cazador;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use App\Models\Reservation;
-use App\Models\Client;
-use App\Models\Project;
 use App\Models\Unit;
-use App\Models\User;
+use App\Services\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 class ReservationController extends Controller
 {
     use ApiResponse;
+
+    protected ReservationService $reservationService;
+
+    public function __construct(ReservationService $reservationService)
+    {
+        $this->reservationService = $reservationService;
+    }
 
     /**
      * Formatear reserva para respuesta API
@@ -198,11 +201,7 @@ class ReservationController extends Controller
                 'client_id' => 'required|exists:clients,id',
                 'project_id' => 'required|exists:projects,id',
                 'unit_id' => 'required|exists:units,id',
-                'advisor_id' => 'required|exists:users,id',
-                'reservation_date' => 'required|date',
-                'expiration_date' => 'nullable|date|after:reservation_date',
                 'reservation_amount' => 'required|numeric|min:0',
-                'reservation_percentage' => 'nullable|numeric|min:0|max:100',
                 'payment_method' => 'nullable|string|max:255',
                 'payment_reference' => 'nullable|string|max:255',
                 'notes' => 'nullable|string',
@@ -214,18 +213,9 @@ class ReservationController extends Controller
                 'project_id.exists' => 'El proyecto seleccionado no existe.',
                 'unit_id.required' => 'La unidad es obligatoria.',
                 'unit_id.exists' => 'La unidad seleccionada no existe.',
-                'advisor_id.required' => 'El asesor es obligatorio.',
-                'advisor_id.exists' => 'El asesor seleccionado no existe.',
-                'reservation_date.required' => 'La fecha de reserva es obligatoria.',
-                'reservation_date.date' => 'La fecha de reserva debe ser una fecha válida.',
-                'expiration_date.date' => 'La fecha de vencimiento debe ser una fecha válida.',
-                'expiration_date.after' => 'La fecha de vencimiento debe ser posterior a la fecha de reserva.',
                 'reservation_amount.required' => 'El monto de reserva es obligatorio.',
                 'reservation_amount.numeric' => 'El monto de reserva debe ser un número.',
                 'reservation_amount.min' => 'El monto de reserva debe ser mayor o igual a 0.',
-                'reservation_percentage.numeric' => 'El porcentaje debe ser un número.',
-                'reservation_percentage.min' => 'El porcentaje debe ser mayor o igual a 0.',
-                'reservation_percentage.max' => 'El porcentaje no puede ser mayor a 100.',
             ]);
 
             if ($validator->fails()) {
@@ -247,34 +237,17 @@ class ReservationController extends Controller
                 return $this->errorResponse('La unidad no pertenece al proyecto seleccionado', null, 422);
             }
 
-            DB::beginTransaction();
-
-            // Crear reserva con valores forzados
-            $reservation = Reservation::create([
+            $reservation = $this->reservationService->createReservation([
                 'client_id' => $request->client_id,
                 'project_id' => $request->project_id,
                 'unit_id' => $request->unit_id,
-                'advisor_id' => $request->advisor_id,
-                'reservation_type' => 'pre_reserva', // Siempre 'pre_reserva' al crear
-                'status' => 'activa', // Siempre 'activa' al crear
-                'payment_status' => 'pendiente', // Siempre 'pendiente' al crear
-                'reservation_date' => $request->reservation_date,
-                'expiration_date' => $request->expiration_date,
+                'advisor_id' => Auth::id(),
                 'reservation_amount' => $request->reservation_amount,
-                'reservation_percentage' => $request->reservation_percentage ?? 0,
                 'payment_method' => $request->payment_method,
                 'payment_reference' => $request->payment_reference,
                 'notes' => $request->notes,
                 'terms_conditions' => $request->terms_conditions,
-                'image' => null, // No se sube imagen al crear
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-
-            // NO reservar la unidad al crear (solo cuando se confirma con imagen)
-            // La unidad permanece disponible hasta que se confirme la reserva
-
-            DB::commit();
+            ], Auth::id());
 
             // Cargar relaciones para respuesta
             $reservation->load(['client', 'project', 'unit', 'advisor']);
@@ -291,8 +264,9 @@ class ReservationController extends Controller
                 201
             );
 
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), null, 422);
         } catch (\Exception $e) {
-            DB::rollBack();
             
             Log::error('Error al crear reserva (Cazador)', [
                 'user_id' => Auth::id(),
@@ -318,6 +292,7 @@ class ReservationController extends Controller
                 return $this->errorResponse('ID de reserva inválido', null, 400);
             }
 
+            /** @var Reservation|null $reservation */
             $reservation = Reservation::find($id);
 
             if (!$reservation) {
@@ -342,7 +317,6 @@ class ReservationController extends Controller
                 'reservation_date' => 'sometimes|required|date',
                 'expiration_date' => 'nullable|date|after:reservation_date',
                 'reservation_amount' => 'sometimes|required|numeric|min:0',
-                'reservation_percentage' => 'nullable|numeric|min:0|max:100',
                 'payment_method' => 'nullable|string|max:255',
                 'payment_status' => 'sometimes|required|in:pendiente,pagado,parcial',
                 'payment_reference' => 'nullable|string|max:255',
@@ -354,29 +328,26 @@ class ReservationController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            DB::beginTransaction();
+            $updateData = [
+                'client_id' => $request->input('client_id', $reservation->client_id),
+                'advisor_id' => $request->input('advisor_id', $reservation->advisor_id),
+                'reservation_type' => $request->input('reservation_type', $reservation->reservation_type),
+                'reservation_date' => $request->input(
+                    'reservation_date',
+                    $reservation->reservation_date?->format('Y-m-d')
+                ),
+                'expiration_date' => $request->has('expiration_date')
+                    ? $request->input('expiration_date')
+                    : $reservation->expiration_date?->format('Y-m-d'),
+                'reservation_amount' => $request->input('reservation_amount', $reservation->reservation_amount),
+                'payment_method' => $request->input('payment_method', $reservation->payment_method),
+                'payment_status' => $request->input('payment_status', $reservation->payment_status),
+                'payment_reference' => $request->input('payment_reference', $reservation->payment_reference),
+                'notes' => $request->input('notes', $reservation->notes),
+                'terms_conditions' => $request->input('terms_conditions', $reservation->terms_conditions),
+            ];
 
-            // Proyecto y unidad NO se pueden editar (mantener valores originales)
-            $updateData = $request->only([
-                'client_id',
-                'advisor_id',
-                'reservation_type',
-                'reservation_date',
-                'expiration_date',
-                'reservation_amount',
-                'reservation_percentage',
-                'payment_method',
-                'payment_status',
-                'payment_reference',
-                'notes',
-                'terms_conditions',
-            ]);
-
-            $updateData['updated_by'] = Auth::id();
-
-            $reservation->update($updateData);
-
-            DB::commit();
+            $this->reservationService->updateReservation($reservation, $updateData, Auth::id());
 
             // Cargar relaciones para respuesta
             $reservation->load(['client', 'project', 'unit', 'advisor']);
@@ -387,8 +358,6 @@ class ReservationController extends Controller
             );
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             return $this->serverErrorResponse($e, 'Error al actualizar la reserva');
         }
     }
@@ -407,6 +376,7 @@ class ReservationController extends Controller
                 return $this->errorResponse('ID de reserva inválido', null, 400);
             }
 
+            /** @var Reservation|null $reservation */
             $reservation = Reservation::find($id);
 
             if (!$reservation) {
@@ -429,7 +399,6 @@ class ReservationController extends Controller
                 'reservation_date' => 'sometimes|required|date',
                 'expiration_date' => 'nullable|date|after:reservation_date',
                 'reservation_amount' => 'sometimes|required|numeric|min:0',
-                'reservation_percentage' => 'nullable|numeric|min:0|max:100',
                 'payment_method' => 'nullable|string|max:255',
                 'payment_status' => 'sometimes|required|in:pendiente,pagado,parcial',
                 'payment_reference' => 'nullable|string|max:255',
@@ -444,58 +413,26 @@ class ReservationController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            DB::beginTransaction();
-
-            // Procesar imagen
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                // Eliminar imagen anterior si existe
-                if ($reservation->image && Storage::disk('public')->exists($reservation->image)) {
-                    Storage::disk('public')->delete($reservation->image);
-                }
-                
-                $imagePath = $request->file('image')->store('reservations', 'public');
-            }
-
-            // Actualizar reserva con imagen y datos
             $updateData = [
-                'image' => $imagePath,
-                'status' => 'confirmada', // Cambiar a confirmada cuando se sube imagen
-                'updated_by' => Auth::id(),
+                'reservation_date' => $request->input(
+                    'reservation_date',
+                    $reservation->reservation_date?->format('Y-m-d')
+                ),
+                'expiration_date' => $request->has('expiration_date')
+                    ? $request->input('expiration_date')
+                    : $reservation->expiration_date?->format('Y-m-d'),
+                'reservation_amount' => $request->input('reservation_amount', $reservation->reservation_amount),
+                'payment_method' => $request->input('payment_method', $reservation->payment_method),
+                'payment_status' => $request->input('payment_status', $reservation->payment_status),
+                'payment_reference' => $request->input('payment_reference', $reservation->payment_reference),
             ];
 
-            // Actualizar campos opcionales si se proporcionan
-            if ($request->has('reservation_date')) {
-                $updateData['reservation_date'] = $request->reservation_date;
-            }
-            if ($request->has('expiration_date')) {
-                $updateData['expiration_date'] = $request->expiration_date;
-            }
-            if ($request->has('reservation_amount')) {
-                $updateData['reservation_amount'] = $request->reservation_amount;
-            }
-            if ($request->has('reservation_percentage')) {
-                $updateData['reservation_percentage'] = $request->reservation_percentage;
-            }
-            if ($request->has('payment_method')) {
-                $updateData['payment_method'] = $request->payment_method;
-            }
-            if ($request->has('payment_status')) {
-                $updateData['payment_status'] = $request->payment_status;
-            }
-            if ($request->has('payment_reference')) {
-                $updateData['payment_reference'] = $request->payment_reference;
-            }
-
-            $reservation->update($updateData);
-
-            // Actualizar estado de la unidad a 'reservado'
-            if ($reservation->unit && $reservation->unit->status !== 'reservado') {
-                $reservation->unit->update(['status' => 'reservado']);
-                $reservation->unit->project->updateUnitCounts();
-            }
-
-            DB::commit();
+            $this->reservationService->confirmReservationWithImage(
+                $reservation,
+                $updateData,
+                $request->file('image'),
+                Auth::id()
+            );
 
             // Cargar relaciones para respuesta
             $reservation->load(['client', 'project', 'unit', 'advisor']);
@@ -512,8 +449,6 @@ class ReservationController extends Controller
             );
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             Log::error('Error al confirmar reserva (Cazador)', [
                 'user_id' => Auth::id(),
                 'reservation_id' => $id,
@@ -539,6 +474,7 @@ class ReservationController extends Controller
                 return $this->errorResponse('ID de reserva inválido', null, 400);
             }
 
+            /** @var Reservation|null $reservation */
             $reservation = Reservation::find($id);
 
             if (!$reservation) {
@@ -568,14 +504,11 @@ class ReservationController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            DB::beginTransaction();
-
-            // Cancelar reserva usando el método del modelo
-            $cancelNote = "[Cancelada] " . $request->cancel_note;
-            $reservation->cancel($cancelNote);
-            $reservation->update(['updated_by' => Auth::id()]);
-
-            DB::commit();
+            $this->reservationService->cancelReservation(
+                $reservation,
+                $request->cancel_note,
+                Auth::id()
+            );
 
             // Cargar relaciones para respuesta
             $reservation->load(['client', 'project', 'unit', 'advisor']);
@@ -592,8 +525,6 @@ class ReservationController extends Controller
             );
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             Log::error('Error al cancelar reserva (Cazador)', [
                 'user_id' => Auth::id(),
                 'reservation_id' => $id,

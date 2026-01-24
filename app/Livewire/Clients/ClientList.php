@@ -8,6 +8,7 @@ use App\Services\ClientService;
 use App\Services\ActivityService;
 use App\Services\TaskService;
 use App\Services\DocumentSearchService;
+use App\Services\ReservationService;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -36,6 +37,7 @@ class ClientList extends Component
     public $editingClient = null;
     public $showActivityModal = false;
     public $showTaskModal = false;
+    public $showReservationModal = false;
     public $selectedClientId = null;
     public $activityPage = 1;
     public $taskPage = 1;
@@ -72,10 +74,20 @@ class ClientList extends Component
     public $task_assigned_to = '';
     public $task_notes = '';
 
+    // Campos de reserva
+    public $reservationClientId = null;
+    public $reservationClientName = '';
+    public $reservation_project_id = '';
+    public $reservation_unit_id = '';
+    public $reservation_amount = 0;
+    public $reservation_projects = [];
+    public $reservation_units = [];
+
     protected $clientService;
     protected $documentSearchService;
     protected $activityService;
     protected $taskService;
+    protected $reservationService;
     public $advisors = [];
     public $searchingDocument = false;
 
@@ -93,13 +105,15 @@ class ClientList extends Component
         ClientService $clientService,
         DocumentSearchService $documentSearchService,
         ActivityService $activityService,
-        TaskService $taskService
+        TaskService $taskService,
+        ReservationService $reservationService
     )
     {
         $this->clientService = $clientService;
         $this->documentSearchService = $documentSearchService;
         $this->activityService = $activityService;
         $this->taskService = $taskService;
+        $this->reservationService = $reservationService;
     }
 
     public function mount()
@@ -113,6 +127,7 @@ class ClientList extends Component
 
         $this->advisorFilter = $user->id;
         $this->status = 'nuevo';
+        $this->reservation_projects = $this->reservationService->getActiveProjects();
     }
 
     // Métodos para resetear paginación cuando cambian los filtros
@@ -209,6 +224,13 @@ class ClientList extends Component
         $this->resetErrorBag();
     }
 
+    public function closeReservationModal(): void
+    {
+        $this->reset(['showReservationModal', 'reservationClientId', 'reservationClientName']);
+        $this->resetReservationForm();
+        $this->resetErrorBag();
+    }
+
     public function resetForm()
     {
         $this->reset([
@@ -265,6 +287,17 @@ class ClientList extends Component
         $this->task_priority = 'media';
     }
 
+    private function resetReservationForm(): void
+    {
+        $this->reset([
+            'reservation_project_id',
+            'reservation_unit_id',
+            'reservation_amount',
+            'reservation_units',
+        ]);
+        $this->reservation_amount = 0;
+    }
+
     public function fillFormFromClient($client)
     {
         $this->name = $client->name;
@@ -299,6 +332,28 @@ class ClientList extends Component
         $this->task_assigned_to = $this->getClientAssignedAdvisorId($clientId) ?? '';
         $this->resetPage('taskPage');
         $this->showTaskModal = true;
+    }
+
+    public function openReservationModal(int $clientId): void
+    {
+        $this->resetErrorBag();
+        $this->resetReservationForm();
+        $this->reservationClientId = $clientId;
+        $client = Client::select('name')->find($clientId);
+        $this->reservationClientName = $client ? $client->name : '';
+        $this->reservation_units = [];
+        $this->showReservationModal = true;
+    }
+
+    public function updatedReservationProjectId(): void
+    {
+        if ($this->reservation_project_id) {
+            $this->reservation_units = $this->reservationService->getAvailableUnitsForProject($this->reservation_project_id);
+        } else {
+            $this->reservation_units = [];
+        }
+
+        $this->reservation_unit_id = '';
     }
 
     public function createActivity(): void
@@ -348,6 +403,34 @@ class ClientList extends Component
             $this->error('Error de validacion al crear la tarea.');
         } catch (\Exception $e) {
             $this->error('Error al crear la tarea: ' . $e->getMessage());
+        }
+    }
+
+    public function createReservationFromClient(): void
+    {
+        if (!$this->reservationClientId) {
+            $this->warning('No se encontro cliente para la reserva.');
+            return;
+        }
+
+        $this->validate($this->getReservationRules(), $this->getReservationMessages());
+
+        try {
+            $this->reservationService->createReservation([
+                'client_id' => $this->reservationClientId,
+                'project_id' => $this->reservation_project_id,
+                'unit_id' => $this->reservation_unit_id,
+                'advisor_id' => Auth::id(),
+                'reservation_amount' => $this->reservation_amount,
+            ], Auth::id());
+
+            $this->closeReservationModal();
+            $this->resetPage();
+            $this->success('Reserva creada exitosamente en estado activa.');
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage());
+        } catch (\Exception $e) {
+            $this->error('Error al crear la reserva: ' . $e->getMessage());
         }
     }
 
@@ -590,6 +673,24 @@ class ClientList extends Component
             'task_type.required' => 'El tipo es obligatorio.',
             'task_status.required' => 'El estado es obligatorio.',
             'task_priority.required' => 'La prioridad es obligatoria.',
+        ];
+    }
+
+    private function getReservationRules(): array
+    {
+        return [
+            'reservation_project_id' => 'required|exists:projects,id',
+            'reservation_unit_id' => 'required|exists:units,id',
+            'reservation_amount' => 'required|numeric|min:0',
+        ];
+    }
+
+    private function getReservationMessages(): array
+    {
+        return [
+            'reservation_project_id.required' => 'El proyecto es obligatorio.',
+            'reservation_unit_id.required' => 'La unidad es obligatoria.',
+            'reservation_amount.required' => 'El monto es obligatorio.',
         ];
     }
 
