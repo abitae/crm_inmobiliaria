@@ -128,6 +128,10 @@ class ProjectController extends Controller
         try {
             // Validar y obtener parámetros de paginación
             $perPage = min((int) $request->get('per_page', 15), 100);
+            $includes = $this->parseIncludes($request->get('include'), [
+                'advisors',
+                'reservations',
+            ]);
             
             // Validar filtros básicos
             $filters = [
@@ -143,8 +147,13 @@ class ProjectController extends Controller
                 'has_available_units' => filter_var($request->get('has_available_units', false), FILTER_VALIDATE_BOOLEAN),
             ];
 
+            $relations = ['advisors:id,name,email'];
+            if (!empty($includes)) {
+                $relations = array_unique(array_merge($relations, $includes));
+            }
+
             // Obtener todos los proyectos (no solo publicados) con eager loading optimizado
-            $query = Project::with(['advisors:id,name,email']);
+            $query = Project::with($relations);
 
             // Aplicar filtros
             if (!empty($filters['project_type'])) {
@@ -201,14 +210,7 @@ class ProjectController extends Controller
 
             return $this->successResponse([
                 'projects' => $formattedProjects,
-                'pagination' => [
-                    'current_page' => $projects->currentPage(),
-                    'per_page' => $projects->perPage(),
-                    'total' => $projects->total(),
-                    'last_page' => $projects->lastPage(),
-                    'from' => $projects->firstItem(),
-                    'to' => $projects->lastItem(),
-                ]
+                'pagination' => $this->formatPagination($projects),
             ], 'Proyectos obtenidos exitosamente');
 
         } catch (\Exception $e) {
@@ -234,11 +236,18 @@ class ProjectController extends Controller
             // Obtener parámetros de paginación para unidades
             $unitsPerPage = min((int) $request->get('units_per_page', 15), 100);
             $includeUnits = $request->get('include_units', true);
+            $includes = $this->parseIncludes($request->get('include'), [
+                'advisors',
+                'reservations',
+            ]);
 
             // Buscar proyecto con relaciones optimizadas
-            $project = Project::with([
-                'advisors:id,name,email',
-            ])->find($id);
+            $relations = ['advisors:id,name,email'];
+            if (!empty($includes)) {
+                $relations = array_unique(array_merge($relations, $includes));
+            }
+
+            $project = Project::with($relations)->find($id);
 
             if (!$project) {
                 return $this->notFoundResponse('Proyecto');
@@ -259,14 +268,7 @@ class ProjectController extends Controller
                     return $this->formatUnit($unit);
                 });
                 
-                $projectData['units_pagination'] = [
-                    'current_page' => $units->currentPage(),
-                    'per_page' => $units->perPage(),
-                    'total' => $units->total(),
-                    'last_page' => $units->lastPage(),
-                    'from' => $units->firstItem(),
-                    'to' => $units->lastItem(),
-                ];
+                $projectData['units_pagination'] = $this->formatPagination($units);
             }
 
             return $this->successResponse(['project' => $projectData], 'Proyecto obtenido exitosamente');
@@ -320,19 +322,76 @@ class ProjectController extends Controller
                     'name' => $project->name,
                 ],
                 'units' => $formattedUnits,
-                'pagination' => [
-                    'current_page' => $units->currentPage(),
-                    'per_page' => $units->perPage(),
-                    'total' => $units->total(),
-                    'last_page' => $units->lastPage(),
-                    'from' => $units->firstItem(),
-                    'to' => $units->lastItem(),
-                ]
+                'pagination' => $this->formatPagination($units),
             ], 'Unidades obtenidas exitosamente');
 
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener las unidades');
         }
+    }
+
+    /**
+     * Sugerencias rapidas de proyectos
+     */
+    public function suggestions(Request $request)
+    {
+        $query = trim((string) $request->get('q', ''));
+        $limit = min((int) $request->get('limit', 10), 20);
+
+        if (strlen($query) < 2) {
+            return $this->successResponse(['suggestions' => []], 'Consulta muy corta');
+        }
+
+        $projects = Project::query()
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get(['id', 'name', 'status']);
+
+        return $this->successResponse([
+            'suggestions' => $projects->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'status' => $project->status,
+                ];
+            }),
+        ], 'Sugerencias obtenidas');
+    }
+
+    protected function formatPagination($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'last_page' => $paginator->lastPage(),
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->url($paginator->lastPage()),
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+        ];
+    }
+
+    protected function parseIncludes(?string $includeParam, array $allowed): array
+    {
+        if (!$includeParam) {
+            return [];
+        }
+
+        return collect(explode(',', $includeParam))
+            ->map(fn($item) => trim($item))
+            ->filter(fn($item) => $item !== '' && in_array($item, $allowed, true))
+            ->unique()
+            ->values()
+            ->all();
     }
 }
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\HealthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -19,6 +20,16 @@ require __DIR__ . '/api/cazador.php';
 
 // Cargar rutas de Datero
 require __DIR__ . '/api/datero.php';
+
+// Versionado v1
+Route::prefix('v1')->name('v1.')->group(function () {
+    require __DIR__ . '/api/cazador.php';
+    require __DIR__ . '/api/datero.php';
+});
+
+// Health check (publico)
+Route::get('/health', [HealthController::class, 'health'])
+    ->name('api.health');
 
 // ==================== RUTAS PÚBLICAS (Proyectos publicados) ====================
 Route::middleware(['throttle:120,1'])->prefix('projects')->group(function () {

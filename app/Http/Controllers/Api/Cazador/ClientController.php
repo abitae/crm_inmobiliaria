@@ -70,15 +70,24 @@ class ClientController extends Controller
     {
         try {
             $perPage = min((int) $request->get('per_page', 15), 100);
+            $includes = $this->parseIncludes($request->get('include'), [
+                'assignedAdvisor',
+                'createdBy',
+                'activities',
+                'reservations',
+                'tasks',
+                'opportunities',
+            ]);
             $filters = [
                 'search' => $request->get('search'),
                 'status' => $request->get('status'),
                 'type' => $request->get('type'),
                 'source' => $request->get('source'),
+                'create_type' => $request->get('create_type'),
             ];
 
             // Obtener clientes asignados al cazador o creados por él
-            $query = Client::with(['assignedAdvisor', 'createdBy'])
+            $query = Client::with(array_values($includes))
                 ->withCount(['opportunities', 'activities', 'tasks'])
                 ->where(function ($q) {
                     $q->where('assigned_advisor_id', Auth::id())
@@ -96,6 +105,10 @@ class ClientController extends Controller
 
             if (!empty($filters['source'])) {
                 $query->bySource($filters['source']);
+            }
+
+            if (!empty($filters['create_type'])) {
+                $query->byCreateType($filters['create_type']);
             }
 
             if (!empty($filters['search'])) {
@@ -118,14 +131,7 @@ class ClientController extends Controller
 
             return $this->successResponse([
                 'clients' => $formattedClients,
-                'pagination' => [
-                    'current_page' => $clients->currentPage(),
-                    'per_page' => $clients->perPage(),
-                    'total' => $clients->total(),
-                    'last_page' => $clients->lastPage(),
-                    'from' => $clients->firstItem(),
-                    'to' => $clients->lastItem(),
-                ]
+                'pagination' => $this->formatPagination($clients),
             ], 'Clientes obtenidos exitosamente');
 
         } catch (\Exception $e) {
@@ -142,10 +148,21 @@ class ClientController extends Controller
     public function show($id)
     {
         try {
-            $client = Client::with([
+            $includes = $this->parseIncludes(request()->get('include'), [
+                'assignedAdvisor',
+                'activities',
+                'reservations',
+                'tasks',
+                'opportunities',
+                'documents',
+            ]);
+
+            $baseRelations = [
                 'assignedAdvisor:id,name,email',
                 'opportunities.project:id,name',
-            ])
+            ];
+
+            $client = Client::with(array_merge($baseRelations, array_values($includes)))
             ->withCount(['opportunities', 'activities', 'tasks'])
             ->find($id);
 
@@ -333,6 +350,179 @@ class ClientController extends Controller
     }
 
     /**
+     * Crear o actualizar clientes en batch
+     */
+    public function batchStore(Request $request)
+    {
+        $items = $request->input('clients', []);
+
+        if (!is_array($items) || count($items) === 0) {
+            return $this->errorResponse('La lista de clientes es obligatoria', null, 422);
+        }
+
+        $created = [];
+        $updated = [];
+        $errors = [];
+
+        foreach ($items as $index => $payload) {
+            try {
+                $clientId = isset($payload['id']) ? (int) $payload['id'] : null;
+                $rules = $this->clientService->getValidationRules($clientId);
+                $messages = $this->clientService->getValidationMessages();
+                $validator = Validator::make($payload, $rules, $messages);
+
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'index' => $index,
+                        'errors' => $validator->errors()->toArray(),
+                    ];
+                    continue;
+                }
+
+                $formData = collect($payload)->only([
+                    'name',
+                    'phone',
+                    'document_type',
+                    'document_number',
+                    'address',
+                    'birth_date',
+                    'client_type',
+                    'source',
+                    'status',
+                    'create_type',
+                    'score',
+                    'notes'
+                ])->toArray();
+
+                if (isset($formData['name'])) {
+                    $formData['name'] = trim($formData['name']);
+                }
+                if (isset($formData['phone'])) {
+                    $formData['phone'] = preg_replace('/[^0-9+\-() ]/', '', $formData['phone']);
+                }
+                if (isset($formData['document_number'])) {
+                    $formData['document_number'] = preg_replace('/[^0-9]/', '', $formData['document_number']);
+                }
+                if (isset($formData['address'])) {
+                    $formData['address'] = trim($formData['address']);
+                }
+                if (isset($formData['notes'])) {
+                    $formData['notes'] = trim($formData['notes']);
+                }
+
+                if ($clientId) {
+                    /** @var Client|null $client */
+                    $client = Client::find($clientId);
+                    if (!$client) {
+                        $errors[] = [
+                            'index' => $index,
+                            'errors' => ['id' => ['Cliente no encontrado.']],
+                        ];
+                        continue;
+                    }
+
+                    if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+                        $errors[] = [
+                            'index' => $index,
+                            'errors' => ['permission' => ['No tienes permiso para actualizar este cliente.']],
+                        ];
+                        continue;
+                    }
+
+                    $this->clientService->updateClient($clientId, $formData);
+                    $updated[] = $this->formatClient($client->fresh());
+                } else {
+                    $formData['status'] = $formData['status'] ?? 'nuevo';
+                    $formData['score'] = isset($formData['score'])
+                        ? max(0, min(100, (int) $formData['score']))
+                        : 0;
+                    $formData['assigned_advisor_id'] = Auth::id();
+                    $client = $this->clientService->createClient($formData);
+                    $created[] = $this->formatClient($client);
+                }
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'index' => $index,
+                    'errors' => ['exception' => [$e->getMessage()]],
+                ];
+            }
+        }
+
+        return $this->successResponse([
+            'created' => $created,
+            'updated' => $updated,
+            'errors' => $errors,
+        ], 'Batch de clientes procesado');
+    }
+
+    /**
+     * Obtener multiples clientes por IDs
+     */
+    public function batchShow(Request $request)
+    {
+        $idsParam = $request->query('ids', '');
+        $ids = collect(explode(',', $idsParam))
+            ->map(fn($id) => (int) trim($id))
+            ->filter(fn($id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return $this->errorResponse('Se requieren IDs validos', null, 422);
+        }
+
+        $clients = Client::with(['assignedAdvisor'])
+            ->whereIn('id', $ids)
+            ->where(function ($q) {
+                $q->where('assigned_advisor_id', Auth::id())
+                    ->orWhere('created_by', Auth::id());
+            })
+            ->get();
+
+        return $this->successResponse([
+            'clients' => $clients->map(fn($client) => $this->formatClient($client)),
+        ], 'Clientes obtenidos exitosamente');
+    }
+
+    /**
+     * Sugerencias rapidas de clientes
+     */
+    public function suggestions(Request $request)
+    {
+        $query = trim((string) $request->get('q', ''));
+        $limit = min((int) $request->get('limit', 10), 20);
+
+        if (strlen($query) < 2) {
+            return $this->successResponse(['suggestions' => []], 'Consulta muy corta');
+        }
+
+        $clients = Client::query()
+            ->where(function ($q) {
+                $q->where('assigned_advisor_id', Auth::id())
+                    ->orWhere('created_by', Auth::id());
+            })
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%")
+                    ->orWhere('document_number', 'like', "%{$query}%");
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get(['id', 'name', 'phone', 'document_number']);
+
+        return $this->successResponse([
+            'suggestions' => $clients->map(function ($client) {
+                return [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'phone' => $client->phone,
+                    'document_number' => $client->document_number,
+                ];
+            }),
+        ], 'Sugerencias obtenidas');
+    }
+
+    /**
      * Obtener opciones para formularios
      * 
      * @return \Illuminate\Http\JsonResponse
@@ -347,6 +537,38 @@ class ClientController extends Controller
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener las opciones');
         }
+    }
+
+    protected function formatPagination($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'last_page' => $paginator->lastPage(),
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->url($paginator->lastPage()),
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+        ];
+    }
+
+    protected function parseIncludes(?string $includeParam, array $allowed): array
+    {
+        if (!$includeParam) {
+            return [];
+        }
+
+        return collect(explode(',', $includeParam))
+            ->map(fn($item) => trim($item))
+            ->filter(fn($item) => $item !== '' && in_array($item, $allowed, true))
+            ->unique()
+            ->values()
+            ->all();
     }
 }
 

@@ -174,6 +174,24 @@ class Reservation extends Model
         return $query->where('payment_status', $paymentStatus);
     }
 
+    public function scopeSearch($query, string $search)
+    {
+        $search = trim($search);
+        if ($search === '') {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($search) {
+            $q->where('reservation_number', 'like', '%' . $search . '%')
+                ->orWhereHas('client', function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('project', function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+        });
+    }
+
     // Accessors
     public function getIsActiveAttribute(): bool
     {

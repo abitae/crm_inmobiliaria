@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use App\Models\Reservation;
 use App\Models\Unit;
+use App\Http\Requests\Cazador\ReservationIndexRequest;
 use App\Services\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -93,27 +94,62 @@ class ReservationController extends Controller
     /**
      * Listar reservas del cazador autenticado
      * 
-     * @param Request $request
+     * @param ReservationIndexRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
+    public function index(ReservationIndexRequest $request)
     {
         try {
-            // Validar y obtener parámetros de paginación
-            $perPage = min(max((int)$request->input('per_page', 15), 1), 100);
+            $filters = $request->validated();
+            $perPage = $filters['per_page'] ?? 15;
             $user = Auth::user();
 
-            // Construir la query base con relaciones necesarias
-            $query = Reservation::with([
+            $includes = $this->parseIncludes($request->get('include'), [
+                'client',
+                'project',
+                'unit',
+                'advisor',
+            ]);
+
+            $relations = [
                 'client:id,name,phone',
                 'project:id,name',
                 'unit:id,project_id,unit_manzana,unit_number',
                 'advisor:id,name,email',
-            ]);
+            ];
+
+            if (!empty($includes)) {
+                $relations = array_unique(array_merge($relations, $includes));
+            }
+
+            // Construir la query base con relaciones necesarias
+            $query = Reservation::with($relations);
 
             // Filtrar por asesor según rol (cazadores normales solo ven sus reservas)
             if (!$user->isAdmin() && !$user->isLider()) {
                 $query->where('advisor_id', $user->id);
+            } elseif (!empty($filters['advisor_id'])) {
+                $query->where('advisor_id', $filters['advisor_id']);
+            }
+
+            if (!empty($filters['search'])) {
+                $query->search($filters['search']);
+            }
+
+            if (!empty($filters['status'])) {
+                $query->byStatus($filters['status']);
+            }
+
+            if (!empty($filters['payment_status'])) {
+                $query->byPaymentStatus($filters['payment_status']);
+            }
+
+            if (!empty($filters['project_id'])) {
+                $query->byProject($filters['project_id']);
+            }
+
+            if (!empty($filters['client_id'])) {
+                $query->byClient($filters['client_id']);
             }
 
             // Paginar y ordenar por fecha de creación descendente
@@ -126,14 +162,7 @@ class ReservationController extends Controller
 
             return $this->successResponse([
                 'reservations' => $formattedReservations,
-                'pagination' => [
-                    'current_page' => $reservationsPage->currentPage(),
-                    'per_page' => $reservationsPage->perPage(),
-                    'total' => $reservationsPage->total(),
-                    'last_page' => $reservationsPage->lastPage(),
-                    'from' => $reservationsPage->firstItem(),
-                    'to' => $reservationsPage->lastItem(),
-                ]
+                'pagination' => $this->formatPagination($reservationsPage),
             ], 'Reservas obtenidas exitosamente');
 
         } catch (\Exception $e) {
@@ -160,14 +189,29 @@ class ReservationController extends Controller
                 return $this->errorResponse('ID de reserva inválido', null, 400);
             }
 
-            $reservation = Reservation::with([
+            $includes = $this->parseIncludes(request()->get('include'), [
+                'client',
+                'project',
+                'unit',
+                'advisor',
+                'createdBy',
+                'updatedBy',
+            ]);
+
+            $relations = [
                 'client:id,name,phone,document_type,document_number',
                 'project:id,name,address,district,province',
                 'unit:id,project_id,unit_manzana,unit_number,area,final_price',
                 'advisor:id,name,email,phone',
                 'createdBy:id,name,email',
                 'updatedBy:id,name,email',
-            ])->find($id);
+            ];
+
+            if (!empty($includes)) {
+                $relations = array_unique(array_merge($relations, $includes));
+            }
+
+            $reservation = Reservation::with($relations)->find($id);
 
             if (!$reservation) {
                 return $this->notFoundResponse('Reserva');
@@ -276,6 +320,94 @@ class ReservationController extends Controller
             
             return $this->serverErrorResponse($e, 'Error al crear la reserva');
         }
+    }
+
+    /**
+     * Crear reservas en batch
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function batchStore(Request $request)
+    {
+        $items = $request->input('reservations', []);
+
+        if (!is_array($items) || count($items) === 0) {
+            return $this->errorResponse('La lista de reservas es obligatoria', null, 422);
+        }
+
+        $created = [];
+        $errors = [];
+
+        foreach ($items as $index => $payload) {
+            try {
+                $validator = Validator::make($payload, [
+                    'client_id' => 'required|exists:clients,id',
+                    'project_id' => 'required|exists:projects,id',
+                    'unit_id' => 'required|exists:units,id',
+                    'reservation_amount' => 'required|numeric|min:0',
+                    'payment_method' => 'nullable|string|max:255',
+                    'payment_reference' => 'nullable|string|max:255',
+                    'notes' => 'nullable|string',
+                    'terms_conditions' => 'nullable|string',
+                ]);
+
+                if ($validator->fails()) {
+                    $errors[] = [
+                        'index' => $index,
+                        'errors' => $validator->errors()->toArray(),
+                    ];
+                    continue;
+                }
+
+                $unit = Unit::find($payload['unit_id']);
+                if (!$unit || $unit->status !== 'disponible') {
+                    $errors[] = [
+                        'index' => $index,
+                        'errors' => ['unit_id' => ['La unidad no esta disponible.']],
+                    ];
+                    continue;
+                }
+
+                if ($unit->project_id != $payload['project_id']) {
+                    $errors[] = [
+                        'index' => $index,
+                        'errors' => ['project_id' => ['La unidad no pertenece al proyecto seleccionado.']],
+                    ];
+                    continue;
+                }
+
+                $reservation = $this->reservationService->createReservation([
+                    'client_id' => $payload['client_id'],
+                    'project_id' => $payload['project_id'],
+                    'unit_id' => $payload['unit_id'],
+                    'advisor_id' => Auth::id(),
+                    'reservation_amount' => $payload['reservation_amount'],
+                    'payment_method' => $payload['payment_method'] ?? null,
+                    'payment_reference' => $payload['payment_reference'] ?? null,
+                    'notes' => $payload['notes'] ?? null,
+                    'terms_conditions' => $payload['terms_conditions'] ?? null,
+                ], Auth::id());
+
+                $reservation->load(['client', 'project', 'unit', 'advisor']);
+                $created[] = $this->formatReservation($reservation);
+            } catch (\InvalidArgumentException $e) {
+                $errors[] = [
+                    'index' => $index,
+                    'errors' => ['reservation' => [$e->getMessage()]],
+                ];
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'index' => $index,
+                    'errors' => ['exception' => [$e->getMessage()]],
+                ];
+            }
+        }
+
+        return $this->successResponse([
+            'created' => $created,
+            'errors' => $errors,
+        ], 'Batch de reservas procesado');
     }
 
     /**
@@ -599,6 +731,38 @@ class ReservationController extends Controller
             
             return $this->serverErrorResponse($e, 'Error al convertir la reserva a venta');
         }
+    }
+
+    protected function formatPagination($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'last_page' => $paginator->lastPage(),
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->url($paginator->lastPage()),
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+        ];
+    }
+
+    protected function parseIncludes(?string $includeParam, array $allowed): array
+    {
+        if (!$includeParam) {
+            return [];
+        }
+
+        return collect(explode(',', $includeParam))
+            ->map(fn($item) => trim($item))
+            ->filter(fn($item) => $item !== '' && in_array($item, $allowed, true))
+            ->unique()
+            ->values()
+            ->all();
     }
 }
 

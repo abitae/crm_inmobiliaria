@@ -119,6 +119,11 @@ class Client extends Model
         return $query->where('source', $source);
     }
 
+    public function scopeByCreateType($query, $createType)
+    {
+        return $query->where('create_type', $createType);
+    }
+
     public function scopeByAdvisor($query, $advisorId)
     {
         return $query->where('assigned_advisor_id', $advisorId);
