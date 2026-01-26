@@ -414,3 +414,523 @@ GET `/reports/sales`
 - Auth: Requiere JWT.
 - Respuesta:
   - Archivo `text/csv` descargable.
+
+---
+
+## Ejemplos Postman (request/response)
+
+Notas generales:
+- Base URL: `{{base_url}}/api/cazador` (o `{{base_url}}/api/v1/cazador`)
+- Header: `Authorization: Bearer {{token}}`
+
+### Auth
+
+POST `/auth/login`
+Body (JSON):
+```json
+{
+  "email": "asesor@example.com",
+  "password": "secret123"
+}
+```
+Respuesta (JSON):
+```json
+{
+  "message": "Inicio de sesión exitoso",
+  "data": {
+    "token": "jwt-token",
+    "token_type": "bearer",
+    "expires_in": 3600,
+    "user": {
+      "id": 10,
+      "name": "Juan Perez",
+      "email": "asesor@example.com",
+      "phone": "999888777",
+      "role": "cazador",
+      "is_active": true
+    }
+  }
+}
+```
+
+GET `/auth/me`
+Respuesta (JSON):
+```json
+{
+  "data": {
+    "id": 10,
+    "name": "Juan Perez",
+    "email": "asesor@example.com",
+    "phone": "999888777",
+    "role": "cazador",
+    "is_active": true
+  }
+}
+```
+
+POST `/auth/logout`
+Respuesta (JSON):
+```json
+{
+  "message": "Sesión cerrada exitosamente"
+}
+```
+
+POST `/auth/refresh`
+Respuesta (JSON):
+```json
+{
+  "message": "Token renovado exitosamente",
+  "data": {
+    "token": "jwt-token",
+    "token_type": "bearer",
+    "expires_in": 3600
+  }
+}
+```
+
+POST `/auth/change-password`
+Body (JSON):
+```json
+{
+  "current_password": "secret123",
+  "new_password": "newSecret123",
+  "new_password_confirmation": "newSecret123"
+}
+```
+
+### Health
+
+GET `/health`
+Respuesta (JSON):
+```json
+{
+  "status": "healthy",
+  "checks": {
+    "database": { "status": "ok", "message": "Operational" },
+    "cache": { "status": "ok", "message": "Operational" },
+    "storage": { "status": "ok", "message": "Operational" }
+  },
+  "timestamp": "2026-01-23T12:00:00Z"
+}
+```
+
+### Clientes
+
+GET `/clients?search=juan&status=nuevo&include=activities,reservations`
+Respuesta (JSON):
+```json
+{
+  "data": {
+    "clients": [
+      {
+        "id": 1,
+        "name": "Juan Perez",
+        "phone": "999888777",
+        "document_type": "DNI",
+        "document_number": "12345678",
+        "client_type": "comprador",
+        "status": "nuevo"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 15,
+      "total": 1,
+      "last_page": 1,
+      "from": 1,
+      "to": 1,
+      "links": {
+        "first": "https://api.example.com/api/cazador/clients?page=1",
+        "last": "https://api.example.com/api/cazador/clients?page=1",
+        "prev": null,
+        "next": null
+      }
+    }
+  }
+}
+```
+
+POST `/clients`
+Body (JSON):
+```json
+{
+  "name": "Maria Torres",
+  "phone": "988776655",
+  "document_type": "DNI",
+  "document_number": "87654321",
+  "address": "Av. Central 123",
+  "birth_date": "1990-05-10",
+  "client_type": "comprador",
+  "source": "redes_sociales",
+  "status": "nuevo",
+  "create_type": "propio",
+  "score": 60,
+  "notes": "Cliente interesado en preventa."
+}
+```
+
+GET `/clients/{id}`
+Ejemplo: `/clients/1?include=activities,reservations`
+
+PUT `/clients/{id}`
+Body (JSON):
+```json
+{
+  "phone": "977665544",
+  "status": "en_seguimiento",
+  "notes": "Seguimiento programado"
+}
+```
+
+POST `/clients/batch`
+Body (JSON):
+```json
+{
+  "clients": [
+    {
+      "name": "Nuevo Cliente",
+      "client_type": "comprador",
+      "source": "referidos"
+    },
+    {
+      "id": 1,
+      "phone": "966554433",
+      "status": "contacto_inicial"
+    }
+  ]
+}
+```
+
+GET `/clients/batch?ids=1,2,3`
+
+POST `/clients/validate`
+Body (JSON):
+```json
+{
+  "name": "Validacion Cliente",
+  "client_type": "comprador",
+  "source": "redes_sociales"
+}
+```
+
+GET `/clients/suggestions?q=mar&limit=5`
+
+GET `/clients/export`
+
+#### Actividades del cliente
+
+> Base: `Activity` (migración `2024_01_01_000007_create_activities_table.php`).
+> Este recurso siempre está ligado a un `client_id` vía la ruta.
+> Permiso: solo el asesor asignado al cliente o quien lo creó puede acceder/modificar.
+
+GET `/clients/{client}/activities`
+
+Query params:
+- `per_page` (int, opcional, default 15, max 100)
+- `status` (string, opcional): `programada|en_progreso|completada|cancelada`
+- `activity_type` (string, opcional): `llamada|reunion|visita|seguimiento|tarea`
+- `priority` (string, opcional): `baja|media|alta|urgente`
+- `start_date_from` (date, opcional, formato `YYYY-MM-DD`)
+- `start_date_to` (date, opcional, formato `YYYY-MM-DD`)
+- `search` (string, opcional): busca en `title`, `description`, `notes`
+
+Respuesta 200 (JSON):
+```json
+{
+  "success": true,
+  "message": "Actividades obtenidas exitosamente",
+  "data": {
+    "activities": [
+      {
+        "id": 10,
+        "title": "Llamada inicial",
+        "description": null,
+        "activity_type": "llamada",
+        "status": "programada",
+        "priority": "media",
+        "start_date": "2026-01-23 10:00:00",
+        "duration": 30,
+        "location": "Oficina",
+        "client_id": 5,
+        "project_id": null,
+        "unit_id": null,
+        "opportunity_id": null,
+        "advisor_id": 8,
+        "assigned_to": 12,
+        "reminder_before": 15,
+        "reminder_sent": false,
+        "notes": "Confirmar interés.",
+        "result": null,
+        "created_by": 8,
+        "updated_by": 8,
+        "created_at": "2026-01-23 09:45:00",
+        "updated_at": "2026-01-23 09:45:00",
+        "advisor": { "id": 8, "name": "Ana Pérez", "email": "ana.perez@crm.com" },
+        "assigned_to": { "id": 12, "name": "Luis Ramos", "email": "luis.ramos@crm.com" }
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 15,
+      "total": 40,
+      "last_page": 3,
+      "from": 1,
+      "to": 15,
+      "links": {
+        "first": "https://api.tuapp.com/api/v1/cazador/clients/5/activities?page=1",
+        "last": "https://api.tuapp.com/api/v1/cazador/clients/5/activities?page=3",
+        "prev": null,
+        "next": "https://api.tuapp.com/api/v1/cazador/clients/5/activities?page=2"
+      }
+    }
+  }
+}
+```
+
+POST `/clients/{client}/activities`
+
+Body (JSON) - campos según migración:
+Campos requeridos:
+- `title` (string)
+- `activity_type` (string): `llamada|reunion|visita|seguimiento|tarea`
+- `start_date` (datetime)
+
+Campos opcionales:
+- `description` (string)
+- `status` (string): `programada|en_progreso|completada|cancelada` (default: `programada`)
+- `priority` (string): `baja|media|alta|urgente` (default: `media`)
+- `duration` (int, minutos)
+- `location` (string)
+- `project_id` (int, exists: `projects`)
+- `unit_id` (int, exists: `units`)
+- `opportunity_id` (int, exists: `opportunities`)
+- `advisor_id` (int, exists: `users`)
+- `assigned_to` (int, exists: `users`)
+- `reminder_before` (int, minutos)
+- `reminder_sent` (bool, default: `false`)
+- `notes` (string)
+- `result` (string)
+
+Notas:
+- `client_id` se toma de la ruta.
+- `created_by` y `updated_by` se asignan al usuario autenticado.
+
+Body ejemplo:
+```json
+{
+  "title": "Llamada inicial",
+  "activity_type": "llamada",
+  "start_date": "2026-01-23 10:00:00",
+  "status": "programada",
+  "priority": "media",
+  "duration": 30,
+  "location": "Oficina",
+  "assigned_to": 12,
+  "notes": "Confirmar interés."
+}
+```
+
+Respuesta 201 (JSON):
+```json
+{
+  "success": true,
+  "message": "Actividad creada correctamente",
+  "data": {
+    "activity": { "...": "..." }
+  }
+}
+```
+
+PUT/PATCH `/clients/{client}/activities/{activity}`
+
+Campos permitidos para actualizar:
+- `status` (string): `programada|en_progreso|completada|cancelada`
+- `result` (string, nullable)
+- `notes` (string, nullable)
+- `start_date` (datetime, nullable)
+- `assigned_to` (int, exists: `users`)
+
+Body ejemplo:
+```json
+{
+  "status": "completada",
+  "result": "Cliente interesado",
+  "notes": "Se agenda visita",
+  "start_date": "2026-01-24 10:30:00",
+  "assigned_to": 12
+}
+```
+
+Respuesta 200 (JSON):
+```json
+{
+  "success": true,
+  "message": "Actividad actualizada correctamente",
+  "data": {
+    "activity": { "...": "..." }
+  }
+}
+```
+
+POST `/clients/{client}/tasks`
+Body (JSON):
+```json
+{
+  "title": "Enviar brochure",
+  "task_type": "documento",
+  "status": "pendiente",
+  "priority": "media",
+  "due_date": "2026-01-25",
+  "notes": "PDF del proyecto."
+}
+```
+
+### Proyectos
+
+GET `/projects?search=sol&stage=venta_activa`
+
+GET `/projects/suggestions?q=sol&limit=5`
+
+GET `/projects/{id}?include_units=true&units_per_page=10`
+
+GET `/projects/{id}/units?per_page=10`
+
+### Dateros
+
+GET `/dateros?search=ana&is_active=true`
+
+POST `/dateros`
+Body (JSON):
+```json
+{
+  "name": "Ana Datero",
+  "email": "ana.datero@example.com",
+  "phone": "955443322",
+  "dni": "44556677",
+  "pin": "123456",
+  "ocupacion": "Independiente"
+}
+```
+
+GET `/dateros/{id}`
+
+PATCH `/dateros/{id}`
+Body (JSON):
+```json
+{
+  "phone": "944332211",
+  "is_active": true
+}
+```
+
+### Dashboard
+
+GET `/dashboard/stats`
+
+### Reservas
+
+GET `/reservations?status=activa&payment_status=pendiente`
+
+POST `/reservations`
+Body (JSON):
+```json
+{
+  "client_id": 1,
+  "project_id": 2,
+  "unit_id": 5,
+  "reservation_amount": 5000,
+  "payment_method": "transferencia",
+  "payment_reference": "TRX123",
+  "notes": "Reserva inicial"
+}
+```
+
+POST `/reservations/validate`
+Body (JSON):
+```json
+{
+  "client_id": 1,
+  "project_id": 2,
+  "unit_id": 5,
+  "reservation_amount": 5000
+}
+```
+
+GET `/reservations/{id}`
+
+PATCH `/reservations/{id}`
+Body (JSON):
+```json
+{
+  "reservation_amount": 6000,
+  "payment_status": "parcial",
+  "notes": "Se ajusto el monto"
+}
+```
+
+POST `/reservations/{id}/confirm`
+Body (multipart/form-data):
+- `image`: archivo de imagen
+- `reservation_amount`: `6000`
+- `payment_status`: `pagado`
+
+POST `/reservations/{id}/cancel`
+Body (JSON):
+```json
+{
+  "cancel_note": "Cliente solicito cancelacion"
+}
+```
+
+POST `/reservations/batch`
+Body (JSON):
+```json
+{
+  "reservations": [
+    {
+      "client_id": 1,
+      "project_id": 2,
+      "unit_id": 5,
+      "reservation_amount": 3000
+    },
+    {
+      "client_id": 2,
+      "project_id": 2,
+      "unit_id": 6,
+      "reservation_amount": 3500
+    }
+  ]
+}
+```
+
+GET `/reservations/export`
+
+POST `/reservations/{id}/convert-to-sale`
+
+### Documentos
+
+POST `/documents/search`
+Body (JSON):
+```json
+{
+  "document_type": "dni",
+  "document_number": "12345678"
+}
+```
+
+POST `/documents/validate-dni`
+Body (JSON):
+```json
+{
+  "dni": "12345678"
+}
+```
+
+### Sync
+
+GET `/sync?since=2026-01-01T00:00:00Z`
+
+### Reportes
+
+GET `/reports/sales?date_from=2026-01-01&date_to=2026-01-31`

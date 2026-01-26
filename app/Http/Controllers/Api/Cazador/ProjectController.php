@@ -214,7 +214,7 @@ class ProjectController extends Controller
             ], 'Proyectos obtenidos exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener los proyectos');
+            return $this->serverErrorResponse($e, 'Error al listar proyectos del cazador');
         }
     }
 
@@ -274,7 +274,7 @@ class ProjectController extends Controller
             return $this->successResponse(['project' => $projectData], 'Proyecto obtenido exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener el proyecto');
+            return $this->serverErrorResponse($e, 'Error al obtener detalle del proyecto');
         }
     }
 
@@ -326,7 +326,7 @@ class ProjectController extends Controller
             ], 'Unidades obtenidas exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener las unidades');
+            return $this->serverErrorResponse($e, 'Error al listar unidades del proyecto');
         }
     }
 

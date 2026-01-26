@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             // 8. Entidades de Seguimiento (dependen de múltiples entidades)
             ActivitySeeder::class,
             TaskSeeder::class,
+            DocumentSeeder::class,
 
             // 9. Relaciones Many-to-Many y Precios (dependen de todas las entidades anteriores)
             RelationshipSeeder::class,
@@ -50,9 +51,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('');
         $this->command->info('🔐 USUARIOS DE PRUEBA:');
         $this->command->info('👑 Admin: abel.arana@hotmail.com / lobomalo123');
-        $this->command->info('👥 Líderes: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
-        $this->command->info('💼 Vendedores: ana.martinez@crm.com, luis.perez@crm.com, sofia.lopez@crm.com, roberto.silva@crm.com, miguel.torres@crm.com / password');
-        $this->command->info('📊 Dateros: pedro.ramirez@crm.com, laura.jimenez@crm.com, diego.morales@crm.com, carmen.garcia@crm.com, juan.perez@crm.com / password');
+        $this->command->info('👥 Líderes fijos: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
+        $this->command->info('💼 Vendedores/Dateros: usuarios generados con password "password"');
         $this->command->info('');
         $this->command->info('🏢 JERARQUÍAS ESTABLECIDAS:');
         $this->command->info('├── Admin (Abel Arana)');

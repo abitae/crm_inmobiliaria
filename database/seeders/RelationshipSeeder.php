@@ -6,16 +6,7 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\Commission;
-use App\Models\Activity;
-use App\Models\Task;
-use App\Models\Interaction;
-use App\Models\Document;
-use App\Models\Reservation;
-use App\Models\Opportunity;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class RelationshipSeeder extends Seeder
 {
@@ -102,7 +93,7 @@ class RelationshipSeeder extends Seeder
 
     private function createAdvisorProjectAssignments($projects, $admin): void
     {
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::role('lider')->get()->merge(User::role('vendedor')->get());
 
         // Verificar que existan asesores antes de continuar
         if ($advisors->isEmpty()) {
@@ -110,8 +101,10 @@ class RelationshipSeeder extends Seeder
         }
 
         foreach ($projects as $project) {
-            // Cada proyecto puede tener 1-3 asesores asignados
-            $assignedAdvisors = $advisors->random(rand(1, 3));
+            // Cada proyecto puede tener 2-6 asesores asignados
+            $maxAssign = min(6, $advisors->count());
+            $minAssign = $maxAssign >= 2 ? 2 : 1;
+            $assignedAdvisors = $advisors->random(rand($minAssign, $maxAssign));
             $primaryAdvisor = $assignedAdvisors->first();
 
             foreach ($assignedAdvisors as $advisor) {

@@ -135,7 +135,7 @@ class ClientController extends Controller
             ], 'Clientes obtenidos exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener los clientes');
+            return $this->serverErrorResponse($e, 'Error al listar clientes del cazador');
         }
     }
 
@@ -183,7 +183,7 @@ class ClientController extends Controller
             return $this->successResponse(['client' => $clientData], 'Cliente obtenido exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener el cliente');
+            return $this->serverErrorResponse($e, 'Error al obtener el cliente solicitado');
         }
     }
 
@@ -268,7 +268,7 @@ class ClientController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al crear el cliente');
+            return $this->serverErrorResponse($e, 'Error al crear el cliente en Cazador');
         }
     }
 
@@ -345,7 +345,7 @@ class ClientController extends Controller
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al actualizar el cliente');
+            return $this->serverErrorResponse($e, 'Error al actualizar el cliente en Cazador');
         }
     }
 
@@ -535,7 +535,7 @@ class ClientController extends Controller
             return $this->successResponse($options, 'Opciones obtenidas exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener las opciones');
+            return $this->serverErrorResponse($e, 'Error al obtener opciones de formulario');
         }
     }
 

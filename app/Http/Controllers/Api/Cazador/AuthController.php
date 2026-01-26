@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -58,7 +59,7 @@ class AuthController extends Controller
             }
 
             // Obtener el usuario autenticado
-            $user = auth()->user();
+            $user = Auth::user();
 
             // Verificar que el usuario puede acceder al API de Cazador
             // Permite: Administrador, Lider y Cazador (vendedor)
@@ -116,7 +117,7 @@ class AuthController extends Controller
                 'ip' => $request->ip(),
             ]);
             
-            return $this->errorResponse('Error al generar el token', ['error' => 'No se pudo crear el token'], 500);
+            return $this->errorResponse('Error al generar el token de acceso', ['error' => 'No se pudo crear el token'], 500);
         } catch (\Exception $e) {
             Log::error('Error en login (Cazador)', [
                 'email' => $request->input('email'),
@@ -125,7 +126,7 @@ class AuthController extends Controller
                 'ip' => $request->ip(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error en el servidor');
+            return $this->serverErrorResponse($e, 'Error al iniciar sesión');
         }
     }
 
@@ -147,7 +148,7 @@ class AuthController extends Controller
             return $this->successResponse(null, 'Sesión cerrada exitosamente');
 
         } catch (JWTException $e) {
-            return $this->errorResponse('Error al cerrar sesión', ['error' => 'No se pudo invalidar el token'], 500);
+            return $this->errorResponse('Error al cerrar sesión (token inválido)', ['error' => 'No se pudo invalidar el token'], 500);
         }
     }
 
@@ -160,7 +161,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
 
             if (!$user) {
                 return $this->unauthorizedResponse('Usuario no autenticado');
@@ -176,7 +177,7 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener información del usuario');
+            return $this->serverErrorResponse($e, 'Error al obtener el usuario autenticado');
         }
     }
 
@@ -199,7 +200,7 @@ class AuthController extends Controller
             ], 'Token renovado exitosamente');
 
         } catch (JWTException $e) {
-            return $this->unauthorizedResponse('Token inválido o expirado');
+            return $this->unauthorizedResponse('Token inválido o expirado (no se pudo refrescar)');
         }
     }
 
@@ -212,7 +213,7 @@ class AuthController extends Controller
     public function changePassword(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
 
             if (!$user) {
                 return $this->unauthorizedResponse('Usuario no autenticado');
@@ -264,13 +265,13 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error al cambiar contraseña (Cazador)', [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'ip' => $request->ip(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al cambiar la contraseña');
+            return $this->serverErrorResponse($e, 'Error al actualizar la contraseña');
         }
     }
 }

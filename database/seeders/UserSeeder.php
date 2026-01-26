@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as Faker;
 
 class UserSeeder extends Seeder
 {
@@ -13,142 +14,143 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        $faker = Faker::create('es_PE');
+        $this->command->info('Generando usuarios de prueba (dataset grande)...');
+
         // Usuario administrador (sin líder)
         $admin = User::create([
             'name' => 'Abel Arana',
             'email' => 'abel.arana@hotmail.com',
+            'dni' => '00000000',
+            'pin' => '1234',
             'phone' => '999999999',
+            'ocupacion' => 'Administrador',
             'password' => Hash::make('lobomalo123'),
             'email_verified_at' => now(),
             'is_active' => true,
-            'lider_id' => null, // Admin no tiene líder
+            'lider_id' => null,
         ]);
         $admin->setRole('admin');
 
-        // Crear 5 líderes de ventas (reportan al admin)
+        $leadersCount = 10;
+        $vendorsPerLeader = 30; // 300 vendedores
+        $independentVendors = 10;
+        $independentDateros = 10;
+
+        // Líderes fijos para mantener compatibilidad con jerarquías
+        $fixedLeaders = [
+            ['name' => 'María González', 'email' => 'maria.gonzalez@crm.com'],
+            ['name' => 'Carlos Rodríguez', 'email' => 'carlos.rodriguez@crm.com'],
+        ];
+
         $lideres = [];
-        $nombresLideres = [
-            'María González', 'Carlos Rodríguez', 'Ana Patricia López', 'Roberto Silva',
-            'Carmen García'
-        ];
-
-        for ($i = 0; $i < 5; $i++) {
-            $lider = User::create([
-                'name' => $nombresLideres[$i],
-                'email' => strtolower(str_replace(' ', '.', $nombresLideres[$i])) . '@crm.com',
-                'phone' => '999' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-                'lider_id' => $admin->id, // Reportan al admin
-            ]);
-            $lider->setRole('lider');
-            $lideres[] = $lider;
+        foreach ($fixedLeaders as $leaderData) {
+            $lideres[] = $this->createUser($leaderData + [
+                'dni' => $this->generateDni($faker),
+                'pin' => $faker->numerify('####'),
+                'phone' => $faker->numerify('9########'),
+                'ocupacion' => 'Líder de ventas',
+                'lider_id' => $admin->id,
+            ], 'lider');
         }
 
-        // Crear 100 vendedores (20 por cada líder)
+        for ($i = count($fixedLeaders); $i < $leadersCount; $i++) {
+            $lideres[] = $this->createUser([
+                'name' => $faker->name(),
+                'email' => $faker->unique()->safeEmail(),
+                'dni' => $this->generateDni($faker),
+                'pin' => $faker->numerify('####'),
+                'phone' => $faker->numerify('9########'),
+                'ocupacion' => 'Líder de ventas',
+                'lider_id' => $admin->id,
+            ], 'lider');
+        }
+
         $vendedores = [];
-        $nombresVendedores = [
-            'Ana', 'Luis', 'Sofia', 'Roberto', 'Miguel', 'Elena', 'Carlos', 'Patricia', 'Fernando', 'Isabel',
-            'Antonio', 'Valentina', 'Diego', 'Carmen', 'Pedro', 'Laura', 'Juan', 'María', 'José', 'Andrea',
-            'Ricardo', 'Gabriela', 'Daniel', 'Monica', 'Alejandro', 'Paola', 'Andrés', 'Natalia', 'Sergio', 'Claudia',
-            'Francisco', 'Diana', 'Javier', 'Raúl', 'Verónica', 'Manuel', 'Lucía', 'Rodrigo', 'Cecilia', 'Esteban',
-            'Mariana', 'Felipe', 'Adriana', 'Gustavo', 'Carolina', 'Héctor', 'Óscar', 'Rosa', 'Emilio', 'Teresa',
-            'Víctor', 'Lorena', 'Mauricio', 'Gloria', 'Pablo', 'Silvia', 'Alberto', 'Martha', 'Enrique', 'Beatriz',
-            'Rafael', 'Alicia', 'Gerardo', 'Eugenia', 'Arturo', 'Dolores', 'Ignacio', 'Ramón', 'Eduardo', 'Jorge',
-            'Mercedes', 'Salvador', 'Josefina', 'Tomás', 'Francisca', 'Agustín', 'Manuela', 'Benito', 'Rosario', 'César',
-            'Amparo', 'Concepción', 'Ángel', 'Brenda', 'Cristina', 'David', 'Edgar', 'Fabiola', 'Gonzalo', 'Hilda',
-            'Iván', 'Julia', 'Kevin', 'Liliana', 'Mario', 'Nora', 'Octavio', 'Patricia', 'Quetzal', 'Renata'
-        ];
-        $apellidosVendedores = [
-            'Martínez', 'Pérez', 'López', 'García', 'González', 'Rodríguez', 'Hernández', 'Sánchez', 'Ramírez', 'Torres',
-            'Flores', 'Rivera', 'Gómez', 'Díaz', 'Cruz', 'Morales', 'Ortiz', 'Gutiérrez', 'Chávez', 'Ramos',
-            'Reyes', 'Mendoza', 'Moreno', 'Jiménez', 'Alvarez', 'Ruiz', 'Vargas', 'Castro', 'Romero', 'Soto',
-            'Contreras', 'Guerrero', 'Ortega', 'Delgado', 'Salazar', 'Vega', 'Medina', 'Herrera', 'Aguilar', 'Sandoval',
-            'Silva', 'Méndez', 'Rojas', 'Cortés', 'Núñez', 'Peña', 'Luna', 'Campos', 'Vásquez', 'Fuentes',
-            'Carrillo', 'Paredes', 'Navarro', 'Valdez', 'Espinoza', 'Mejía', 'Acosta', 'Miranda', 'Ponce', 'Sosa',
-            'Villanueva', 'Cárdenas', 'Benítez', 'Zúñiga', 'Aguirre', 'Montes', 'Serrano', 'León', 'Calderón', 'Ríos',
-            'Molina', 'Franco', 'Barrera', 'Escobar', 'Pacheco', 'Cervantes', 'Galván', 'Velázquez', 'Castañeda', 'Juárez',
-            'Tapia', 'Ibarra', 'Macías', 'Solis', 'Maldonado', 'Rangel', 'Zamora', 'Bautista', 'Robles', 'Quiroz',
-            'Yáñez', 'Ximénez', 'Wong', 'Villalobos', 'Uribe', 'Trejo', 'Suárez', 'Roldán', 'Pineda', 'Ochoa'
-        ];
-
-        for ($i = 0; $i < 100; $i++) {
-            $nombre = $nombresVendedores[$i % count($nombresVendedores)];
-            $apellido = $apellidosVendedores[intval($i / count($nombresVendedores)) % count($apellidosVendedores)];
-            $nombreCompleto = $nombre . ' ' . $apellido;
-            
-            $liderAsignado = $lideres[$i % 5]; // Distribuir entre los 5 líderes (20 por cada uno)
-            $emailBase = strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú', 'ñ'], ['', 'a', 'e', 'i', 'o', 'u', 'n'], $nombre . '.' . $apellido));
-            $email = $emailBase . ($i + 1) . '@crm.com'; // Siempre incluir número único
-            
-            $vendedor = User::create([
-                'name' => $nombreCompleto,
-                'email' => $email,
-                'phone' => '998' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-                'lider_id' => $liderAsignado->id,
-            ]);
-            $vendedor->setRole('vendedor');
-            $vendedores[] = $vendedor;
+        foreach ($lideres as $lider) {
+            for ($i = 0; $i < $vendorsPerLeader; $i++) {
+                $vendedores[] = $this->createUser([
+                    'name' => $faker->name(),
+                    'email' => $faker->unique()->safeEmail(),
+                    'dni' => $this->generateDni($faker),
+                    'pin' => $faker->numerify('####'),
+                    'phone' => $faker->numerify('9########'),
+                    'ocupacion' => 'Vendedor',
+                    'lider_id' => $lider->id,
+                ], 'vendedor');
+            }
         }
 
-        // Crear 100 dateros (1 por cada vendedor)
+        // Vendedores independientes
+        for ($i = 0; $i < $independentVendors; $i++) {
+            $vendedores[] = $this->createUser([
+                'name' => $faker->name(),
+                'email' => $faker->unique()->safeEmail(),
+                'dni' => $this->generateDni($faker),
+                'pin' => $faker->numerify('####'),
+                'phone' => $faker->numerify('9########'),
+                'ocupacion' => 'Vendedor independiente',
+                'lider_id' => null,
+            ], 'vendedor');
+        }
+
+        // Dateros (1 por vendedor)
         $dateros = [];
-        $nombresDateros = [
-            'Pedro', 'Laura', 'Diego', 'Carmen', 'Juan', 'María', 'Carlos', 'Ana', 'Roberto', 'Sofia',
-            'Miguel', 'Elena', 'Fernando', 'Isabel', 'Antonio', 'Valentina', 'Ricardo', 'Gabriela', 'Daniel', 'Monica',
-            'Alejandro', 'Paola', 'Andrés', 'Natalia', 'Sergio', 'Claudia', 'Francisco', 'Diana', 'Javier', 'Raúl',
-            'Verónica', 'Manuel', 'Lucía', 'Rodrigo', 'Cecilia', 'Esteban', 'Mariana', 'Felipe', 'Adriana', 'Gustavo',
-            'Carolina', 'Héctor', 'Óscar', 'Rosa', 'Emilio', 'Teresa', 'Víctor', 'Lorena', 'Mauricio', 'Gloria',
-            'Pablo', 'Silvia', 'Alberto', 'Martha', 'Enrique', 'Beatriz', 'Rafael', 'Alicia', 'Gerardo', 'Eugenia',
-            'Arturo', 'Dolores', 'Ignacio', 'Ramón', 'Eduardo', 'Jorge', 'Mercedes', 'Salvador', 'Josefina', 'Tomás',
-            'Francisca', 'Agustín', 'Manuela', 'Benito', 'Rosario', 'César', 'Amparo', 'Concepción', 'Ángel', 'Brenda',
-            'Cristina', 'David', 'Edgar', 'Fabiola', 'Gonzalo', 'Hilda', 'Iván', 'Julia', 'Kevin', 'Liliana',
-            'Mario', 'Nora', 'Octavio', 'Quetzal', 'Renata', 'Samuel', 'Tania', 'Ulises', 'Vanesa', 'Wilfredo'
-        ];
-        $apellidosDateros = [
-            'Ramírez', 'Jiménez', 'Morales', 'García', 'Pérez', 'López', 'Silva', 'Martínez', 'Torres', 'Vargas',
-            'Castro', 'Moreno', 'Ruiz', 'Herrera', 'Flores', 'Rivera', 'Gómez', 'Díaz', 'Cruz', 'Ortiz',
-            'Gutiérrez', 'Chávez', 'Ramos', 'Reyes', 'Mendoza', 'Alvarez', 'Romero', 'Soto', 'Contreras', 'Guerrero',
-            'Ortega', 'Delgado', 'Salazar', 'Vega', 'Medina', 'Aguilar', 'Sandoval', 'Méndez', 'Rojas', 'Cortés',
-            'Núñez', 'Peña', 'Luna', 'Campos', 'Vásquez', 'Fuentes', 'Carrillo', 'Paredes', 'Navarro', 'Valdez',
-            'Espinoza', 'Mejía', 'Acosta', 'Miranda', 'Ponce', 'Sosa', 'Villanueva', 'Cárdenas', 'Benítez', 'Zúñiga',
-            'Aguirre', 'Montes', 'Serrano', 'León', 'Calderón', 'Ríos', 'Molina', 'Franco', 'Barrera', 'Escobar',
-            'Pacheco', 'Cervantes', 'Galván', 'Velázquez', 'Castañeda', 'Juárez', 'Tapia', 'Ibarra', 'Macías', 'Solis',
-            'Maldonado', 'Rangel', 'Zamora', 'Bautista', 'Robles', 'Quiroz', 'Yáñez', 'Ximénez', 'Wong', 'Villalobos',
-            'Uribe', 'Trejo', 'Suárez', 'Roldán', 'Pineda', 'Ochoa', 'Nieto', 'Márquez', 'Lozano', 'Kaufman'
-        ];
-
-        for ($i = 0; $i < 100; $i++) {
-            $nombre = $nombresDateros[$i % count($nombresDateros)];
-            $apellido = $apellidosDateros[intval($i / count($nombresDateros)) % count($apellidosDateros)];
-            $nombreCompleto = $nombre . ' ' . $apellido;
-            
-            $vendedorAsignado = $vendedores[$i]; // 1 datero por cada vendedor
-            $emailBase = strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú', 'ñ'], ['', 'a', 'e', 'i', 'o', 'u', 'n'], $nombre . '.' . $apellido));
-            $email = $emailBase . ($i + 1) . '@crm.com'; // Siempre incluir número único
-            
-            $datero = User::create([
-                'name' => $nombreCompleto,
-                'email' => $email,
-                'phone' => '997' . str_pad($i + 1, 6, '0', STR_PAD_LEFT),
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'is_active' => true,
-                'lider_id' => $vendedorAsignado->id,
-            ]);
-            $datero->setRole('datero');
-            $dateros[] = $datero;
+        foreach ($vendedores as $vendedor) {
+            $dateros[] = $this->createUser([
+                'name' => $faker->name(),
+                'email' => $faker->unique()->safeEmail(),
+                'dni' => $this->generateDni($faker),
+                'pin' => $faker->numerify('####'),
+                'phone' => $faker->numerify('9########'),
+                'ocupacion' => 'Datero',
+                'lider_id' => $vendedor->id,
+            ], 'datero');
         }
 
-        $this->command->info('Usuarios creados exitosamente con jerarquías:');
+        // Dateros independientes
+        for ($i = 0; $i < $independentDateros; $i++) {
+            $dateros[] = $this->createUser([
+                'name' => $faker->name(),
+                'email' => $faker->unique()->safeEmail(),
+                'dni' => $this->generateDni($faker),
+                'pin' => $faker->numerify('####'),
+                'phone' => $faker->numerify('9########'),
+                'ocupacion' => 'Datero independiente',
+                'lider_id' => null,
+            ], 'datero');
+        }
+
+        $this->command->info('Usuarios creados exitosamente con jerarquías (dataset grande):');
         $this->command->info('Admin: Abel Arana');
-        $this->command->info('Líderes: 5 líderes creados');
-        $this->command->info('Vendedores: 100 vendedores creados (20 por cada líder)');
-        $this->command->info('Dateros: 100 dateros creados (1 por cada vendedor)');
-        $this->command->info('Total usuarios: ' . (1 + 5 + 100 + 100) . ' usuarios');
+        $this->command->info("Líderes: {$leadersCount} líderes creados");
+        $this->command->info('Vendedores: ' . count($vendedores) . ' vendedores creados');
+        $this->command->info('Dateros: ' . count($dateros) . ' dateros creados');
+        $this->command->info('Total usuarios: ' . (1 + count($lideres) + count($vendedores) + count($dateros)) . ' usuarios');
+    }
+
+    private function createUser(array $data, string $role): User
+    {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'dni' => $data['dni'] ?? null,
+            'pin' => $data['pin'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'ocupacion' => $data['ocupacion'] ?? null,
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'is_active' => true,
+            'lider_id' => $data['lider_id'] ?? null,
+        ]);
+
+        $user->setRole($role);
+
+        return $user;
+    }
+
+    private function generateDni($faker): string
+    {
+        return (string) $faker->unique()->numberBetween(10000000, 99999999);
     }
 }

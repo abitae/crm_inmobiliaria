@@ -18,7 +18,7 @@ class ActivitySeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'abel.arana@hotmail.com')->first();
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->get();
 
         // Verificar que existan usuarios antes de continuar
         if (!$admin) {
@@ -190,7 +190,7 @@ class ActivitySeeder extends Seeder
         $statuses = ['programada', 'en_progreso', 'completada', 'cancelada'];
         $priorities = ['baja', 'media', 'alta', 'urgente'];
 
-        for ($i = 0; $i < 40; $i++) {
+        for ($i = 0; $i < 500; $i++) {
             $activityType = $activityTypes[array_rand($activityTypes)];
             $status = $statuses[array_rand($statuses)];
             $priority = $priorities[array_rand($priorities)];
@@ -277,7 +277,7 @@ class ActivitySeeder extends Seeder
         $priorities = ['baja', 'media', 'alta', 'urgente'];
 
         // Crear actividades de los últimos 7 días para el dashboard
-        for ($i = 0; $i < 30; $i++) {
+        for ($i = 0; $i < 200; $i++) {
             $activityType = $activityTypes[array_rand($activityTypes)];
             $status = $statuses[array_rand($statuses)];
             $priority = $priorities[array_rand($priorities)];

@@ -39,7 +39,7 @@ class ClientTaskController extends Controller
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al crear la tarea');
+            return $this->serverErrorResponse($e, 'Error al crear la tarea del cliente');
         }
     }
 }

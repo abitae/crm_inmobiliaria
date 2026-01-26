@@ -24,33 +24,33 @@ class SyncController extends Controller
 
         try {
             $sinceDate = Carbon::parse($since);
+
+            $user = Auth::user();
+            $isAdminOrLider = $user->isAdmin() || $user->isLider();
+
+            $clientsQuery = Client::where('updated_at', '>', $sinceDate);
+            if (!$isAdminOrLider) {
+                $clientsQuery->where(function ($q) use ($user) {
+                    $q->where('assigned_advisor_id', $user->id)
+                        ->orWhere('created_by', $user->id);
+                });
+            }
+
+            $reservationsQuery = Reservation::where('updated_at', '>', $sinceDate);
+            if (!$isAdminOrLider) {
+                $reservationsQuery->where('advisor_id', $user->id);
+            }
+
+            $projectsQuery = Project::where('updated_at', '>', $sinceDate);
+
+            return $this->successResponse([
+                'clients' => $clientsQuery->get(),
+                'reservations' => $reservationsQuery->get(),
+                'projects' => $projectsQuery->get(),
+                'sync_timestamp' => now()->toIso8601String(),
+            ], 'Sincronizacion completada');
         } catch (\Exception $e) {
-            return $this->errorResponse('Formato de fecha invalido', null, 422);
+            return $this->serverErrorResponse($e, 'Error al sincronizar datos');
         }
-
-        $user = Auth::user();
-        $isAdminOrLider = $user->isAdmin() || $user->isLider();
-
-        $clientsQuery = Client::where('updated_at', '>', $sinceDate);
-        if (!$isAdminOrLider) {
-            $clientsQuery->where(function ($q) use ($user) {
-                $q->where('assigned_advisor_id', $user->id)
-                    ->orWhere('created_by', $user->id);
-            });
-        }
-
-        $reservationsQuery = Reservation::where('updated_at', '>', $sinceDate);
-        if (!$isAdminOrLider) {
-            $reservationsQuery->where('advisor_id', $user->id);
-        }
-
-        $projectsQuery = Project::where('updated_at', '>', $sinceDate);
-
-        return $this->successResponse([
-            'clients' => $clientsQuery->get(),
-            'reservations' => $reservationsQuery->get(),
-            'projects' => $projectsQuery->get(),
-            'sync_timestamp' => now()->toIso8601String(),
-        ], 'Sincronizacion completada');
     }
 }

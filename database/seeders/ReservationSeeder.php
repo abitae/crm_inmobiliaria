@@ -17,7 +17,7 @@ class ReservationSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'abel.arana@hotmail.com')->first();
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->get();
 
         // Verificar que existan usuarios antes de continuar
         if (!$admin) {
@@ -174,7 +174,7 @@ class ReservationSeeder extends Seeder
         $lastReservation = Reservation::orderBy('id', 'desc')->first();
         $lastNumber = $lastReservation ? (int) substr($lastReservation->reservation_number, -6) : 5;
 
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 0; $i < 1000; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();

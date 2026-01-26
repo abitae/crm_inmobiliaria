@@ -17,7 +17,7 @@ class OpportunitySeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'abel.arana@hotmail.com')->first();
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->get();
 
         // Verificar que existan usuarios antes de continuar
         if (!$admin) {
@@ -186,7 +186,7 @@ class OpportunitySeeder extends Seeder
         $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
 
-        for ($i = 0; $i < 200; $i++) {
+        for ($i = 0; $i < 1000; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();
@@ -242,10 +242,10 @@ class OpportunitySeeder extends Seeder
         // Crear oportunidades específicas por etapa para mejor visualización
         foreach ($stages as $stage) {
             $stageCount = match($stage) {
-                'calificado' => 50,
-                'visita' => 40,
-                'cierre' => 30,
-                default => 10
+                'calificado' => 120,
+                'visita' => 100,
+                'cierre' => 80,
+                default => 20
             };
 
             for ($i = 0; $i < $stageCount; $i++) {
@@ -315,8 +315,8 @@ class OpportunitySeeder extends Seeder
             $query->where('name', 'lider');
         })->get();
 
-        // Crear 500 oportunidades adicionales distribuidas entre vendedores y líderes
-        for ($i = 0; $i < 500; $i++) {
+        // Crear oportunidades adicionales distribuidas entre vendedores y líderes
+        for ($i = 0; $i < 1500; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();

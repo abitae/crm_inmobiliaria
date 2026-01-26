@@ -32,7 +32,7 @@ class UnitSeeder extends Seeder
     private function createUnitsForProject(Project $project, User $admin): void
     {
         $unitTypes = ['lote', 'casa', 'departamento', 'oficina', 'local'];
-        $statuses = ['disponible', 'reservado', 'vendido', 'bloqueado', 'en_construccion'];
+        $statuses = ['disponible', 'reservado', 'vendido', 'transferido', 'cuotas'];
 
         // Determinar el tipo de unidad basado en el tipo de proyecto
         $unitType = match ($project->project_type) {
@@ -47,6 +47,7 @@ class UnitSeeder extends Seeder
         $totalUnits = $project->total_units;
         $soldUnits = $project->sold_units;
         $reservedUnits = $project->reserved_units;
+        $blockedUnits = $project->blocked_units;
         $availableUnits = $project->available_units;
 
         // Crear unidades vendidas
@@ -59,8 +60,13 @@ class UnitSeeder extends Seeder
             $this->createUnit($project, $unitType, 'reservado', $i, $admin);
         }
 
+        // Crear unidades transferidas (antes bloqueadas)
+        for ($i = $soldUnits + $reservedUnits + 1; $i <= $soldUnits + $reservedUnits + $blockedUnits; $i++) {
+            $this->createUnit($project, $unitType, 'transferido', $i, $admin);
+        }
+
         // Crear unidades disponibles
-        for ($i = $soldUnits + $reservedUnits + 1; $i <= $totalUnits; $i++) {
+        for ($i = $soldUnits + $reservedUnits + $blockedUnits + 1; $i <= $totalUnits; $i++) {
             $this->createUnit($project, $unitType, 'disponible', $i, $admin);
         }
     }
@@ -71,11 +77,14 @@ class UnitSeeder extends Seeder
         $area = $this->getAreaByType($unitType);
         $totalPrice = $basePrice * $area;
         $finalPrice = $totalPrice;
+        $discountPercentage = 0;
+        $discountAmount = 0;
 
         // Aplicar descuento aleatorio (0-15%)
         if (rand(1, 100) <= 30) { // 30% de probabilidad de descuento
             $discountPercentage = rand(5, 15);
-            $finalPrice = $totalPrice * (1 - $discountPercentage / 100);
+            $discountAmount = $totalPrice * ($discountPercentage / 100);
+            $finalPrice = $totalPrice - $discountAmount;
         }
 
         $unitData = [
@@ -87,6 +96,8 @@ class UnitSeeder extends Seeder
             'area' => $area,
             'base_price' => $basePrice,
             'total_price' => $totalPrice,
+            'discount_percentage' => $discountPercentage,
+            'discount_amount' => $discountAmount,
             'final_price' => $finalPrice,
             'created_by' => $admin->id,
             'updated_by' => $admin->id,

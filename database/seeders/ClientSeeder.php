@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class ClientSeeder extends Seeder
 {
@@ -13,7 +14,7 @@ class ClientSeeder extends Seeder
      */
     public function run(): void
     {
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->get();
         $admin = User::where('email', 'abel.arana@hotmail.com')->first();
 
         // Verificar que existan usuarios antes de continuar
@@ -25,9 +26,11 @@ class ClientSeeder extends Seeder
             throw new \Exception('No se encontró el usuario administrador. Asegúrate de ejecutar UserSeeder primero.');
         }
 
+        $faker = Faker::create('es_PE');
         $clientTypes = ['inversor', 'comprador', 'empresa', 'constructor'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $statuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
+        $createTypes = ['datero', 'propio'];
         
         // Generar fechas de nacimiento aleatorias entre 18 y 65 años
         $birthDates = [
@@ -154,59 +157,91 @@ class ClientSeeder extends Seeder
             Client::create([
                 ...$clientData,
                 'assigned_advisor_id' => $advisor->id,
-                'created_by' => $admin->id,
-                'updated_by' => $admin->id,
+                'create_type' => $advisor->getRoleName() === 'datero' ? 'datero' : 'propio',
+                'created_by' => $advisor->id,
+                'updated_by' => $advisor->id,
             ]);
         }
 
-        // Crear clientes adicionales para cada asesor según jerarquía
-        $this->createClientsForHierarchy($advisors, $admin);
+        // Crear clientes adicionales (dataset grande)
+        $this->createClientsForHierarchy($advisors, $admin, $faker);
+        $this->createClientsForAdmin($admin, $faker);
 
         $this->command->info('Clientes creados exitosamente');
     }
 
-    private function createClientsForHierarchy($advisors, $admin): void
+    private function createClientsForHierarchy($advisors, $admin, $faker): void
     {
         $clientTypes = ['inversor', 'comprador', 'empresa', 'constructor'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $statuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
         
-        // Nombres adicionales para generar más clientes
-        $firstNames = ['Carlos', 'Ana', 'Luis', 'Sofia', 'Miguel', 'Elena', 'Diego', 'Carmen', 'Roberto', 'Laura', 'Javier', 'Patricia', 'Fernando', 'Lucia', 'Antonio', 'Isabel', 'Rafael', 'Monica', 'Sergio', 'Adriana'];
-        $lastNames = ['Garcia', 'Rodriguez', 'Martinez', 'Lopez', 'Gonzalez', 'Perez', 'Sanchez', 'Ramirez', 'Torres', 'Flores', 'Rivera', 'Gomez', 'Diaz', 'Cruz', 'Morales', 'Ortiz', 'Gutierrez', 'Chavez', 'Ramos', 'Herrera'];
-
         foreach ($advisors as $advisor) {
             // Determinar cuántos clientes crear según el rol
             $clientCount = match($advisor->getRoleName()) {
-                'admin' => 50, // Admin ve todos, así que más clientes
-                'lider' => 30,  // Líder ve su equipo
-                'vendedor' => 20, // Vendedor ve sus clientes
-                'datero' => 10,   // Datero ve pocos clientes
-                default => 5
+                'admin' => 150,
+                'lider' => 80,
+                'vendedor' => 40,
+                'datero' => 20,
+                default => 10
             };
 
             for ($i = 0; $i < $clientCount; $i++) {
-                $firstName = $firstNames[array_rand($firstNames)];
-                $lastName1 = $lastNames[array_rand($lastNames)];
-                $lastName2 = $lastNames[array_rand($lastNames)];
-                
+                $documentType = $faker->randomElement(['DNI', 'RUC', 'CE', 'PASAPORTE']);
+                $documentNumber = $documentType === 'RUC'
+                    ? $faker->numerify('20#########')
+                    : $faker->numerify('########');
+
                 Client::create([
-                    'name' => "{$firstName} {$lastName1} {$lastName2}",
-                    'phone' => '+51 999 ' . rand(100, 999) . ' ' . rand(100, 999),
-                    'document_type' => rand(0, 1) ? 'DNI' : 'RUC',
-                    'document_number' => rand(0, 1) ? rand(10000000, 99999999) : '20' . rand(10000000, 99999999),
-                    'address' => 'Av. ' . ['Arequipa', 'Javier Prado', 'Benavides', 'Angamos', 'La Marina', 'Primavera'][array_rand(['Arequipa', 'Javier Prado', 'Benavides', 'Angamos', 'La Marina', 'Primavera'])] . ' ' . rand(1000, 9999),
-                    'birth_date' => now()->subYears(rand(18, 65))->format('Y-m-d'),
+                    'name' => $faker->name(),
+                    'phone' => $faker->numerify('+51 9########'),
+                    'document_type' => $documentType,
+                    'document_number' => $documentNumber,
+                    'address' => $faker->streetAddress(),
+                    'birth_date' => $faker->dateTimeBetween('-65 years', '-18 years')->format('Y-m-d'),
                     'client_type' => $clientTypes[array_rand($clientTypes)],
                     'source' => $sources[array_rand($sources)],
                     'status' => $statuses[array_rand($statuses)],
                     'score' => rand(40, 100),
                     'notes' => "Cliente generado para {$advisor->name} - {$advisor->getRoleName()}",
                     'assigned_advisor_id' => $advisor->id,
-                    'created_by' => $admin->id,
-                    'updated_by' => $admin->id,
+                    'create_type' => $advisor->getRoleName() === 'datero' ? 'datero' : 'propio',
+                    'created_by' => $advisor->id,
+                    'updated_by' => $advisor->id,
                 ]);
             }
+        }
+    }
+
+    private function createClientsForAdmin($admin, $faker): void
+    {
+        $clientTypes = ['inversor', 'comprador', 'empresa', 'constructor'];
+        $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
+        $statuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
+
+        for ($i = 0; $i < 200; $i++) {
+            $documentType = $faker->randomElement(['DNI', 'RUC', 'CE', 'PASAPORTE']);
+            $documentNumber = $documentType === 'RUC'
+                ? $faker->numerify('20#########')
+                : $faker->numerify('########');
+
+            Client::create([
+                'name' => $faker->name(),
+                'phone' => $faker->numerify('+51 9########'),
+                'document_type' => $documentType,
+                'document_number' => $documentNumber,
+                'address' => $faker->streetAddress(),
+                'birth_date' => $faker->dateTimeBetween('-65 years', '-18 years')->format('Y-m-d'),
+                'client_type' => $clientTypes[array_rand($clientTypes)],
+                'source' => $sources[array_rand($sources)],
+                'status' => $statuses[array_rand($statuses)],
+                'score' => rand(40, 100),
+                'notes' => 'Cliente generado para pruebas (admin).',
+                'assigned_advisor_id' => null,
+                'create_type' => 'propio',
+                'created_by' => $admin->id,
+                'updated_by' => $admin->id,
+            ]);
         }
     }
 }

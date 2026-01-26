@@ -172,7 +172,7 @@ class ReservationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al obtener las reservas');
+            return $this->serverErrorResponse($e, 'Error al listar reservas del cazador');
         }
     }
 
@@ -228,7 +228,7 @@ class ReservationController extends Controller
             ], 'Reserva obtenida exitosamente');
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al obtener la reserva');
+            return $this->serverErrorResponse($e, 'Error al obtener la reserva solicitada');
         }
     }
 
@@ -318,7 +318,7 @@ class ReservationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al crear la reserva');
+            return $this->serverErrorResponse($e, 'Error al crear la reserva en Cazador');
         }
     }
 
@@ -490,7 +490,7 @@ class ReservationController extends Controller
             );
 
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al actualizar la reserva');
+            return $this->serverErrorResponse($e, 'Error al actualizar la reserva en Cazador');
         }
     }
 
@@ -588,7 +588,7 @@ class ReservationController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al confirmar la reserva');
+            return $this->serverErrorResponse($e, 'Error al confirmar la reserva con comprobante');
         }
     }
 

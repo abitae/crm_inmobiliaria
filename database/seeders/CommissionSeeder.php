@@ -17,7 +17,7 @@ class CommissionSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'abel.arana@hotmail.com')->first();
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->get();
 
         // Verificar que existan usuarios antes de continuar
         if (!$admin) {
@@ -170,7 +170,7 @@ class CommissionSeeder extends Seeder
         $statuses = ['pendiente', 'aprobada', 'pagada', 'cancelada'];
         $paymentMethods = ['transferencia', 'efectivo', 'cheque', 'depósito'];
 
-        for ($i = 0; $i < 30; $i++) {
+        for ($i = 0; $i < 500; $i++) {
             $advisor = $advisors->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();
@@ -222,9 +222,9 @@ class CommissionSeeder extends Seeder
         $statuses = ['pendiente', 'aprobada', 'pagada'];
         $paymentMethods = ['transferencia', 'efectivo', 'depósito'];
 
-        // Crear comisiones para cada datero (entre 1 y 3 comisiones por datero)
+        // Crear comisiones para cada datero (entre 1 y 5 comisiones por datero)
         foreach ($dateros as $datero) {
-            $numCommissions = rand(1, 3);
+            $numCommissions = rand(1, 5);
             
             for ($i = 0; $i < $numCommissions; $i++) {
                 $project = $projects->random();

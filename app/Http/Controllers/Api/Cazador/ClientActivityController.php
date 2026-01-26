@@ -57,12 +57,16 @@ class ClientActivityController extends Controller
             });
         }
 
-        $activities = $query->orderBy('start_date', 'desc')->paginate($perPage);
+        try {
+            $activities = $query->orderBy('start_date', 'desc')->paginate($perPage);
 
-        return $this->successResponse([
-            'activities' => $activities->items(),
-            'pagination' => $this->formatPagination($activities),
-        ], 'Actividades obtenidas exitosamente');
+            return $this->successResponse([
+                'activities' => $activities->items(),
+                'pagination' => $this->formatPagination($activities),
+            ], 'Actividades obtenidas exitosamente');
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse($e, 'Error al listar actividades del cliente');
+        }
     }
 
     public function store(Client $client, Request $request)
@@ -83,7 +87,7 @@ class ClientActivityController extends Controller
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            return $this->serverErrorResponse($e, 'Error al crear la actividad');
+            return $this->serverErrorResponse($e, 'Error al crear la actividad del cliente');
         }
     }
 
@@ -109,21 +113,25 @@ class ClientActivityController extends Controller
             return $this->validationErrorResponse($validator->errors());
         }
 
-        $updateData = $request->only([
-            'status',
-            'result',
-            'notes',
-            'start_date',
-            'assigned_to',
-        ]);
-        $updateData['updated_by'] = Auth::id();
+        try {
+            $updateData = $request->only([
+                'status',
+                'result',
+                'notes',
+                'start_date',
+                'assigned_to',
+            ]);
+            $updateData['updated_by'] = Auth::id();
 
-        $activity->update($updateData);
-        $activity->refresh();
+            $activity->update($updateData);
+            $activity->refresh();
 
-        return $this->successResponse([
-            'activity' => $activity,
-        ], 'Actividad actualizada correctamente');
+            return $this->successResponse([
+                'activity' => $activity,
+            ], 'Actividad actualizada correctamente');
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse($e, 'Error al actualizar la actividad del cliente');
+        }
     }
 
     private function formatPagination($paginator): array

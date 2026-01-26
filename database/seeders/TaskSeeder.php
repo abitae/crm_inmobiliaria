@@ -18,7 +18,7 @@ class TaskSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'abel.arana@hotmail.com')->first();
-        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->take(5)->get();
+        $advisors = User::where('email', '!=', 'abel.arana@hotmail.com')->get();
 
         // Verificar que existan usuarios antes de continuar
         if (!$admin) {
@@ -167,11 +167,11 @@ class TaskSeeder extends Seeder
         foreach ($advisors as $advisor) {
             // Determinar cuántas tareas crear según el rol
             $taskCount = match($advisor->getRoleName()) {
-                'admin' => 20, // Admin tiene más tareas
-                'lider' => 12, // Líder tiene tareas de equipo
-                'vendedor' => 8, // Vendedor tiene tareas de ventas
-                'datero' => 5,  // Datero tiene pocas tareas
-                default => 3
+                'admin' => 50,
+                'lider' => 30,
+                'vendedor' => 15,
+                'datero' => 8,
+                default => 5
             };
 
             for ($i = 0; $i < $taskCount; $i++) {

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 
 class ProjectSeeder extends Seeder
 {
@@ -20,6 +21,7 @@ class ProjectSeeder extends Seeder
             throw new \Exception('No se encontró el usuario administrador. Asegúrate de ejecutar UserSeeder primero.');
         }
 
+        $faker = Faker::create('es_PE');
         $projects = [
             [
                 'name' => 'Lotes Miraflores Park',
@@ -599,12 +601,69 @@ class ProjectSeeder extends Seeder
             ]);
         }
 
-        // Crear proyectos adicionales usando factory (comentado porque no existe ProjectFactory)
-        // Project::factory(8)->create([
-        //     'created_by' => $admin->id,
-        //     'updated_by' => $admin->id,
-        // ]);
+        // Crear proyectos adicionales (dataset grande)
+        $this->createExtraProjects($admin, $faker);
 
         $this->command->info('Proyectos creados exitosamente');
+    }
+
+    private function createExtraProjects(User $admin, $faker): void
+    {
+        $districts = ['Miraflores', 'San Isidro', 'Barranco', 'Surco', 'Chorrillos', 'La Molina', 'San Borja', 'Pueblo Libre', 'Magdalena', 'Jesús María'];
+        $stages = ['preventa', 'lanzamiento', 'venta_activa', 'cierre'];
+        $legalStatuses = ['con_titulo', 'en_tramite', 'habilitado'];
+        $statuses = ['activo', 'inactivo', 'suspendido', 'finalizado'];
+        $loteTypes = ['normal', 'express'];
+        $estadoLegal = ['Derecho Posesorio', 'Compra y Venta', 'Juez de Paz', 'Titulo de propiedad'];
+        $tipoProyecto = ['propio', 'tercero'];
+        $tipoFinanciamiento = ['contado', 'financiado'];
+        $tipoCuenta = ['cuenta corriente', 'cuenta vista', 'cuenta ahorro'];
+
+        $extraProjects = 20;
+        for ($i = 0; $i < $extraProjects; $i++) {
+            $totalUnits = rand(80, 250);
+            $soldUnits = rand(0, (int) ($totalUnits * 0.5));
+            $reservedUnits = rand(0, (int) ($totalUnits * 0.2));
+            $blockedUnits = rand(0, (int) ($totalUnits * 0.05));
+            $availableUnits = max(0, $totalUnits - $soldUnits - $reservedUnits - $blockedUnits);
+
+            Project::create([
+                'name' => 'Lotes ' . $faker->unique()->company() . ' ' . strtoupper($faker->lexify('??')),
+                'description' => $faker->paragraphs(2, true),
+                'project_type' => 'lotes',
+                'is_published' => $faker->boolean(70),
+                'lote_type' => $faker->randomElement($loteTypes),
+                'stage' => $faker->randomElement($stages),
+                'legal_status' => $faker->randomElement($legalStatuses),
+                'address' => $faker->streetAddress(),
+                'district' => $faker->randomElement($districts),
+                'province' => 'Lima',
+                'region' => 'Lima Metropolitana',
+                'country' => 'Perú',
+                'ubicacion' => 'https://maps.google.com/?q=' . $faker->latitude() . ',' . $faker->longitude(),
+                'total_units' => $totalUnits,
+                'available_units' => $availableUnits,
+                'reserved_units' => $reservedUnits,
+                'sold_units' => $soldUnits,
+                'blocked_units' => $blockedUnits,
+                'start_date' => $faker->dateTimeBetween('-2 years', '+3 months'),
+                'end_date' => $faker->dateTimeBetween('+6 months', '+3 years'),
+                'delivery_date' => $faker->dateTimeBetween('+1 year', '+4 years'),
+                'status' => $faker->randomElement($statuses),
+                'path_image_portada' => null,
+                'path_video_portada' => null,
+                'path_images' => null,
+                'path_videos' => null,
+                'path_documents' => null,
+                'estado_legal' => $faker->randomElement($estadoLegal),
+                'tipo_proyecto' => $faker->randomElement($tipoProyecto),
+                'tipo_financiamiento' => $faker->randomElement($tipoFinanciamiento),
+                'banco' => $faker->randomElement(['BCP', 'BBVA', 'Interbank', 'Scotiabank', null]),
+                'tipo_cuenta' => $faker->randomElement($tipoCuenta),
+                'cuenta_bancaria' => $faker->numerify('############'),
+                'created_by' => $admin->id,
+                'updated_by' => $admin->id,
+            ]);
+        }
     }
 }
