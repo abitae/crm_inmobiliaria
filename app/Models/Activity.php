@@ -13,26 +13,26 @@ class Activity extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title',
-        'description',
+        'title', // título de la actividad
+        'description', // descripción de la actividad
         'activity_type', // llamada, reunion, visita, seguimiento, tarea
         'status', // programada, en_progreso, completada, cancelada
         'priority', // baja, media, alta, urgente
-        'start_date',
+        'start_date', // fecha de inicio de la actividad
         'duration', // duración en minutos
-        'location',
+        'location', // ubicación de la actividad
         'client_id', // ID del cliente
-        'project_id',
-        'unit_id',
+        'project_id', // ID del proyecto
+        'unit_id', // ID de la unidad
         'opportunity_id', // ID de la oportunidad
-        'advisor_id',
+        'advisor_id', // ID del advisor
         'assigned_to', // ID del usuario asignado
         'reminder_before', // minutos antes para recordatorio
         'reminder_sent', // si el recordatorio se ha enviado
-        'notes',
+        'notes', // notas de la actividad
         'result', // resultado de la actividad
-        'created_by',
-        'updated_by',
+        'created_by', // creado por el usuario
+        'updated_by', // actualizado por el usuario
     ];
 
     protected $casts = [

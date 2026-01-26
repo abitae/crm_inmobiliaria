@@ -84,8 +84,15 @@ Route::prefix('cazador')->group(function () {
         Route::match(['put', 'patch'], '/{id}', [CazadorClientController::class, 'update'])
             ->name('api.cazador.clients.update');
 
+        Route::get('/{client}/activities', [ClientActivityController::class, 'index'])
+            ->middleware('cache.headers:public;max_age=60')
+            ->name('api.cazador.clients.activities.index');
+
         Route::post('/{client}/activities', [ClientActivityController::class, 'store'])
             ->name('api.cazador.clients.activities.store');
+
+        Route::match(['put', 'patch'], '/{client}/activities/{activity}', [ClientActivityController::class, 'update'])
+            ->name('api.cazador.clients.activities.update');
 
         Route::post('/{client}/tasks', [ClientTaskController::class, 'store'])
             ->name('api.cazador.clients.tasks.store');
