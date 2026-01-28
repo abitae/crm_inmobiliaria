@@ -589,7 +589,7 @@ Respuesta 422 (duplicado de telefono o DNI):
 ```json
 {
   "success": false,
-  "message": "Error de validación",
+  "message": "Telefono registrado por \"Juan Perez\"",
   "errors": {
     "errors": {
       "phone": ["El teléfono ya está en uso."]
@@ -671,6 +671,26 @@ Body (JSON):
   "source": "redes_sociales",
   "status": "nuevo",
   "score": 50
+}
+```
+
+Respuesta 200 (duplicado):
+```json
+{
+  "success": true,
+  "message": "Telefono registrado por \"Juan Perez\"",
+  "data": {
+    "valid": false,
+    "errors": {
+      "phone": ["El teléfono ya está en uso."]
+    },
+    "duplicate_owner": {
+      "name": "Juan Perez",
+      "user_id": 10,
+      "client_id": 5,
+      "field": "phone"
+    }
+  }
 }
 ```
 

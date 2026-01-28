@@ -230,7 +230,7 @@ class ClientController extends Controller
                 $formData['document_number'] ?? null
             );
             if ($duplicateOwner) {
-                return $this->errorResponse('Error de validación', [
+                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
                     'errors' => $e->errors(),
                     'duplicate_owner' => $duplicateOwner,
                 ], 422);
@@ -310,7 +310,7 @@ class ClientController extends Controller
                 $formData['document_number'] ?? null
             );
             if ($duplicateOwner) {
-                return $this->errorResponse('Error de validación', [
+                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
                     'errors' => $e->errors(),
                     'duplicate_owner' => $duplicateOwner,
                 ], 422);
@@ -390,6 +390,7 @@ class ClientController extends Controller
                             'index' => $index,
                             'errors' => $e->errors(),
                             'duplicate_owner' => $duplicateOwner,
+                            'message' => $duplicateOwner ? $this->buildDuplicateMessage($duplicateOwner) : null,
                         ];
                     }
                 } else {
@@ -405,6 +406,7 @@ class ClientController extends Controller
                             'index' => $index,
                             'errors' => $e->errors(),
                             'duplicate_owner' => $duplicateOwner,
+                            'message' => $duplicateOwner ? $this->buildDuplicateMessage($duplicateOwner) : null,
                         ];
                     }
                 }
@@ -584,5 +586,13 @@ class ClientController extends Controller
             'client_id' => $client->id,
             'field' => $field,
         ];
+    }
+
+    private function buildDuplicateMessage(array $duplicateOwner): string
+    {
+        $label = ($duplicateOwner['field'] ?? '') === 'phone' ? 'Telefono' : 'DNI';
+        $name = $duplicateOwner['name'] ?? 'Desconocido';
+
+        return $label . ' registrado por "' . $name . '"';
     }
 }

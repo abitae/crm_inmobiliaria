@@ -46,7 +46,7 @@ class ValidationController extends Controller
                 'valid' => false,
                 'errors' => $validator->errors(),
                 'duplicate_owner' => $duplicateOwner,
-            ], 'Validacion de cliente fallida');
+            ], $duplicateOwner ? $this->buildDuplicateMessage($duplicateOwner) : 'Validacion de cliente fallida');
         }
 
         return $this->successResponse(['valid' => true], 'Validacion de cliente exitosa');
@@ -141,5 +141,13 @@ class ValidationController extends Controller
             'client_id' => $client->id,
             'field' => $field,
         ];
+    }
+
+    private function buildDuplicateMessage(array $duplicateOwner): string
+    {
+        $label = ($duplicateOwner['field'] ?? '') === 'phone' ? 'Telefono' : 'DNI';
+        $name = $duplicateOwner['name'] ?? 'Desconocido';
+
+        return $label . ' registrado por "' . $name . '"';
     }
 }
