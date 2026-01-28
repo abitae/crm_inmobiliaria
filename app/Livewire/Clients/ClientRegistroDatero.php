@@ -81,49 +81,23 @@ class ClientRegistroDatero extends Component
 
     protected $clientService;
 
-    protected $rules = [
-        'name' => 'required|string|max:255',
-        'phone' => 'required|string|size:9',
-        'document_type' => 'required|in:DNI',
-        'document_number' => 'required|string|size:8',
-        'address' => 'nullable|string|max:500',
-        'birth_date' => 'required|date',
-        'ocupacion' => 'nullable|string|max:255',
-        'client_type' => 'required|in:inversor,comprador,empresa,constructor',
-        'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
-        'create_type' => 'nullable|in:datero,propio',
-        'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
-        'score' => 'required|integer|min:0|max:100',
-        'notes' => 'nullable|string',
-    ];
+    protected function rules(): array
+    {
+        $rules = $this->clientService->getValidationRules();
+        $rules['document_type'] = 'required|in:DNI';
+        $rules['document_number'] .= '|size:8';
+        $rules['ocupacion'] = 'nullable|string|max:255';
 
-    // Mensajes de validación personalizados
-    protected $messages = [
-        'name.required' => 'El nombre es obligatorio.',
-        'name.max' => 'El nombre no debe exceder los 255 caracteres.',
-        'phone.required' => 'El teléfono es obligatorio.',
-        'phone.size' => 'El teléfono debe tener exactamente 9 dígitos.',
-        'document_type.required' => 'El tipo de documento es obligatorio.',
-        'document_type.in' => 'El tipo de documento seleccionado no es válido.',
-        'document_number.required' => 'El número de documento es obligatorio.',
-        'document_number.size' => 'El número de documento debe tener exactamente 8 dígitos.',
-        'address.max' => 'La dirección no debe exceder los 500 caracteres.',
-        'birth_date.required' => 'La fecha de nacimiento es obligatoria.',
-        'birth_date.date' => 'La fecha de nacimiento no es válida.',
-        'client_type.required' => 'El tipo de cliente es obligatorio.',
-        'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
-        'source.required' => 'La fuente es obligatoria.',
-        'source.in' => 'La fuente seleccionada no es válida.',
-        'create_type.nullable' => 'El tipo de creación es opcional.',
-        'create_type.in' => 'El tipo de creación seleccionado no es válido.',
-        'status.required' => 'El estado es obligatorio.',
-        'status.in' => 'El estado seleccionado no es válido.',
-        'score.required' => 'El puntaje es obligatorio.',
-        'score.integer' => 'El puntaje debe ser un número entero.',
-        'score.min' => 'El puntaje no puede ser menor a 0.',
-        'score.max' => 'El puntaje no puede ser mayor a 100.',
-        'notes.string' => 'Las notas deben ser texto.',
-    ];
+        return $rules;
+    }
+
+    protected function messages(): array
+    {
+        $messages = $this->clientService->getValidationMessages();
+        $messages['document_number.size'] = 'El número de documento debe tener exactamente 8 dígitos.';
+
+        return $messages;
+    }
     public function boot(ClientService $clientService)
     {
         $this->clientService = $clientService;

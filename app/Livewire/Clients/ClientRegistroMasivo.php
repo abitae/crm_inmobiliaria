@@ -32,38 +32,20 @@ class ClientRegistroMasivo extends Component
     // Reglas de validación específicas para este componente
     protected function rules()
     {
-        return [
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|size:9',
-            'document_type' => 'required|in:DNI',
-            'document_number' => 'required|string|size:8',
-            'address' => 'nullable|string|max:500',
-            'birth_date' => 'required|date',
-            'client_type' => 'required|in:inversor,comprador,empresa,constructor',
-            'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
-            'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
-            'score' => 'required|integer|min:0|max:100',
-            'notes' => 'nullable|string',
-        ];
+        $rules = $this->clientService->getValidationRules();
+        $rules['document_type'] = 'required|in:DNI';
+        $rules['document_number'] .= '|size:8';
+
+        return $rules;
     }
 
     // Mensajes de validación específicos para este componente
     protected function messages()
     {
-        return [
-            'name.required' => 'El nombre es requerido.',
-            'phone.required' => 'El teléfono es requerido.',
-            'document_type.required' => 'El tipo de documento es requerido.',
-            'document_type.in' => 'El tipo de documento seleccionado no es válido.',
-            'document_number.required' => 'El número de documento es requerido.',
-            'document_number.max' => 'El número de documento no puede exceder 8 caracteres.',
-            'birth_date.required' => 'La fecha de nacimiento es requerida.',
-            'client_type.required' => 'El tipo de cliente es requerido.',
-            'source.required' => 'La fuente es requerida.',
-            'status.required' => 'El estado es requerido.',
-            'score.required' => 'La puntuación es requerida.',
-            'notes.required' => 'Las notas son requeridas.',
-        ];
+        $messages = $this->clientService->getValidationMessages();
+        $messages['document_number.size'] = 'El número de documento debe tener exactamente 8 dígitos.';
+
+        return $messages;
     }
 
     /**

@@ -69,20 +69,12 @@ trait ClientFormTrait
      */
     protected function getValidationRules(): array
     {
-        return [
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|size:9',
-            'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
-            'document_number' => 'required|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'birth_date' => 'required|date',
-            'client_type' => 'required|in:inversor,comprador,empresa,constructor',
-            'source' => 'required|in:redes_sociales,ferias,referidos,formulario_web,publicidad',
-            'status' => 'required|in:nuevo,contacto_inicial,en_seguimiento,cierre,perdido',
-            'score' => 'required|integer|min:0|max:100',
-            'notes' => 'nullable|string',
-            'assigned_advisor_id' => 'nullable|exists:users,id'
-        ];
+        $clientId = null;
+        if (property_exists($this, 'editingClient') && $this->editingClient) {
+            $clientId = $this->editingClient->id;
+        }
+
+        return app(ClientService::class)->getValidationRules($clientId);
     }
 
     /**
@@ -90,31 +82,7 @@ trait ClientFormTrait
      */
     protected function getValidationMessages(): array
     {
-        return [
-            'name.required' => 'El nombre es obligatorio.',
-            'name.max' => 'El nombre no debe exceder los 255 caracteres.',
-            'phone.required' => 'El teléfono es obligatorio.',
-            'phone.size' => 'El teléfono debe tener exactamente 9 dígitos.',
-            'document_type.required' => 'El tipo de documento es obligatorio.',
-            'document_type.in' => 'El tipo de documento seleccionado no es válido.',
-            'document_number.required' => 'El número de documento es obligatorio.',
-            'document_number.max' => 'El número de documento no puede exceder 20 caracteres.',
-            'address.max' => 'La dirección no debe exceder los 500 caracteres.',
-            'birth_date.required' => 'La fecha de nacimiento es obligatoria.',
-            'birth_date.date' => 'La fecha de nacimiento no es válida.',
-            'client_type.required' => 'El tipo de cliente es obligatorio.',
-            'client_type.in' => 'El tipo de cliente seleccionado no es válido.',
-            'source.required' => 'La fuente es obligatoria.',
-            'source.in' => 'La fuente seleccionada no es válida.',
-            'status.required' => 'El estado es obligatorio.',
-            'status.in' => 'El estado seleccionado no es válido.',
-            'score.required' => 'El puntaje es obligatorio.',
-            'score.integer' => 'El puntaje debe ser un número entero.',
-            'score.min' => 'El puntaje no puede ser menor a 0.',
-            'score.max' => 'El puntaje no puede ser mayor a 100.',
-            'notes.string' => 'Las notas deben ser texto.',
-            'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
-        ];
+        return app(ClientService::class)->getValidationMessages();
     }
 
     /**

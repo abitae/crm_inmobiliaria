@@ -8,7 +8,6 @@ use App\Models\Client;
 use App\Services\ClientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -211,18 +210,7 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         try {
-            // Obtener reglas de validación
-            $rules = $this->clientService->getValidationRules();
-            $messages = $this->clientService->getValidationMessages();
-
-            // Validar datos
-            $validator = Validator::make($request->all(), $rules, $messages);
-
-            if ($validator->fails()) {
-                return $this->validationErrorResponse($validator->errors());
-            }
-
-            // Preparar y sanitizar datos del formulario
+            // Preparar datos del formulario
             $formData = $request->only([
                 'name',
                 'phone',
@@ -238,27 +226,6 @@ class ClientController extends Controller
                 'notes',
                 'assigned_advisor_id'
             ]);
-            $formData['create_type'] = 'datero';
-            // Sanitizar campos de texto
-            if (isset($formData['name'])) {
-                $formData['name'] = trim($formData['name']);
-            }
-            if (isset($formData['phone'])) {
-                $formData['phone'] = preg_replace('/[^0-9+\-() ]/', '', $formData['phone']);
-            }
-            if (isset($formData['document_number'])) {
-                $formData['document_number'] = preg_replace('/[^0-9]/', '', $formData['document_number']);
-            }
-            if (isset($formData['address'])) {
-                $formData['address'] = trim($formData['address']);
-            }
-            if (isset($formData['notes'])) {
-                $formData['notes'] = trim($formData['notes']);
-            }
-
-            // Establecer valores por defecto si no se proporcionan
-            $formData['status'] = $formData['status'] ?? 'nuevo';
-            $formData['score'] = isset($formData['score']) ? max(0, min(100, (int) $formData['score'])) : 0;
 
             // El servicio se encargará de establecer assigned_advisor_id, created_by y updated_by
             // basándose en el lider_id del datero autenticado
@@ -307,17 +274,6 @@ class ClientController extends Controller
             // Verificar propiedad del cliente
             if ($forbidden = $this->ensureClientOwnership($client)) {
                 return $forbidden;
-            }
-
-            // Obtener reglas de validación
-            $rules = $this->clientService->getValidationRules($id);
-            $messages = $this->clientService->getValidationMessages();
-
-            // Validar datos
-            $validator = Validator::make($request->all(), $rules, $messages);
-
-            if ($validator->fails()) {
-                return $this->validationErrorResponse($validator->errors());
             }
 
             // Preparar datos del formulario

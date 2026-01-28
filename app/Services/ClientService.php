@@ -184,6 +184,8 @@ class ClientService
 
             Log::info("Cliente creado exitosamente ID: {$client->id}");
             return $client;
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error('Error al crear cliente: ' . $e->getMessage());
             throw new \Exception('Error al crear el cliente: ' . $e->getMessage());
@@ -216,6 +218,8 @@ class ClientService
             }
 
             return false;
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (\Exception $e) {
             Log::error("Error al actualizar cliente ID {$id}: " . $e->getMessage());
             throw new \Exception('Error al actualizar el cliente: ' . $e->getMessage());
@@ -287,6 +291,12 @@ class ClientService
      */
     public function clientExists(string $documentType, string $documentNumber): ?Client
     {
+        $documentType = strtoupper(trim($documentType));
+        $documentNumber = trim($documentNumber);
+        if (in_array($documentType, ['DNI', 'RUC'], true)) {
+            $documentNumber = preg_replace('/[^0-9]/', '', $documentNumber);
+        }
+
         return Client::with('assignedAdvisor')
             ->where('document_number', $documentNumber)
             ->where('document_type', $documentType)
@@ -421,18 +431,19 @@ class ClientService
      */
     public function prepareFormData(array $formData, ?int $createdById = null, ?Client $editingClient = null): array
     {
+        $formData = $this->sanitizeFormData($formData);
         $data = [
             'name' => $formData['name'],
             'phone' => $formData['phone'],
             'document_type' => $formData['document_type'],
             'document_number' => $formData['document_number'],
-            'address' => $formData['address'],
+            'address' => $formData['address'] ?? null,
             'birth_date' => $formData['birth_date'] ?? null,
             'client_type' => $formData['client_type'],
             'source' => $formData['source'],
-            'status' => $formData['status'],
-            'score' => $formData['score'],
-            'notes' => $formData['notes'],
+            'status' => $formData['status'] ?? null,
+            'score' => $formData['score'] ?? null,
+            'notes' => $formData['notes'] ?? null,
             'assigned_advisor_id' => $formData['assigned_advisor_id'] ?? null,
         ];
 
@@ -483,9 +494,49 @@ class ClientService
                     $data['create_type'] = $formData['create_type'];
                 }
             }
+
+            if (!isset($formData['status'])) {
+                $data['status'] = 'nuevo';
+            }
+            if (!isset($formData['score'])) {
+                $data['score'] = 0;
+            }
         } else {
             // Al actualizar un cliente existente
             $data['updated_by'] = $formData['updated_by'] ?? Auth::id();
+        }
+
+        return $data;
+    }
+
+    private function sanitizeFormData(array $formData): array
+    {
+        $data = $formData;
+
+        if (isset($data['name'])) {
+            $data['name'] = trim($data['name']);
+        }
+        if (isset($data['phone'])) {
+            $data['phone'] = preg_replace('/[^0-9]/', '', (string) $data['phone']);
+        }
+        if (isset($data['document_type'])) {
+            $data['document_type'] = strtoupper(trim((string) $data['document_type']));
+        }
+        if (isset($data['document_number'])) {
+            $documentNumber = trim((string) $data['document_number']);
+            $documentType = $data['document_type'] ?? null;
+            if (in_array($documentType, ['DNI', 'RUC'], true)) {
+                $documentNumber = preg_replace('/[^0-9]/', '', $documentNumber);
+            } else {
+                $documentNumber = strtoupper(preg_replace('/\s+/', '', $documentNumber));
+            }
+            $data['document_number'] = $documentNumber;
+        }
+        if (isset($data['address'])) {
+            $data['address'] = trim((string) $data['address']);
+        }
+        if (isset($data['notes'])) {
+            $data['notes'] = trim((string) $data['notes']);
         }
 
         return $data;
@@ -514,8 +565,10 @@ class ClientService
         // Validar documento único excepto para el cliente actual
         if ($clientId) {
             $rules['document_number'] = 'required|string|max:20|unique:clients,document_number,' . $clientId;
+            $rules['phone'] = ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone,' . $clientId];
         } else {
             $rules['document_number'] = 'required|string|max:20|unique:clients,document_number';
+            $rules['phone'] = ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone'];
         }
 
         return $rules;
@@ -533,6 +586,7 @@ class ClientService
             'phone.required' => 'El teléfono es obligatorio.',
             'phone.string' => 'El teléfono debe ser una cadena de texto.',
             'phone.regex' => 'El teléfono debe tener 9 dígitos y comenzar con el número 9 (ejemplo: 912345678).',
+            'phone.unique' => 'El teléfono ya está en uso.',
             'document_type.required' => 'El tipo de documento es obligatorio.',
             'document_type.in' => 'El tipo de documento seleccionado no es válido.',
             'document_number.required' => 'El número de documento es obligatorio.',

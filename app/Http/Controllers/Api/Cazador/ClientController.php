@@ -8,7 +8,6 @@ use App\Models\Client;
 use App\Services\ClientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -196,18 +195,7 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         try {
-            // Obtener reglas de validación
-            $rules = $this->clientService->getValidationRules();
-            $messages = $this->clientService->getValidationMessages();
-
-            // Validar datos
-            $validator = Validator::make($request->all(), $rules, $messages);
-
-            if ($validator->fails()) {
-                return $this->validationErrorResponse($validator->errors());
-            }
-
-            // Preparar y sanitizar datos del formulario
+            // Preparar datos del formulario
             $formData = $request->only([
                 'name',
                 'phone',
@@ -222,29 +210,6 @@ class ClientController extends Controller
                 'score',
                 'notes'
             ]);
-
-            // Sanitizar campos de texto
-            if (isset($formData['name'])) {
-                $formData['name'] = trim($formData['name']);
-            }
-            if (isset($formData['phone'])) {
-                $formData['phone'] = preg_replace('/[^0-9+\-() ]/', '', $formData['phone']);
-            }
-            if (isset($formData['document_number'])) {
-                $formData['document_number'] = preg_replace('/[^0-9]/', '', $formData['document_number']);
-            }
-            if (isset($formData['address'])) {
-                $formData['address'] = trim($formData['address']);
-            }
-            if (isset($formData['notes'])) {
-                $formData['notes'] = trim($formData['notes']);
-            }
-
-            // Establecer valores por defecto
-            $formData['status'] = $formData['status'] ?? 'nuevo';
-            $formData['score'] = isset($formData['score']) ? max(0, min(100, (int) $formData['score'])) : 0;
-            // Asignar automáticamente al cazador autenticado
-            $formData['assigned_advisor_id'] = Auth::id();
 
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);
@@ -294,17 +259,6 @@ class ClientController extends Controller
                 return $this->forbiddenResponse('No tienes permiso para actualizar este cliente');
             }
 
-            // Obtener reglas de validación
-            $rules = $this->clientService->getValidationRules($id);
-            $messages = $this->clientService->getValidationMessages();
-
-            // Validar datos
-            $validator = Validator::make($request->all(), $rules, $messages);
-
-            if ($validator->fails()) {
-                return $this->validationErrorResponse($validator->errors());
-            }
-
             // Preparar datos del formulario
             $formData = $request->only([
                 'name',
@@ -320,12 +274,6 @@ class ClientController extends Controller
                 'score',
                 'notes'
             ]);
-
-            // Mantener el assigned_advisor_id del cazador autenticado (no permitir cambiar)
-            // Solo si el cliente ya está asignado al cazador, mantener la asignación
-            if ($client->assigned_advisor_id === Auth::id()) {
-                $formData['assigned_advisor_id'] = Auth::id();
-            }
 
             // Actualizar el cliente usando el servicio
             $updated = $this->clientService->updateClient($id, $formData);
@@ -367,17 +315,6 @@ class ClientController extends Controller
         foreach ($items as $index => $payload) {
             try {
                 $clientId = isset($payload['id']) ? (int) $payload['id'] : null;
-                $rules = $this->clientService->getValidationRules($clientId);
-                $messages = $this->clientService->getValidationMessages();
-                $validator = Validator::make($payload, $rules, $messages);
-
-                if ($validator->fails()) {
-                    $errors[] = [
-                        'index' => $index,
-                        'errors' => $validator->errors()->toArray(),
-                    ];
-                    continue;
-                }
 
                 $formData = collect($payload)->only([
                     'name',
@@ -393,22 +330,6 @@ class ClientController extends Controller
                     'score',
                     'notes'
                 ])->toArray();
-
-                if (isset($formData['name'])) {
-                    $formData['name'] = trim($formData['name']);
-                }
-                if (isset($formData['phone'])) {
-                    $formData['phone'] = preg_replace('/[^0-9+\-() ]/', '', $formData['phone']);
-                }
-                if (isset($formData['document_number'])) {
-                    $formData['document_number'] = preg_replace('/[^0-9]/', '', $formData['document_number']);
-                }
-                if (isset($formData['address'])) {
-                    $formData['address'] = trim($formData['address']);
-                }
-                if (isset($formData['notes'])) {
-                    $formData['notes'] = trim($formData['notes']);
-                }
 
                 if ($clientId) {
                     /** @var Client|null $client */
@@ -429,16 +350,25 @@ class ClientController extends Controller
                         continue;
                     }
 
-                    $this->clientService->updateClient($clientId, $formData);
-                    $updated[] = $this->formatClient($client->fresh());
+                    try {
+                        $this->clientService->updateClient($clientId, $formData);
+                        $updated[] = $this->formatClient($client->fresh());
+                    } catch (ValidationException $e) {
+                        $errors[] = [
+                            'index' => $index,
+                            'errors' => $e->errors(),
+                        ];
+                    }
                 } else {
-                    $formData['status'] = $formData['status'] ?? 'nuevo';
-                    $formData['score'] = isset($formData['score'])
-                        ? max(0, min(100, (int) $formData['score']))
-                        : 0;
-                    $formData['assigned_advisor_id'] = Auth::id();
-                    $client = $this->clientService->createClient($formData);
-                    $created[] = $this->formatClient($client);
+                    try {
+                        $client = $this->clientService->createClient($formData);
+                        $created[] = $this->formatClient($client);
+                    } catch (ValidationException $e) {
+                        $errors[] = [
+                            'index' => $index,
+                            'errors' => $e->errors(),
+                        ];
+                    }
                 }
             } catch (\Exception $e) {
                 $errors[] = [
