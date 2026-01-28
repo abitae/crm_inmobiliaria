@@ -212,6 +212,7 @@ class ClientController extends Controller
         try {
             // Preparar datos del formulario
             $formData = $request->only([
+                'create_mode',
                 'name',
                 'phone',
                 'document_type',
@@ -226,6 +227,9 @@ class ClientController extends Controller
                 'notes',
                 'assigned_advisor_id'
             ]);
+            if (empty($formData['create_mode'])) {
+                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
+            }
 
             // El servicio se encargará de establecer assigned_advisor_id, created_by y updated_by
             // basándose en el lider_id del datero autenticado
@@ -278,6 +282,7 @@ class ClientController extends Controller
 
             // Preparar datos del formulario
             $formData = $request->only([
+                'create_mode',
                 'name',
                 'phone',
                 'document_type',
@@ -291,6 +296,9 @@ class ClientController extends Controller
                 'notes',
                 'assigned_advisor_id'
             ]);
+            if (empty($formData['create_mode'])) {
+                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
+            }
 
             // Actualizar el cliente usando el servicio
             $updated = $this->clientService->updateClient($id, $formData);

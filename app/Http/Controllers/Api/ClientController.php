@@ -129,7 +129,6 @@ class ClientController extends Controller
                     'to' => $clients->lastItem(),
                 ]
             ], 'Clientes obtenidos exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener los clientes');
         }
@@ -149,8 +148,8 @@ class ClientController extends Controller
                 'assignedAdvisor:id,name,email',
                 'opportunities.project:id,name',
             ])
-            ->withCount(['opportunities', 'activities', 'tasks'])
-            ->find($id);
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->find($id);
 
             if (!$client) {
                 return $this->notFoundResponse('Cliente');
@@ -167,7 +166,6 @@ class ClientController extends Controller
             $clientData['tasks_count'] = $client->tasks_count;
 
             return $this->successResponse(['client' => $clientData], 'Cliente obtenido exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener el cliente');
         }
@@ -182,12 +180,19 @@ class ClientController extends Controller
     public function store(Request $request)
     {
         try {
+            $createMode = $request->input('create_mode');
+            if (!$createMode) {
+                $documentNumber = $request->input('document_number');
+                $createMode = empty($documentNumber) ? 'phone' : 'dni';
+            }
+            $payload = array_merge($request->all(), ['create_mode' => $createMode]);
+
             // Obtener reglas de validación
-            $rules = $this->clientService->getValidationRules();
+            $rules = $this->clientService->getValidationRules(null, $createMode);
             $messages = $this->clientService->getValidationMessages();
 
             // Validar datos
-            $validator = Validator::make($request->all(), $rules, $messages);
+            $validator = Validator::make($payload, $rules, $messages);
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
@@ -195,6 +200,7 @@ class ClientController extends Controller
 
             // Preparar datos del formulario
             $formData = $request->only([
+                'create_mode',
                 'name',
                 'phone',
                 'document_type',
@@ -208,6 +214,9 @@ class ClientController extends Controller
                 'notes',
                 'assigned_advisor_id'
             ]);
+            if (empty($formData['create_mode'])) {
+                $formData['create_mode'] = $createMode;
+            }
 
             // Establecer valores por defecto si no se proporcionan
             $formData['status'] = $formData['status'] ?? 'nuevo';
@@ -215,7 +224,7 @@ class ClientController extends Controller
 
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);
-            
+
             // Recargar con relaciones necesarias
             $client->load('assignedAdvisor:id,name,email');
 
@@ -224,7 +233,6 @@ class ClientController extends Controller
                 'Cliente creado exitosamente',
                 201
             );
-
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
@@ -254,12 +262,19 @@ class ClientController extends Controller
                 return $forbidden;
             }
 
+            $createMode = $request->input('create_mode');
+            if (!$createMode) {
+                $documentNumber = $request->input('document_number');
+                $createMode = empty($documentNumber) ? 'phone' : 'dni';
+            }
+            $payload = array_merge($request->all(), ['create_mode' => $createMode]);
+
             // Obtener reglas de validación
-            $rules = $this->clientService->getValidationRules($id);
+            $rules = $this->clientService->getValidationRules($id, $createMode);
             $messages = $this->clientService->getValidationMessages();
 
             // Validar datos
-            $validator = Validator::make($request->all(), $rules, $messages);
+            $validator = Validator::make($payload, $rules, $messages);
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
@@ -267,6 +282,7 @@ class ClientController extends Controller
 
             // Preparar datos del formulario
             $formData = $request->only([
+                'create_mode',
                 'name',
                 'phone',
                 'document_type',
@@ -280,6 +296,9 @@ class ClientController extends Controller
                 'notes',
                 'assigned_advisor_id'
             ]);
+            if (empty($formData['create_mode'])) {
+                $formData['create_mode'] = $createMode;
+            }
 
             // Actualizar el cliente usando el servicio
             $updated = $this->clientService->updateClient($id, $formData);
@@ -295,7 +314,6 @@ class ClientController extends Controller
                 ['client' => $this->formatClient($client)],
                 'Cliente actualizado exitosamente'
             );
-
         } catch (ValidationException $e) {
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
@@ -314,10 +332,8 @@ class ClientController extends Controller
             $options = $this->clientService->getFormOptions();
 
             return $this->successResponse($options, 'Opciones obtenidas exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener las opciones');
         }
     }
 }
-

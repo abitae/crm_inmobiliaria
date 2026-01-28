@@ -451,6 +451,11 @@ class ClientService
     public function prepareFormData(array $formData, ?int $createdById = null, ?Client $editingClient = null): array
     {
         $formData = $this->sanitizeFormData($formData);
+        $createMode = $formData['create_mode'] ?? null;
+        if (!$createMode) {
+            $documentNumber = $formData['document_number'] ?? null;
+            $createMode = empty($documentNumber) ? 'phone' : 'dni';
+        }
         $data = [
             'name' => $formData['name'],
             'phone' => $formData['phone'],
@@ -464,6 +469,7 @@ class ClientService
             'score' => $formData['score'] ?? null,
             'notes' => $formData['notes'] ?? null,
             'assigned_advisor_id' => $formData['assigned_advisor_id'] ?? null,
+            'create_mode' => $createMode,
         ];
 
         // Agregar campos de auditoría
@@ -537,6 +543,10 @@ class ClientService
         }
         if (isset($data['phone'])) {
             $data['phone'] = preg_replace('/[^0-9]/', '', (string) $data['phone']);
+        }
+        if (array_key_exists('create_mode', $data)) {
+            $createMode = strtolower(trim((string) $data['create_mode']));
+            $data['create_mode'] = $createMode === '' ? null : $createMode;
         }
         if (array_key_exists('document_type', $data)) {
             $documentType = trim((string) $data['document_type']);

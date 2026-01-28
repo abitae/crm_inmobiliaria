@@ -24,6 +24,7 @@ class Client extends Model
         'client_type', // inversor, comprador, empresa, constructor
         'source', // redes_sociales, ferias, referidos, formulario_web, publicidad
         'create_type', // datero, propio
+        'create_mode', // dni, phone
         'status', // nuevo, contacto_inicial, en_seguimiento, cierre, perdido
         'score', // scoring del lead
         'notes',
