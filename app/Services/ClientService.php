@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ClientService
@@ -178,7 +179,20 @@ class ClientService
     {
         try {
             $data = $this->prepareFormData($formData, $createdById);
-            $this->validateClientData($data);
+            $createMode = $formData['create_mode'] ?? null;
+            if (!$createMode) {
+                $createMode = empty($data['document_number']) ? 'phone' : 'dni';
+            }
+
+            Log::info('Intentando crear cliente', [
+                'create_mode' => $createMode,
+                'phone' => $data['phone'] ?? null,
+                'document_type' => $data['document_type'] ?? null,
+                'document_number' => $data['document_number'] ?? null,
+                'user_id' => $createdById ?? Auth::id(),
+            ]);
+
+            $this->validateClientData($data, null, $createMode);
 
             $client = Client::create($data);
 
@@ -208,7 +222,12 @@ class ClientService
             }
 
             $data = $this->prepareFormData($formData, null, $client);
-            $this->validateClientData($data, $id);
+            $createMode = $formData['create_mode'] ?? null;
+            if (!$createMode) {
+                $createMode = empty($data['document_number']) ? 'phone' : 'dni';
+            }
+
+            $this->validateClientData($data, $id, $createMode);
 
             $updated = $client->update($data);
 
@@ -519,11 +538,16 @@ class ClientService
         if (isset($data['phone'])) {
             $data['phone'] = preg_replace('/[^0-9]/', '', (string) $data['phone']);
         }
-        if (isset($data['document_type'])) {
-            $data['document_type'] = strtoupper(trim((string) $data['document_type']));
+        if (array_key_exists('document_type', $data)) {
+            $documentType = trim((string) $data['document_type']);
+            $data['document_type'] = $documentType === '' ? null : strtoupper($documentType);
         }
-        if (isset($data['document_number'])) {
+        if (array_key_exists('document_number', $data)) {
             $documentNumber = trim((string) $data['document_number']);
+            if ($documentNumber === '') {
+                $data['document_number'] = null;
+                return $data;
+            }
             $documentType = $data['document_type'] ?? null;
             if (in_array($documentType, ['DNI', 'RUC'], true)) {
                 $documentNumber = preg_replace('/[^0-9]/', '', $documentNumber);
@@ -545,13 +569,29 @@ class ClientService
     /**
      * Obtener reglas de validación centralizadas
      */
-    public function getValidationRules(?int $clientId = null): array
+    public function getValidationRules(?int $clientId = null, ?string $createMode = null): array
     {
+        $isPhoneMode = $createMode === 'phone';
+        $documentTypeRules = $isPhoneMode
+            ? ['nullable', 'in:DNI,RUC,CE,PASAPORTE']
+            : ['required', 'in:DNI,RUC,CE,PASAPORTE'];
+
+        $documentNumberRules = $isPhoneMode
+            ? ['nullable', 'string', 'max:20']
+            : ['required', 'string', 'max:20'];
+
+        if ($clientId) {
+            $documentNumberRules[] = Rule::unique('clients', 'document_number')->ignore($clientId);
+        } else {
+            $documentNumberRules[] = Rule::unique('clients', 'document_number');
+        }
+
         $rules = [
+            'create_mode' => 'required|in:dni,phone',
             'name' => 'required|string|max:255',
             'phone' => ['required', 'string', 'regex:/^9[0-9]{8}$/'],
-            'document_type' => 'required|in:DNI,RUC,CE,PASAPORTE',
-            'document_number' => 'required|string|max:20',
+            'document_type' => $documentTypeRules,
+            'document_number' => $documentNumberRules,
             'address' => 'nullable|string|max:500',
             'birth_date' => 'required|date',
             'client_type' => 'required|in:inversor,comprador,empresa,constructor',
@@ -564,10 +604,8 @@ class ClientService
 
         // Validar documento único excepto para el cliente actual
         if ($clientId) {
-            $rules['document_number'] = 'required|string|max:20|unique:clients,document_number,' . $clientId;
             $rules['phone'] = ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone,' . $clientId];
         } else {
-            $rules['document_number'] = 'required|string|max:20|unique:clients,document_number';
             $rules['phone'] = ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone'];
         }
 
@@ -587,6 +625,7 @@ class ClientService
             'phone.string' => 'El teléfono debe ser una cadena de texto.',
             'phone.regex' => 'El teléfono debe tener 9 dígitos y comenzar con el número 9 (ejemplo: 912345678).',
             'phone.unique' => 'El teléfono ya está en uso.',
+            'create_mode.in' => 'El modo de creación seleccionado no es válido.',
             'document_type.required' => 'El tipo de documento es obligatorio.',
             'document_type.in' => 'El tipo de documento seleccionado no es válido.',
             'document_number.required' => 'El número de documento es obligatorio.',
@@ -650,14 +689,21 @@ class ClientService
     /**
      * Validar datos del cliente
      */
-    private function validateClientData(array $data, ?int $clientId = null): void
+    private function validateClientData(array $data, ?int $clientId = null, ?string $createMode = null): void
     {
-        $rules = $this->getValidationRules($clientId);
+        $rules = $this->getValidationRules($clientId, $createMode);
         $messages = $this->getValidationMessages();
 
         $validator = Validator::make($data, $rules, $messages);
 
         if ($validator->fails()) {
+            Log::warning('Validación fallida al guardar cliente', [
+                'create_mode' => $createMode,
+                'phone' => $data['phone'] ?? null,
+                'document_type' => $data['document_type'] ?? null,
+                'document_number' => $data['document_number'] ?? null,
+                'errors' => $validator->errors()->toArray(),
+            ]);
             throw new ValidationException($validator);
         }
     }

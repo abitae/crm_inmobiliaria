@@ -90,7 +90,7 @@ class ClientController extends Controller
                 ->withCount(['opportunities', 'activities', 'tasks'])
                 ->where(function ($q) {
                     $q->where('assigned_advisor_id', Auth::id())
-                      ->orWhere('created_by', Auth::id());
+                        ->orWhere('created_by', Auth::id());
                 });
 
             // Aplicar filtros
@@ -132,7 +132,6 @@ class ClientController extends Controller
                 'clients' => $formattedClients,
                 'pagination' => $this->formatPagination($clients),
             ], 'Clientes obtenidos exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al listar clientes del cazador');
         }
@@ -162,8 +161,8 @@ class ClientController extends Controller
             ];
 
             $client = Client::with(array_merge($baseRelations, array_values($includes)))
-            ->withCount(['opportunities', 'activities', 'tasks'])
-            ->find($id);
+                ->withCount(['opportunities', 'activities', 'tasks'])
+                ->find($id);
 
             if (!$client) {
                 return $this->notFoundResponse('Cliente');
@@ -180,7 +179,6 @@ class ClientController extends Controller
             $clientData['tasks_count'] = $client->tasks_count;
 
             return $this->successResponse(['client' => $clientData], 'Cliente obtenido exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener el cliente solicitado');
         }
@@ -207,13 +205,17 @@ class ClientController extends Controller
                 'source',
                 'status',
                 'create_type',
+                'create_mode',
                 'score',
                 'notes'
             ]);
+            if (empty($formData['create_mode'])) {
+                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
+            }
 
             // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);
-            
+
             // Recargar con relaciones necesarias
             $client->load('assignedAdvisor:id,name,email');
 
@@ -222,8 +224,17 @@ class ClientController extends Controller
                 'Cliente creado exitosamente',
                 201
             );
-
         } catch (ValidationException $e) {
+            $duplicateOwner = $this->getDuplicateOwnerInfo(
+                $formData['phone'] ?? null,
+                $formData['document_number'] ?? null
+            );
+            if ($duplicateOwner) {
+                return $this->errorResponse('Error de validación', [
+                    'errors' => $e->errors(),
+                    'duplicate_owner' => $duplicateOwner,
+                ], 422);
+            }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             Log::error('Error al crear cliente (Cazador)', [
@@ -232,7 +243,7 @@ class ClientController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $this->serverErrorResponse($e, 'Error al crear el cliente en Cazador');
         }
     }
@@ -271,9 +282,13 @@ class ClientController extends Controller
                 'source',
                 'status',
                 'create_type',
+                'create_mode',
                 'score',
                 'notes'
             ]);
+            if (empty($formData['create_mode'])) {
+                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
+            }
 
             // Actualizar el cliente usando el servicio
             $updated = $this->clientService->updateClient($id, $formData);
@@ -289,8 +304,17 @@ class ClientController extends Controller
                 ['client' => $this->formatClient($client)],
                 'Cliente actualizado exitosamente'
             );
-
         } catch (ValidationException $e) {
+            $duplicateOwner = $this->getDuplicateOwnerInfo(
+                $formData['phone'] ?? null,
+                $formData['document_number'] ?? null
+            );
+            if ($duplicateOwner) {
+                return $this->errorResponse('Error de validación', [
+                    'errors' => $e->errors(),
+                    'duplicate_owner' => $duplicateOwner,
+                ], 422);
+            }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al actualizar el cliente en Cazador');
@@ -327,9 +351,13 @@ class ClientController extends Controller
                     'source',
                     'status',
                     'create_type',
+                    'create_mode',
                     'score',
                     'notes'
                 ])->toArray();
+                if (empty($formData['create_mode'])) {
+                    $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
+                }
 
                 if ($clientId) {
                     /** @var Client|null $client */
@@ -354,9 +382,14 @@ class ClientController extends Controller
                         $this->clientService->updateClient($clientId, $formData);
                         $updated[] = $this->formatClient($client->fresh());
                     } catch (ValidationException $e) {
+                        $duplicateOwner = $this->getDuplicateOwnerInfo(
+                            $formData['phone'] ?? null,
+                            $formData['document_number'] ?? null
+                        );
                         $errors[] = [
                             'index' => $index,
                             'errors' => $e->errors(),
+                            'duplicate_owner' => $duplicateOwner,
                         ];
                     }
                 } else {
@@ -364,9 +397,14 @@ class ClientController extends Controller
                         $client = $this->clientService->createClient($formData);
                         $created[] = $this->formatClient($client);
                     } catch (ValidationException $e) {
+                        $duplicateOwner = $this->getDuplicateOwnerInfo(
+                            $formData['phone'] ?? null,
+                            $formData['document_number'] ?? null
+                        );
                         $errors[] = [
                             'index' => $index,
                             'errors' => $e->errors(),
+                            'duplicate_owner' => $duplicateOwner,
                         ];
                     }
                 }
@@ -463,7 +501,6 @@ class ClientController extends Controller
             $options = $this->clientService->getFormOptions();
 
             return $this->successResponse($options, 'Opciones obtenidas exitosamente');
-
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener opciones de formulario');
         }
@@ -500,5 +537,52 @@ class ClientController extends Controller
             ->values()
             ->all();
     }
-}
 
+    private function getDuplicateOwnerInfo(?string $phone, ?string $documentNumber): ?array
+    {
+        $normalizedPhone = $phone ? preg_replace('/[^0-9]/', '', (string) $phone) : null;
+        $normalizedDocument = $documentNumber ? trim((string) $documentNumber) : null;
+
+        if ($normalizedDocument !== null && $normalizedDocument !== '') {
+            if (preg_match('/^[0-9]+$/', $normalizedDocument)) {
+                $normalizedDocument = preg_replace('/[^0-9]/', '', $normalizedDocument);
+            } else {
+                $normalizedDocument = strtoupper(preg_replace('/\s+/', '', $normalizedDocument));
+            }
+        }
+
+        if (!$normalizedPhone && !$normalizedDocument) {
+            return null;
+        }
+
+        $client = Client::query()
+            ->where(function ($q) use ($normalizedPhone, $normalizedDocument) {
+                if ($normalizedPhone) {
+                    $q->orWhere('phone', $normalizedPhone);
+                }
+                if ($normalizedDocument) {
+                    $q->orWhere('document_number', $normalizedDocument);
+                }
+            })
+            ->with(['assignedAdvisor:id,name', 'createdBy:id,name'])
+            ->first();
+
+        if (!$client) {
+            return null;
+        }
+
+        $owner = $client->createdBy ?: $client->assignedAdvisor;
+        if (!$owner) {
+            return null;
+        }
+
+        $field = $normalizedPhone && $client->phone === $normalizedPhone ? 'phone' : 'document_number';
+
+        return [
+            'name' => $owner->name,
+            'user_id' => $owner->id,
+            'client_id' => $client->id,
+            'field' => $field,
+        ];
+    }
+}

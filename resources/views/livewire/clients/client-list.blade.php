@@ -237,36 +237,42 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 
                     <div class="col-span-2">
-                        <!-- Número de Documento -->
-                        <flux:input.group class="flex items-end w-full">
-                            <flux:select wire:model.live="document_type" label="Tipo" size="xs"
-                                class="w-full">
-                                <option value="DNI">DNI</option>
-                            </flux:select>
-                            <flux:input mask="99999999" class="flex-1" label="Documento"
-                                placeholder="Número de documento" wire:model="document_number" size="xs" />
-                            @if ($document_type == 'DNI')
-                                <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
-                                    size="xs" class="self-end" wire:loading.attr="disabled"
-                                    wire:target="buscarDocumento" title="Buscar datos del documento">
-                                    <span wire:loading.remove wire:target="buscarDocumento">
-                                        <flux:icon name="magnifying-glass" class="w-3 h-3" />
-                                    </span>
-                                    <span wire:loading wire:target="buscarDocumento">
-                                        <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
-                                    </span>
-                                </flux:button>
-                                @if ($name || $birth_date)
-                                    <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
-                                        size="xs" class="self-end" title="Limpiar datos de búsqueda">
-                                    </flux:button>
-                                @endif
-                            @endif
-                        </flux:input.group>
-                        @error('document_number')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
+                        <div class="mt-1 flex items-center space-x-4 text-xs text-gray-700">
+                            <flux:radio.group wire:model.live="create_mode" label="Modo de alta">
+                                <flux:radio value="dni" label="DNI" />
+                                <flux:radio value="phone" label="Teléfono" />
+                            </flux:radio.group>
+                        </div>
                     </div>
+
+                    @if ($create_mode === 'dni')
+                        <div class="col-span-2">
+                            <!-- Número de Documento -->
+                            <flux:input.group class="flex items-end w-full">
+                                <flux:select wire:model.live="document_type" label="Tipo" size="xs"
+                                    class="w-full">
+                                    <option value="DNI">DNI</option>
+                                </flux:select>
+                                <flux:input mask="99999999" class="flex-1" label="Documento"
+                                    placeholder="Número de documento" wire:model="document_number" size="xs" />
+                                @if ($document_type == 'DNI' && !$editingClient)
+                                    <flux:button icon="magnifying-glass" wire:click="buscarDocumento"
+                                        variant="outline" size="xs" class="self-end"
+                                        wire:loading.attr="disabled" wire:target="buscarDocumento"
+                                        title="Buscar datos del documento">
+                                    </flux:button>
+                                    @if ($name || $birth_date)
+                                        <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
+                                            size="xs" class="self-end" title="Limpiar datos de búsqueda">
+                                        </flux:button>
+                                    @endif
+                                @endif
+                            </flux:input.group>
+                            @error('document_number')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
                     <!-- Nombre -->
                     <div class="col-span-2">
                         <flux:input label="Nombre completo" wire:model="name" size="xs"
@@ -625,10 +631,12 @@
             <form wire:submit.prevent="createReservationFromClient">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div class="col-span-2 text-xs text-gray-600">
-                        Cliente: <span class="font-medium text-gray-900">{{ $reservationClientName ?: 'Sin cliente' }}</span>
+                        Cliente: <span
+                            class="font-medium text-gray-900">{{ $reservationClientName ?: 'Sin cliente' }}</span>
                     </div>
                     <div>
-                        <flux:select label="Proyecto" wire:model.live="reservation_project_id" size="xs" class="w-full">
+                        <flux:select label="Proyecto" wire:model.live="reservation_project_id" size="xs"
+                            class="w-full">
                             <option value="">Seleccionar proyecto</option>
                             @foreach ($reservation_projects as $project)
                                 <option value="{{ $project->id }}">{{ $project->name }}</option>
@@ -643,7 +651,8 @@
                             <option value="">Seleccionar unidad</option>
                             @foreach ($reservation_units as $unit)
                                 <option value="{{ $unit->id }}">
-                                    {{ $unit->unit_manzana }} - {{ $unit->unit_number }} - S/ {{ number_format($unit->final_price) }}
+                                    {{ $unit->unit_manzana }} - {{ $unit->unit_number }} - S/
+                                    {{ number_format($unit->final_price) }}
                                 </option>
                             @endforeach
                         </flux:select>
@@ -660,7 +669,8 @@
                     </div>
                 </div>
                 <div class="mt-3 text-[11px] text-gray-500">
-                    Al crear, la reserva quedará en estado <span class="font-medium">activa</span> con fecha automática y vencimiento al final del día. Luego podrás confirmarla desde el módulo de reservas.
+                    Al crear, la reserva quedará en estado <span class="font-medium">activa</span> con fecha automática
+                    y vencimiento al final del día. Luego podrás confirmarla desde el módulo de reservas.
                 </div>
                 <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
                     <flux:button type="button" variant="outline" size="xs" wire:click="closeReservationModal">

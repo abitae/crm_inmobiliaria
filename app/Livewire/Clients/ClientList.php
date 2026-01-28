@@ -47,6 +47,7 @@ class ClientList extends Component
     public $phone = '';
     public $document_type = 'DNI';
     public $document_number = '';
+    public $create_mode = 'dni';
     public $address = '';
     public $birth_date = '';
     public $client_type = 'comprador';
@@ -94,7 +95,7 @@ class ClientList extends Component
     public function getRules(): array
     {
         $clientId = $this->editingClient ? $this->editingClient->id : null;
-        return $this->clientService->getValidationRules($clientId);
+        return $this->clientService->getValidationRules($clientId, $this->create_mode);
     }
     public function getMessages(): array
     {
@@ -107,8 +108,7 @@ class ClientList extends Component
         ActivityService $activityService,
         TaskService $taskService,
         ReservationService $reservationService
-    )
-    {
+    ) {
         $this->clientService = $clientService;
         $this->documentSearchService = $documentSearchService;
         $this->activityService = $activityService;
@@ -150,6 +150,20 @@ class ClientList extends Component
     public function updatedAdvisorFilter()
     {
         $this->resetPage();
+    }
+
+    public function updatedCreateMode(): void
+    {
+        if ($this->create_mode === 'phone') {
+            $this->document_type = '';
+            $this->document_number = '';
+        }
+
+        if ($this->create_mode === 'dni' && !$this->document_type) {
+            $this->document_type = 'DNI';
+        }
+
+        $this->resetErrorBag(['document_number', 'document_type']);
     }
 
     public function clearFilters()
@@ -238,6 +252,7 @@ class ClientList extends Component
             'phone',
             'document_type',
             'document_number',
+            'create_mode',
             'address',
             'birth_date',
             'client_type',
@@ -248,6 +263,7 @@ class ClientList extends Component
             'assigned_advisor_id'
         ]);
         $this->document_type = 'DNI';
+        $this->create_mode = 'dni';
         $this->client_type = 'comprador';
         $this->source = 'redes_sociales';
         $this->status = 'nuevo';
@@ -304,6 +320,7 @@ class ClientList extends Component
         $this->phone = $client->phone;
         $this->document_type = $client->document_type;
         $this->document_number = $client->document_number;
+        $this->create_mode = $client->document_number ? 'dni' : 'phone';
         $this->address = $client->address;
         $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : '';
         $this->client_type = $client->client_type;
@@ -587,11 +604,20 @@ class ClientList extends Component
 
     private function getFormData(): array
     {
+        $documentType = $this->document_type;
+        $documentNumber = $this->document_number;
+
+        if ($this->create_mode === 'phone' && $documentNumber === '') {
+            $documentType = null;
+            $documentNumber = null;
+        }
+
         return [
+            'create_mode' => $this->create_mode,
             'name' => $this->name,
             'phone' => $this->phone,
-            'document_type' => $this->document_type,
-            'document_number' => $this->document_number,
+            'document_type' => $documentType,
+            'document_number' => $documentNumber,
             'address' => $this->address,
             'birth_date' => $this->birth_date ?: null,
             'client_type' => $this->client_type,

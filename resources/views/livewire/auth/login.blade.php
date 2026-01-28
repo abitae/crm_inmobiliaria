@@ -1,5 +1,5 @@
 <div class="flex flex-col p-6 border-2 border-gray-500 gap-6 rounded-xl">
-    <x-auth-header :title="__('Open9CRM')" :description="__('Gestiona tu negocio inmobiliario')" />
+    <x-auth-header :title="__('Login')" :description="__('Inicia sesion para continuar')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
@@ -13,12 +13,6 @@
         <div class="relative">
             <flux:input size="xs" wire:model="password" :label="__('Contraseña')" type="password" required
                 autocomplete="current-password" :placeholder="__('Contraseña')" viewable />
-
-            @if (Route::has('password.request'))
-                <flux:link class="absolute end-0 top-0 text-sm" :href="route('password.request')" wire:navigate>
-                    {{ __('¿Olvidaste tu contraseña?') }}
-                </flux:link>
-            @endif
         </div>
 
         <!-- Remember Me -->

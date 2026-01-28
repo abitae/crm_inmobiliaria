@@ -80,12 +80,16 @@ GET `/clients`
   - `pagination` (objeto con `current_page`, `per_page`, `total`, `last_page`, `from`, `to`, `links`)
 - Ejemplo:
   - `/clients?search=juan&status=nuevo&include=activities,reservations`
+- Notas:
+  - La busqueda (`search`) aplica sobre `name`, `document_number` (DNI) y `phone`.
 
 GET `/clients/suggestions`
 - Descripcion: Sugerencias de clientes por texto.
 - Query:
   - `q` (string, requerido, min 2)
   - `limit` (int, opcional)
+- Notas:
+  - La busqueda (`q`) aplica sobre `name`, `document_number` (DNI) y `phone`.
 
 GET `/clients/batch?ids=1,2,3`
 - Descripcion: Obtiene multiples clientes por IDs.
@@ -99,31 +103,41 @@ POST `/clients/batch`
 - Notas:
   - Si un item incluye `id`, se interpreta como update.
   - Respuesta incluye `created`, `updated` y `errors` por indice.
+  - Si un item falla por `phone` o `document_number` duplicado, `errors` incluye `duplicate_owner`.
 
 POST `/clients/validate`
 - Descripcion: Valida payload de cliente sin persistir.
 - Respuesta:
   - `valid` (bool)
   - `errors` (objeto) cuando aplica
+- Notas:
+  - `create_mode` es obligatorio: `dni` o `phone`.
+  - Si `create_mode` es `phone`, `document_type` y `document_number` son opcionales.
+  - Si `create_mode` es `dni`, `document_type` y `document_number` son obligatorios.
+  - Si el `phone` o `document_number` ya existe, `errors` puede incluir `duplicate_owner`.
 
 POST `/clients`
 - Descripcion: Crea un cliente y lo asigna al cazador autenticado.
 - Body:
+  - `create_mode` (string, requerido: `dni|phone`)
   - `name` (string, requerido)
-  - `phone` (string, opcional)
-  - `document_type` (string, opcional)
-  - `document_number` (string, opcional)
+  - `phone` (string, requerido, 9 digitos y empieza en 9, unico)
+  - `document_type` (string, requerido si `create_mode = dni`)
+  - `document_number` (string, requerido si `create_mode = dni`)
   - `address` (string, opcional)
-  - `birth_date` (date, opcional)
+  - `birth_date` (date, requerido)
   - `client_type` (string, requerido)
   - `source` (string, requerido)
-  - `status` (string, opcional, default `nuevo`)
+  - `status` (string, requerido)
   - `create_type` (string, opcional)
-  - `score` (int, opcional, default 0)
+  - `score` (int, requerido, 0-100)
   - `notes` (string, opcional)
 - Notas:
   - `assigned_advisor_id` se asigna al usuario autenticado.
   - Se aplican sanitizaciones basicas (telefono, documento, notas).
+  - Validacion de telefono: 9 digitos empezando con 9, unico.
+  - Si `create_mode = phone`, no se requiere DNI.
+  - Si el `phone` o `document_number` ya existe, el API devuelve el nombre del vendedor que lo registro.
 
 GET `/clients/options`
 - Descripcion: Opciones para formularios (tipos, estados, fuentes, etc).
@@ -139,7 +153,7 @@ GET `/clients/{id}`
 
 PUT/PATCH `/clients/{id}`
 - Descripcion: Actualiza un cliente asignado o creado por el cazador.
-- Body: mismos campos que POST.
+- Body: mismos campos que POST (incluye `create_mode`).
 - Notas:
   - No permite cambiar `assigned_advisor_id` si no pertenece al cazador.
 
@@ -555,6 +569,7 @@ POST `/clients`
 Body (JSON):
 ```json
 {
+  "create_mode": "dni",
   "name": "Maria Torres",
   "phone": "988776655",
   "document_type": "DNI",
@@ -567,6 +582,40 @@ Body (JSON):
   "create_type": "propio",
   "score": 60,
   "notes": "Cliente interesado en preventa."
+}
+```
+
+Respuesta 422 (duplicado de telefono o DNI):
+```json
+{
+  "success": false,
+  "message": "Error de validación",
+  "errors": {
+    "errors": {
+      "phone": ["El teléfono ya está en uso."]
+    },
+    "duplicate_owner": {
+      "name": "Juan Perez",
+      "user_id": 10,
+      "client_id": 5,
+      "field": "phone"
+    }
+  }
+}
+```
+
+POST `/clients` (modo telefono)
+Body (JSON):
+```json
+{
+  "create_mode": "phone",
+  "name": "Rosa Diaz",
+  "phone": "912345678",
+  "birth_date": "1992-10-03",
+  "client_type": "comprador",
+  "source": "referidos",
+  "status": "nuevo",
+  "score": 50
 }
 ```
 
@@ -589,12 +638,18 @@ Body (JSON):
 {
   "clients": [
     {
+      "create_mode": "phone",
       "name": "Nuevo Cliente",
+      "phone": "912345679",
+      "birth_date": "1991-08-14",
       "client_type": "comprador",
-      "source": "referidos"
+      "source": "referidos",
+      "status": "nuevo",
+      "score": 50
     },
     {
       "id": 1,
+      "create_mode": "dni",
       "phone": "966554433",
       "status": "contacto_inicial"
     }
@@ -608,9 +663,14 @@ POST `/clients/validate`
 Body (JSON):
 ```json
 {
+  "create_mode": "phone",
   "name": "Validacion Cliente",
+  "phone": "912345680",
+  "birth_date": "1990-01-10",
   "client_type": "comprador",
-  "source": "redes_sociales"
+  "source": "redes_sociales",
+  "status": "nuevo",
+  "score": 50
 }
 ```
 
