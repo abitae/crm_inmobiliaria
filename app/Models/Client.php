@@ -15,6 +15,7 @@ class Client extends Model
 
     protected $fillable = [
         'name',
+        'create_mode',
         'phone',
         'document_type', // DNI, RUC, CE, PASAPORTE
         'document_number',
