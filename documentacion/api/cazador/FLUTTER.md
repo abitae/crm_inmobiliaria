@@ -41,6 +41,7 @@ Este documento resume los endpoints del API Cazador y enumera **todos los mensaj
 - `create_mode`: **obligatorio** `dni|phone`
 - Modo `dni`: `document_type` y `document_number` **obligatorios**
 - Modo `phone`: DNI **opcional**
+  - Si envías `document_type = "DNI"` y `document_number = "00000000"`, se **permite duplicidad** y se guarda tal cual.
 - `phone`: **9 dígitos** iniciando en `9`, **único**
 - `name`: **obligatorio**
 - `birth_date`, `client_type`, `source`, `status`, `score`: **obligatorios**
@@ -59,6 +60,8 @@ Cuando un DNI o teléfono ya existe, el API devuelve:
   }
 }
 ```
+Nota:
+- En modo `phone`, el DNI ficticio `00000000` **no** dispara error de duplicado.
 
 ## Endpoints y mensajes de error
 

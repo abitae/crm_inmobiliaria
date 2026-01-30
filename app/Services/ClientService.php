@@ -590,10 +590,19 @@ class ClientService
             ? ['nullable', 'string', 'max:20']
             : ['required', 'string', 'max:20'];
 
-        if ($clientId) {
-            $documentNumberRules[] = Rule::unique('clients', 'document_number')->ignore($clientId);
+        if ($isPhoneMode) {
+            $uniqueRule = Rule::unique('clients', 'document_number')
+                ->where(fn($query) => $query->where('document_number', '!=', '00000000'));
+            if ($clientId) {
+                $uniqueRule = $uniqueRule->ignore($clientId);
+            }
+            $documentNumberRules[] = $uniqueRule;
         } else {
-            $documentNumberRules[] = Rule::unique('clients', 'document_number');
+            if ($clientId) {
+                $documentNumberRules[] = Rule::unique('clients', 'document_number')->ignore($clientId);
+            } else {
+                $documentNumberRules[] = Rule::unique('clients', 'document_number');
+            }
         }
 
         $rules = [
