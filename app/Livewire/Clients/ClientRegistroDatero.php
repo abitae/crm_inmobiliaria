@@ -9,6 +9,7 @@ use App\Services\ClientService;
 use App\Models\Client;
 use App\Models\User;
 use App\Traits\SearchDocument;
+use App\Models\City;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,7 +27,9 @@ class ClientRegistroDatero extends Component
     public string $phone = '';
     public string $document_type = 'DNI';
     public string $document_number = '';
+    public string $create_mode = 'dni';
     public ?string $address = null;
+    public ?int $city_id = null;
     public ?string $birth_date = null;
     public ?string $ocupacion = null;
     public string $client_type = 'comprador';
@@ -80,12 +83,15 @@ class ClientRegistroDatero extends Component
     // Ya no necesitamos la propiedad advisors
 
     protected $clientService;
+    public $cities = [];
 
     protected function rules(): array
     {
-        $rules = $this->clientService->getValidationRules();
-        $rules['document_type'] = 'required|in:DNI';
-        $rules['document_number'] .= '|size:8';
+        $rules = $this->clientService->getValidationRules(null, $this->create_mode);
+        if ($this->create_mode === 'dni') {
+            $rules['document_type'] = 'required|in:DNI';
+            $rules['document_number'] .= '|size:8';
+        }
         $rules['ocupacion'] = 'nullable|string|max:255';
 
         return $rules;
@@ -113,6 +119,19 @@ class ClientRegistroDatero extends Component
             // Inicializar campos de auditoría con el id del datero
             $this->created_by = $user->id;
             $this->updated_by = $user->id;
+        }
+        $this->cities = City::orderBy('name')->get(['id', 'name']);
+    }
+
+    public function updatedCreateMode(): void
+    {
+        if ($this->create_mode === 'phone') {
+            $this->document_type = '';
+            $this->document_number = '';
+        }
+
+        if ($this->create_mode === 'dni' && !$this->document_type) {
+            $this->document_type = 'DNI';
         }
     }
 
@@ -163,12 +182,14 @@ class ClientRegistroDatero extends Component
                 'document_type' => $this->document_type,
                 'document_number' => $this->document_number,
                 'address' => $this->address,
+                'city_id' => $this->city_id,
                 'birth_date' => $birthDate,
                 'client_type' => $this->client_type,
                 'source' => $this->source,
                 'status' => $this->status,
                 'score' => $this->score,
                 'notes' => $notes,
+                'create_mode' => $this->create_mode,
             ];
 
             // El servicio establecerá assigned_advisor_id, created_by y updated_by automáticamente
@@ -194,6 +215,7 @@ class ClientRegistroDatero extends Component
             'document_type',
             'document_number',
             'address',
+            'city_id',
             'birth_date',
             'ocupacion',
             'client_type',
@@ -208,6 +230,7 @@ class ClientRegistroDatero extends Component
 
         // Resetear a valores por defecto
         $this->document_type = 'DNI';
+        $this->create_mode = 'dni';
         $this->client_type = 'comprador';
         $this->source = 'formulario_web';
         $this->status = 'nuevo';
@@ -224,6 +247,9 @@ class ClientRegistroDatero extends Component
 
     public function buscarDocumento()
     {
+        if ($this->create_mode !== 'dni') {
+            return;
+        }
         $tipo = strtolower($this->document_type);
         $num_doc = $this->document_number;
 

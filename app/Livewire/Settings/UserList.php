@@ -5,6 +5,7 @@ namespace App\Livewire\Settings;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
+use App\Models\City;
 use App\Services\UserManagementService;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
@@ -61,10 +62,12 @@ class UserList extends Component
     public $banco = '';
     public $cuenta_bancaria = '';
     public $cci_bancaria = '';
+    public $city_id = null;
 
     // Propiedades para datos
     public $roles;
     public $leaders;
+    public $cities;
     public $qrcode;
     protected $cachedQRCode = null;
 
@@ -86,6 +89,7 @@ class UserList extends Component
     {
         $this->roles = $this->getUserService()->getRoles($this->allowedRoles);
         $this->leaders = $this->getUserService()->getLeaders();
+        $this->cities = City::orderBy('name')->get(['id', 'name']);
     }
 
     /**
@@ -274,6 +278,7 @@ class UserList extends Component
             'phone',
             'dni',
             'lider_id',
+            'city_id',
             'selectedRole',
             'password',
             'password_confirmation',
@@ -295,6 +300,7 @@ class UserList extends Component
         $this->phone = $this->selectedUser->phone ?? '';
         $this->dni = $this->selectedUser->dni ?? '';
         $this->lider_id = $this->selectedUser->lider_id;
+        $this->city_id = $this->selectedUser->city_id;
         $this->selectedRole = $this->selectedUser->roles->first()?->name ?? '';
         $this->password = '';
         $this->password_confirmation = '';
@@ -315,6 +321,7 @@ class UserList extends Component
                 'phone' => $this->phone,
                 'dni' => $this->dni,
                 'lider_id' => $this->lider_id,
+            'city_id' => $this->city_id,
                 'selectedRole' => $this->selectedRole,
                 'password' => $this->password,
                 'password_confirmation' => $this->password_confirmation,

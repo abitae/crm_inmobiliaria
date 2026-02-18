@@ -18,8 +18,7 @@ class Login extends Component
     #[Validate('required|string|email')]
     public string $email = '';
 
-    #[Validate('required|string')]
-    
+    #[Validate('required|string|size:6|regex:/^[0-9]{6}$/')]
     public string $password = '';
 
     public bool $remember = false;

@@ -4,7 +4,6 @@ namespace App\Livewire\Settings;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -24,7 +23,12 @@ class Password extends Component
         try {
             $validated = $this->validate([
                 'current_password' => ['required', 'string', 'current_password'],
-                'password' => ['required', 'string', PasswordRule::defaults(), 'confirmed'],
+                'password' => ['required', 'string', 'size:6', 'regex:/^[0-9]{6}$/', 'confirmed'],
+            ], [
+                'password.required' => 'El PIN es obligatorio.',
+                'password.size' => 'El PIN debe tener exactamente 6 dígitos.',
+                'password.regex' => 'El PIN debe contener solo números.',
+                'password.confirmed' => 'La confirmación del PIN no coincide.',
             ]);
         } catch (ValidationException $e) {
             $this->reset('current_password', 'password', 'password_confirmation');
@@ -34,8 +38,10 @@ class Password extends Component
 
         $user = Auth::user();
         if ($user) {
+            $newPin = $validated['password'];
             $user->update([
-                'password' => Hash::make($validated['password']),
+                'password' => Hash::make($newPin),
+                'pin' => $newPin, // el cast 'hashed' del modelo lo hasheará
             ]);
         }
 

@@ -20,6 +20,7 @@ class Client extends Model
         'document_type', // DNI, RUC, CE, PASAPORTE
         'document_number',
         'address',
+        'city_id',
         'birth_date', // fecha de nacimiento
         'client_type', // inversor, comprador, empresa, constructor
         'source', // redes_sociales, ferias, referidos, formulario_web, publicidad
@@ -36,6 +37,7 @@ class Client extends Model
     protected $casts = [
         'score' => 'integer',
         'birth_date' => 'date',
+        'city_id' => 'integer',
         'assigned_advisor_id' => 'integer', // id del vendedor asignado
         'created_by' => 'integer',
         'updated_by' => 'integer',
@@ -48,6 +50,11 @@ class Client extends Model
     public function assignedAdvisor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_advisor_id');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function createdBy(): BelongsTo

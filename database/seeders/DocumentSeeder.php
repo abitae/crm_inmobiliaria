@@ -37,7 +37,7 @@ class DocumentSeeder extends Seeder
         $statuses = ['borrador', 'revisado', 'aprobado', 'firmado', 'archivado'];
         $extensions = ['pdf', 'docx', 'xlsx', 'jpg', 'png'];
 
-        $documentCount = 500;
+        $documentCount = 5;
         for ($i = 0; $i < $documentCount; $i++) {
             $documentType = $faker->randomElement($documentTypes);
             $category = $faker->randomElement($categories);

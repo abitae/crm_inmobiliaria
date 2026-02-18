@@ -51,11 +51,9 @@ class OpportunitySeeder extends Seeder
         $project3 = $projects->skip(2)->first();
         $project4 = $projects->skip(3)->first();
         $project5 = $projects->skip(4)->first();
-        $project6 = $projects->skip(5)->first();
-        
+
         $unit1 = $units->where('project_id', $project1->id)->first();
         $unit3 = $units->where('project_id', $project3->id)->first();
-        $unit6 = $units->where('project_id', $project6->id)->first();
 
         $opportunities = [
             [
@@ -129,7 +127,7 @@ class OpportunitySeeder extends Seeder
                 'notes' => 'Constructor interesado en lotes residenciales para desarrollo. Evaluando viabilidad del proyecto.',
             ],
             [
-                'client_id' => $clients->where('name', 'Alberto García Paredes')->first()->id,
+                'client_id' => $clients->where('name', 'Juan Carlos Vargas Mendoza')->first()->id,
                 'project_id' => $project1->id,
                 'unit_id' => $unit1 ? $unit1->id : null,
                 'advisor_id' => $advisors->random()->id,
@@ -143,20 +141,6 @@ class OpportunitySeeder extends Seeder
                 'source' => 'referidos',
                 'campaign' => 'Campaña Q4 2023',
                 'notes' => 'Cliente satisfecho con la compra del lote. Excelente experiencia de venta.',
-            ],
-            [
-                'client_id' => $clients->where('name', 'Patricia Ríos Morales')->first()->id,
-                'project_id' => $project6->id,
-                'unit_id' => $unit6 ? $unit6->id : null,
-                'advisor_id' => $advisors->random()->id,
-                'stage' => 'calificado',
-                'status' => 'registrado',
-                'probability' => 30,
-                'expected_value' => 350000,
-                'expected_close_date' => now()->addDays(180),
-                'source' => 'formulario_web',
-                'campaign' => 'Campaña Q3 2024',
-                'notes' => 'Inversora en lotes de playa. Primer contacto realizado.',
             ],
         ];
 
@@ -186,7 +170,7 @@ class OpportunitySeeder extends Seeder
         $statuses = ['registrado', 'reservado', 'cuotas', 'pagado', 'transferido', 'cancelado'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
 
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 8; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();
@@ -242,10 +226,10 @@ class OpportunitySeeder extends Seeder
         // Crear oportunidades específicas por etapa para mejor visualización
         foreach ($stages as $stage) {
             $stageCount = match($stage) {
-                'calificado' => 120,
-                'visita' => 100,
-                'cierre' => 80,
-                default => 20
+                'calificado' => 2,
+                'visita' => 2,
+                'cierre' => 2,
+                default => 2
             };
 
             for ($i = 0; $i < $stageCount; $i++) {
@@ -316,7 +300,7 @@ class OpportunitySeeder extends Seeder
         })->get();
 
         // Crear oportunidades adicionales distribuidas entre vendedores y líderes
-        for ($i = 0; $i < 1500; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();

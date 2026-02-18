@@ -34,18 +34,25 @@ class ClientController extends Controller
             'document_type' => $client->document_type,
             'document_number' => $client->document_number,
             'address' => $client->address,
+            'city_id' => $client->city_id,
             'birth_date' => $client->birth_date?->format('Y-m-d'),
             'client_type' => $client->client_type,
             'source' => $client->source,
             'status' => $client->status,
             'create_type' => $client->create_type,
+            'create_mode' => $client->create_mode,
             'score' => $client->score,
             'notes' => $client->notes,
             'created_at' => $client->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $client->updated_at->format('Y-m-d H:i:s'),
         ];
 
-        // Solo incluir assigned_advisor si la relación está cargada
+        if ($client->relationLoaded('city') && $client->city) {
+            $data['city'] = ['id' => $client->city->id, 'name' => $client->city->name];
+        } else {
+            $data['city'] = null;
+        }
+
         if ($client->relationLoaded('assignedAdvisor') && $client->assignedAdvisor) {
             $data['assigned_advisor'] = [
                 'id' => $client->assignedAdvisor->id,
@@ -96,7 +103,7 @@ class ClientController extends Controller
             ];
 
             // Obtener solo clientes creados por este datero
-            $query = Client::with(['assignedAdvisor'])
+            $query = Client::with(['assignedAdvisor', 'city:id,name'])
                 ->withCount(['opportunities', 'activities', 'tasks'])
                 ->where('created_by', Auth::id());
 
@@ -176,6 +183,7 @@ class ClientController extends Controller
         try {
             $client = Client::with([
                 'assignedAdvisor:id,name,email',
+                'city:id,name',
                 'opportunities.project:id,name',
             ])
                 ->withCount(['opportunities', 'activities', 'tasks'])
@@ -207,37 +215,34 @@ class ClientController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Crear un nuevo cliente (misma lógica y patrón que API Cazador; incluye city_id)
+     */
     public function store(Request $request)
     {
         try {
-            // Preparar datos del formulario
             $formData = $request->only([
-                'create_mode',
                 'name',
                 'phone',
                 'document_type',
                 'document_number',
                 'address',
+                'city_id',
                 'birth_date',
                 'client_type',
                 'source',
                 'status',
                 'create_type',
+                'create_mode',
                 'score',
                 'notes',
-                'assigned_advisor_id'
             ]);
             if (empty($formData['create_mode'])) {
                 $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
             }
 
-            // El servicio se encargará de establecer assigned_advisor_id, created_by y updated_by
-            // basándose en el lider_id del datero autenticado
-            // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData, Auth::id());
-
-            // Recargar con relaciones necesarias
-            $client->load('assignedAdvisor:id,name,email');
+            $client->load(['assignedAdvisor:id,name,email', 'city:id,name']);
 
             return $this->successResponse(
                 ['client' => $this->formatClient($client)],
@@ -245,6 +250,16 @@ class ClientController extends Controller
                 201
             );
         } catch (ValidationException $e) {
+            $duplicateOwner = $this->getDuplicateOwnerInfo(
+                $formData['phone'] ?? null,
+                $formData['document_number'] ?? null
+            );
+            if ($duplicateOwner) {
+                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
+                    'errors' => $e->errors(),
+                    'duplicate_owner' => $duplicateOwner,
+                ], 422);
+            }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             Log::error('Error al crear cliente (Datero)', [
@@ -259,62 +274,64 @@ class ClientController extends Controller
     }
 
     /**
-     * Actualizar un cliente existente
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * Actualizar un cliente existente (misma lógica y patrón que API Cazador; incluye city_id)
      */
     public function update(Request $request, $id)
     {
         try {
-            // Buscar cliente
             $client = Client::find($id);
 
             if (!$client) {
                 return $this->notFoundResponse('Cliente');
             }
 
-            // Verificar propiedad del cliente
             if ($forbidden = $this->ensureClientOwnership($client)) {
                 return $forbidden;
             }
 
-            // Preparar datos del formulario
             $formData = $request->only([
-                'create_mode',
                 'name',
                 'phone',
                 'document_type',
                 'document_number',
                 'address',
+                'city_id',
                 'birth_date',
                 'client_type',
                 'source',
                 'status',
+                'create_type',
+                'create_mode',
                 'score',
                 'notes',
-                'assigned_advisor_id'
             ]);
             if (empty($formData['create_mode'])) {
                 $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
             }
 
-            // Actualizar el cliente usando el servicio
             $updated = $this->clientService->updateClient($id, $formData);
 
             if (!$updated) {
                 return $this->errorResponse('Error al actualizar el cliente', null, 500);
             }
 
-            // Obtener el cliente actualizado
-            $client = Client::with('assignedAdvisor:id,name,email')->find($id);
+            $client = Client::with(['assignedAdvisor:id,name,email', 'city:id,name'])->find($id);
 
             return $this->successResponse(
                 ['client' => $this->formatClient($client)],
                 'Cliente actualizado exitosamente'
             );
         } catch (ValidationException $e) {
+            $duplicateOwner = $this->getDuplicateOwnerInfo(
+                $formData['phone'] ?? null,
+                $formData['document_number'] ?? null
+            );
+            if ($duplicateOwner) {
+                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
+                    'errors' => $e->errors(),
+                    'duplicate_owner' => $duplicateOwner,
+                ], 422);
+            }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al actualizar el cliente');
@@ -322,9 +339,7 @@ class ClientController extends Controller
     }
 
     /**
-     * Obtener opciones para formularios (tipos, estados, etc.)
-     * 
-     * @return \Illuminate\Http\JsonResponse
+     * Obtener opciones para formularios (tipos, estados, ciudades, etc.)
      */
     public function options()
     {
@@ -335,5 +350,61 @@ class ClientController extends Controller
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener las opciones');
         }
+    }
+
+    private function getDuplicateOwnerInfo(?string $phone, ?string $documentNumber): ?array
+    {
+        $normalizedPhone = $phone ? preg_replace('/[^0-9]/', '', (string) $phone) : null;
+        $normalizedDocument = $documentNumber ? trim((string) $documentNumber) : null;
+
+        if ($normalizedDocument !== null && $normalizedDocument !== '') {
+            if (preg_match('/^[0-9]+$/', $normalizedDocument)) {
+                $normalizedDocument = preg_replace('/[^0-9]/', '', $normalizedDocument);
+            } else {
+                $normalizedDocument = strtoupper(preg_replace('/\s+/', '', $normalizedDocument));
+            }
+        }
+
+        if (!$normalizedPhone && !$normalizedDocument) {
+            return null;
+        }
+
+        $client = Client::query()
+            ->where(function ($q) use ($normalizedPhone, $normalizedDocument) {
+                if ($normalizedPhone) {
+                    $q->orWhere('phone', $normalizedPhone);
+                }
+                if ($normalizedDocument) {
+                    $q->orWhere('document_number', $normalizedDocument);
+                }
+            })
+            ->with(['assignedAdvisor:id,name', 'createdBy:id,name'])
+            ->first();
+
+        if (!$client) {
+            return null;
+        }
+
+        $owner = $client->createdBy ?: $client->assignedAdvisor;
+        if (!$owner) {
+            return null;
+        }
+
+        $field = $normalizedPhone && $client->phone === $normalizedPhone ? 'phone' : 'document_number';
+
+        return [
+            'name' => $owner->name,
+            'user_id' => $owner->id,
+            'client_id' => $client->id,
+            'field' => $field,
+        ];
+    }
+
+    private function buildDuplicateMessage(array $duplicateOwner): string
+    {
+        $label = ($duplicateOwner['field'] ?? '') === 'phone' ? 'Telefono' : 'DNI';
+        $name = $duplicateOwner['name'] ?? 'Desconocido';
+
+        return $label . ' registrado por "' . $name . '"';
     }
 }

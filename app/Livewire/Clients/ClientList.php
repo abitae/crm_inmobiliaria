@@ -10,6 +10,7 @@ use App\Services\TaskService;
 use App\Services\DocumentSearchService;
 use App\Services\ReservationService;
 use App\Models\User;
+use App\Models\City;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -49,6 +50,7 @@ class ClientList extends Component
     public $document_number = '';
     public $create_mode = 'dni';
     public $address = '';
+    public $city_id = null;
     public $birth_date = '';
     public $client_type = 'comprador';
     public $source = 'redes_sociales';
@@ -90,6 +92,7 @@ class ClientList extends Component
     protected $taskService;
     protected $reservationService;
     public $advisors = [];
+    public $cities = [];
     public $searchingDocument = false;
 
     public function getRules(): array
@@ -124,6 +127,7 @@ class ClientList extends Component
         $this->advisors = Cache::remember($cacheKey, 300, function () use ($user) {
             return User::getAvailableAdvisors($user);
         });
+        $this->cities = City::orderBy('name')->get(['id', 'name']);
 
         $this->advisorFilter = $user->id;
         $this->status = 'nuevo';
@@ -254,6 +258,7 @@ class ClientList extends Component
             'document_number',
             'create_mode',
             'address',
+            'city_id',
             'birth_date',
             'client_type',
             'source',
@@ -322,6 +327,7 @@ class ClientList extends Component
         $this->document_number = $client->document_number;
         $this->create_mode = $client->document_number ? 'dni' : 'phone';
         $this->address = $client->address;
+        $this->city_id = $client->city_id;
         $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : '';
         $this->client_type = $client->client_type;
         $this->source = $client->source;
@@ -619,6 +625,7 @@ class ClientList extends Component
             'document_type' => $documentType,
             'document_number' => $documentNumber,
             'address' => $this->address,
+            'city_id' => $this->city_id ?: null,
             'birth_date' => $this->birth_date ?: null,
             'client_type' => $this->client_type,
             'source' => $this->source,

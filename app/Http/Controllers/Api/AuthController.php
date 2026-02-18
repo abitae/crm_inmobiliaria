@@ -25,12 +25,13 @@ class AuthController extends Controller
             // Validar datos de entrada
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
-                'password' => 'required|string|min:6',
+                'password' => 'required|string|size:6|regex:/^[0-9]{6}$/',
             ], [
                 'email.required' => 'El email es obligatorio.',
                 'email.email' => 'El email debe ser una dirección válida.',
-                'password.required' => 'La contraseña es obligatoria.',
-                'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+                'password.required' => 'El PIN es obligatorio.',
+                'password.size' => 'El PIN debe tener exactamente 6 dígitos.',
+                'password.regex' => 'El PIN debe contener solo números.',
             ]);
 
             if ($validator->fails()) {

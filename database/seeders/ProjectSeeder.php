@@ -619,7 +619,7 @@ class ProjectSeeder extends Seeder
         $tipoFinanciamiento = ['contado', 'financiado'];
         $tipoCuenta = ['cuenta corriente', 'cuenta vista', 'cuenta ahorro'];
 
-        $extraProjects = 20;
+        $extraProjects = 2;
         for ($i = 0; $i < $extraProjects; $i++) {
             $totalUnits = rand(80, 250);
             $soldUnits = rand(0, (int) ($totalUnits * 0.5));

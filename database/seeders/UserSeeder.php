@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('es_PE');
-        $this->command->info('Generando usuarios de prueba (dataset grande)...');
+        $this->command->info('Generando usuarios de prueba (mínimo)...');
 
         // Usuario administrador (sin líder)
         $admin = User::create([
@@ -32,10 +32,10 @@ class UserSeeder extends Seeder
         ]);
         $admin->setRole('admin');
 
-        $leadersCount = 10;
-        $vendorsPerLeader = 30; // 300 vendedores
-        $independentVendors = 10;
-        $independentDateros = 10;
+        $leadersCount = 2;
+        $vendorsPerLeader = 1;
+        $independentVendors = 0;
+        $independentDateros = 0;
 
         // Líderes fijos para mantener compatibilidad con jerarquías
         $fixedLeaders = [
@@ -121,7 +121,7 @@ class UserSeeder extends Seeder
             ], 'datero');
         }
 
-        $this->command->info('Usuarios creados exitosamente con jerarquías (dataset grande):');
+        $this->command->info('Usuarios creados exitosamente (mínimo):');
         $this->command->info('Admin: Abel Arana');
         $this->command->info("Líderes: {$leadersCount} líderes creados");
         $this->command->info('Vendedores: ' . count($vendedores) . ' vendedores creados');

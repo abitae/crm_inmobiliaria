@@ -174,7 +174,7 @@ class ReservationSeeder extends Seeder
         $lastReservation = Reservation::orderBy('id', 'desc')->first();
         $lastNumber = $lastReservation ? (int) substr($lastReservation->reservation_number, -6) : 5;
 
-        for ($i = 0; $i < 1000; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $client = $clients->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();

@@ -170,7 +170,7 @@ class CommissionSeeder extends Seeder
         $statuses = ['pendiente', 'aprobada', 'pagada', 'cancelada'];
         $paymentMethods = ['transferencia', 'efectivo', 'cheque', 'depósito'];
 
-        for ($i = 0; $i < 500; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $advisor = $advisors->random();
             $project = $projects->random();
             $unit = $units->where('project_id', $project->id)->first();

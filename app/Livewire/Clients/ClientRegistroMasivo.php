@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use App\Services\ClientService;
 use App\Traits\ClientFormTrait;
 use App\Traits\SearchDocument;
+use App\Models\City;
 use Illuminate\Support\Facades\Auth;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -28,13 +29,16 @@ class ClientRegistroMasivo extends Component
     
     // Modal para ver el QR
     public bool $showQRModal = false;
+    public $cities = [];
 
     // Reglas de validación específicas para este componente
     protected function rules()
     {
-        $rules = $this->clientService->getValidationRules();
-        $rules['document_type'] = 'required|in:DNI';
-        $rules['document_number'] .= '|size:8';
+        $rules = $this->clientService->getValidationRules(null, $this->create_mode);
+        if ($this->create_mode === 'dni') {
+            $rules['document_type'] = 'required|in:DNI';
+            $rules['document_number'] .= '|size:8';
+        }
 
         return $rules;
     }
@@ -63,6 +67,19 @@ class ClientRegistroMasivo extends Component
     {
         $this->assigned_advisor_id = $id ?? Auth::id();
         $this->setDefaultValues();
+        $this->cities = City::orderBy('name')->get(['id', 'name']);
+    }
+
+    public function updatedCreateMode(): void
+    {
+        if ($this->create_mode === 'phone') {
+            $this->document_type = '';
+            $this->document_number = '';
+        }
+
+        if ($this->create_mode === 'dni' && !$this->document_type) {
+            $this->document_type = 'DNI';
+        }
     }
 
     /**

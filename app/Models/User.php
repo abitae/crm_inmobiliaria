@@ -28,6 +28,7 @@ class User extends Authenticatable implements JWTSubject
         'dni',
         'pin',
         'lider_id',
+        'city_id',
         'is_active',
         'banco',
         'cuenta_bancaria',
@@ -58,6 +59,7 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
             'pin' => 'hashed',
             'lider_id' => 'integer',
+            'city_id' => 'integer',
             'is_active' => 'boolean',
         ];
     }
@@ -189,6 +191,11 @@ class User extends Authenticatable implements JWTSubject
     public function deactivate(): void
     {
         $this->update(['is_active' => false]);
+    }
+
+    public function city(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(City::class);
     }
 
     /**

@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
             // 2. Usuarios con Jerarquías (base - sin dependencias)
             UserSeeder::class,
 
+            // 2.1. Ciudades (base)
+            CitySeeder::class,
+
             // 3. Jerarquías y Equipos (depende de Users)
             HierarchySeeder::class,
 
@@ -54,19 +57,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('👥 Líderes fijos: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
         $this->command->info('💼 Vendedores/Dateros: usuarios generados con password "password"');
         $this->command->info('');
-        $this->command->info('🏢 JERARQUÍAS ESTABLECIDAS:');
+        $this->command->info('🏢 JERARQUÍAS (mínimo):');
         $this->command->info('├── Admin (Abel Arana)');
-        $this->command->info('│   ├── Líder 1 (María González)');
-        $this->command->info('│   │   ├── Vendedor 1 (Ana Martínez)');
-        $this->command->info('│   │   │   └── Datero 1 (Pedro Ramírez)');
-        $this->command->info('│   │   └── Vendedor 2 (Luis Pérez)');
-        $this->command->info('│   │       └── Datero 2 (Laura Jiménez)');
-        $this->command->info('│   └── Líder 2 (Carlos Rodríguez)');
-        $this->command->info('│       ├── Vendedor 3 (Sofia López)');
-        $this->command->info('│       │   └── Datero 3 (Diego Morales)');
-        $this->command->info('│       └── Vendedor 4 (Roberto Silva)');
-        $this->command->info('├── Vendedor 5 (Miguel Torres) - Sin líder');
-        $this->command->info('│   └── Datero 4 (Carmen García)');
-        $this->command->info('└── Datero 5 (Juan Pérez) - Sin vendedor');
+        $this->command->info('│   ├── Líder 1 (María González) → 1 vendedor → 1 datero');
+        $this->command->info('│   └── Líder 2 (Carlos Rodríguez) → 1 vendedor → 1 datero');
     }
 }

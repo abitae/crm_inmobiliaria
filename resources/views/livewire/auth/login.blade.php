@@ -9,10 +9,10 @@
         <flux:input size="xs" wire:model="email" :label="__('Email')" type="email" required autofocus autocomplete="email"
             placeholder="email@example.com" />
 
-        <!-- Password -->
+        <!-- PIN (6 dígitos) - se usa como contraseña -->
         <div class="relative">
-            <flux:input size="xs" wire:model="password" :label="__('Contraseña')" type="password" required
-                autocomplete="current-password" :placeholder="__('Contraseña')" viewable />
+            <flux:input size="xs" wire:model="password" :label="__('PIN (6 dígitos)')" type="password" required
+                autocomplete="current-password" placeholder="000000" maxlength="6" inputmode="numeric" viewable />
         </div>
 
         <!-- Remember Me -->

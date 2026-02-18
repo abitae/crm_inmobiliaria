@@ -29,12 +29,13 @@ class AuthController extends Controller
             // Validar datos de entrada
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
-                'password' => 'required|string|min:6',
+                'password' => 'required|string|size:6|regex:/^[0-9]{6}$/',
             ], [
                 'email.required' => 'El email es obligatorio.',
                 'email.email' => 'El email debe ser una dirección válida.',
-                'password.required' => 'La contraseña es obligatoria.',
-                'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+                'password.required' => 'El PIN es obligatorio.',
+                'password.size' => 'El PIN debe tener exactamente 6 dígitos.',
+                'password.regex' => 'El PIN debe contener solo números.',
             ]);
 
             if ($validator->fails()) {
@@ -219,59 +220,61 @@ class AuthController extends Controller
                 return $this->unauthorizedResponse('Usuario no autenticado');
             }
 
-            // Validar datos
+            // Validar datos (PIN de 6 dígitos)
             $validator = Validator::make($request->all(), [
                 'current_password' => 'required|string',
-                'new_password' => 'required|string|min:6|confirmed',
+                'new_password' => 'required|string|size:6|regex:/^[0-9]{6}$/|confirmed',
             ], [
-                'current_password.required' => 'La contraseña actual es obligatoria.',
-                'new_password.required' => 'La nueva contraseña es obligatoria.',
-                'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
-                'new_password.confirmed' => 'La confirmación de contraseña no coincide.',
+                'current_password.required' => 'El PIN actual es obligatorio.',
+                'new_password.required' => 'El nuevo PIN es obligatorio.',
+                'new_password.size' => 'El nuevo PIN debe tener exactamente 6 dígitos.',
+                'new_password.regex' => 'El nuevo PIN debe contener solo números.',
+                'new_password.confirmed' => 'La confirmación del PIN no coincide.',
             ]);
 
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Verificar contraseña actual
+            // Verificar PIN actual
             if (!Hash::check($request->current_password, $user->password)) {
-                Log::warning('Intento de cambio de contraseña con contraseña actual incorrecta (Cazador)', [
+                Log::warning('Intento de cambio de PIN con PIN actual incorrecto (Cazador)', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'ip' => $request->ip(),
                 ]);
                 
-                return $this->errorResponse('La contraseña actual es incorrecta', null, 422);
+                return $this->errorResponse('El PIN actual es incorrecto', null, 422);
             }
 
-            // Verificar que la nueva contraseña sea diferente a la actual
+            // Verificar que el nuevo PIN sea diferente al actual
             if (Hash::check($request->new_password, $user->password)) {
-                return $this->errorResponse('La nueva contraseña debe ser diferente a la contraseña actual', null, 422);
+                return $this->errorResponse('El nuevo PIN debe ser diferente al PIN actual', null, 422);
             }
 
-            // Actualizar contraseña
+            // Actualizar password y PIN (mismo valor, ambos hasheados)
             $user->update([
-                'password' => Hash::make($request->new_password)
+                'password' => Hash::make($request->new_password),
+                'pin' => $request->new_password, // el cast 'hashed' del modelo lo hasheará
             ]);
 
-            Log::info('Contraseña cambiada exitosamente (Cazador)', [
+            Log::info('PIN actualizado exitosamente (Cazador)', [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'ip' => $request->ip(),
             ]);
 
-            return $this->successResponse(null, 'Contraseña actualizada exitosamente');
+            return $this->successResponse(null, 'PIN actualizado exitosamente');
 
         } catch (\Exception $e) {
-            Log::error('Error al cambiar contraseña (Cazador)', [
+            Log::error('Error al cambiar PIN (Cazador)', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'ip' => $request->ip(),
             ]);
             
-            return $this->serverErrorResponse($e, 'Error al actualizar la contraseña');
+            return $this->serverErrorResponse($e, 'Error al actualizar el PIN');
         }
     }
 }

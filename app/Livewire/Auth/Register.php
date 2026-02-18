@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -42,7 +41,7 @@ class Register extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'string', 'size:6', 'regex:/^[0-9]{6}$/', 'confirmed'],
             'lider_id' => ['nullable', 'exists:users,id'],
             'banco' => ['nullable', 'string', 'max:255'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:255'],
@@ -56,16 +55,15 @@ class Register extends Component
             'email.email' => 'El email debe ser una dirección de email válida',
             'email.max' => 'El email debe tener menos de 255 caracteres',
             'email.unique' => 'El email ya está registrado',
-            'password.required' => 'La contraseña es requerida',
-            'password.string' => 'La contraseña debe ser una cadena de texto',
-            'password.confirmed' => 'La contraseña y la confirmación de la contraseña no coinciden',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres',
-            'password.max' => 'La contraseña debe tener menos de 255 caracteres',
-            'password_confirmation.required' => 'La confirmación de la contraseña es requerida',
-            'password_confirmation.string' => 'La confirmación de la contraseña debe ser una cadena de texto',
-            'password_confirmation.confirmed' => 'La confirmación de la contraseña y la contraseña no coinciden',
-            'password_confirmation.min' => 'La confirmación de la contraseña debe tener al menos 8 caracteres',
-            'password_confirmation.max' => 'La confirmación de la contraseña debe tener menos de 255 caracteres',
+            'password.required' => 'El PIN es requerido',
+            'password.string' => 'El PIN debe ser una cadena de texto',
+            'password.size' => 'El PIN debe tener exactamente 6 dígitos',
+            'password.regex' => 'El PIN debe contener solo números',
+            'password.confirmed' => 'El PIN y la confirmación no coinciden',
+            'password_confirmation.required' => 'La confirmación del PIN es requerida',
+            'password_confirmation.string' => 'La confirmación del PIN debe ser una cadena de texto',
+            'password_confirmation.confirmed' => 'La confirmación del PIN no coincide',
+            'password_confirmation.size' => 'El PIN debe tener exactamente 6 dígitos',
             'phone.unique' => 'El teléfono ya está registrado',
             'phone.required' => 'El teléfono es requerido',
             'phone.string' => 'El teléfono debe ser una cadena de texto',
@@ -83,7 +81,10 @@ class Register extends Component
             'cci_bancaria.max' => 'La CCI bancaria debe tener menos de 255 caracteres',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        // PIN de 6 dígitos: se guarda en password y pin (el modelo hashea con el cast)
+        $pin = $validated['password'];
+        $validated['pin'] = $pin;
+        unset($validated['password_confirmation']);
 
         event(new Registered(($user = User::create($validated))));
 

@@ -16,6 +16,7 @@ use App\Livewire\Reports\SalesReport;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Appearance;
+use App\Livewire\Settings\CityList;
 use App\Livewire\Actividades\ActivityList;
 use App\Livewire\Auth\RegisterDatero;
 use App\Livewire\Clients\ClientListDatero;
@@ -51,6 +52,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/profile', Profile::class)->middleware('permission:view_settings')->name('settings.profile');
     Route::get('settings/password', Password::class)->middleware('permission:view_settings')->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->middleware('permission:view_settings')->name('settings.appearance');
+    Route::get('settings/cities', CityList::class)->middleware('permission:view_settings')->name('settings.cities');
 
     // Dashboard principal
     Route::get('/dashboard', Dashboard::class)->middleware('permission:view_dashboard')->name('dashboard');

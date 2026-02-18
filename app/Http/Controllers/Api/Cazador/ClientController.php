@@ -34,18 +34,25 @@ class ClientController extends Controller
             'document_type' => $client->document_type,
             'document_number' => $client->document_number,
             'address' => $client->address,
+            'city_id' => $client->city_id,
             'birth_date' => $client->birth_date?->format('Y-m-d'),
             'client_type' => $client->client_type,
             'source' => $client->source,
             'status' => $client->status,
             'create_type' => $client->create_type,
+            'create_mode' => $client->create_mode,
             'score' => $client->score,
             'notes' => $client->notes,
             'created_at' => $client->created_at->format('Y-m-d H:i:s'),
             'updated_at' => $client->updated_at->format('Y-m-d H:i:s'),
         ];
 
-        // Solo incluir assigned_advisor si la relación está cargada
+        if ($client->relationLoaded('city') && $client->city) {
+            $data['city'] = ['id' => $client->city->id, 'name' => $client->city->name];
+        } else {
+            $data['city'] = null;
+        }
+
         if ($client->relationLoaded('assignedAdvisor') && $client->assignedAdvisor) {
             $data['assigned_advisor'] = [
                 'id' => $client->assignedAdvisor->id,
@@ -86,7 +93,7 @@ class ClientController extends Controller
             ];
 
             // Obtener clientes asignados al cazador o creados por él
-            $query = Client::with(array_values($includes))
+            $query = Client::with(array_merge(['city:id,name'], array_values($includes)))
                 ->withCount(['opportunities', 'activities', 'tasks'])
                 ->where(function ($q) {
                     $q->where('assigned_advisor_id', Auth::id())
@@ -157,6 +164,7 @@ class ClientController extends Controller
 
             $baseRelations = [
                 'assignedAdvisor:id,name,email',
+                'city:id,name',
                 'opportunities.project:id,name',
             ];
 
@@ -200,6 +208,7 @@ class ClientController extends Controller
                 'document_type',
                 'document_number',
                 'address',
+                'city_id',
                 'birth_date',
                 'client_type',
                 'source',
@@ -277,6 +286,7 @@ class ClientController extends Controller
                 'document_type',
                 'document_number',
                 'address',
+                'city_id',
                 'birth_date',
                 'client_type',
                 'source',
@@ -346,6 +356,7 @@ class ClientController extends Controller
                     'document_type',
                     'document_number',
                     'address',
+                    'city_id',
                     'birth_date',
                     'client_type',
                     'source',

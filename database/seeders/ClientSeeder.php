@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\City;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -27,27 +28,15 @@ class ClientSeeder extends Seeder
         }
 
         $faker = Faker::create('es_PE');
+        $cityId = City::first()?->id;
         $clientTypes = ['inversor', 'comprador', 'empresa', 'constructor'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $statuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
-        $createTypes = ['datero', 'propio'];
-        
-        // Generar fechas de nacimiento aleatorias entre 18 y 65 años
-        $birthDates = [
-            '1985-03-15',
-            '1978-07-22',
-            '1990-11-08',
-            '1982-05-30',
-            '1975-12-14',
-            '1988-09-03',
-            '1980-01-25',
-            '1992-06-18'
-        ];
 
         $clients = [
             [
                 'name' => 'Juan Carlos Vargas Mendoza',
-                'phone' => '+51 999 123 456',
+                'phone' => '999123456',
                 'document_type' => 'DNI',
                 'document_number' => '12345678',
                 'address' => 'Av. Arequipa 1234',
@@ -60,7 +49,7 @@ class ClientSeeder extends Seeder
             ],
             [
                 'name' => 'María Elena Torres Ríos',
-                'phone' => '+51 999 234 567',
+                'phone' => '999234567',
                 'document_type' => 'DNI',
                 'document_number' => '23456789',
                 'address' => 'Jr. de la Unión 567',
@@ -73,7 +62,7 @@ class ClientSeeder extends Seeder
             ],
             [
                 'name' => 'Roberto Silva Castro',
-                'phone' => '+51 999 345 678',
+                'phone' => '999345678',
                 'document_type' => 'RUC',
                 'document_number' => '20123456789',
                 'address' => 'Av. Javier Prado 2345',
@@ -86,7 +75,7 @@ class ClientSeeder extends Seeder
             ],
             [
                 'name' => 'Carmen Flores Díaz',
-                'phone' => '+51 999 456 789',
+                'phone' => '999456789',
                 'document_type' => 'DNI',
                 'document_number' => '34567890',
                 'address' => 'Av. Benavides 3456',
@@ -99,7 +88,7 @@ class ClientSeeder extends Seeder
             ],
             [
                 'name' => 'Fernando Mendoza Ruiz',
-                'phone' => '+51 999 567 890',
+                'phone' => '999567890',
                 'document_type' => 'RUC',
                 'document_number' => '20134567890',
                 'address' => 'Av. La Marina 4567',
@@ -110,52 +99,14 @@ class ClientSeeder extends Seeder
                 'score' => 75,
                 'notes' => 'Constructor interesado en lotes para desarrollo',
             ],
-            [
-                'name' => 'Patricia Ríos Morales',
-                'phone' => '+51 999 678 901',
-                'document_type' => 'DNI',
-                'document_number' => '45678901',
-                'address' => 'Av. Primavera 5678',
-                'birth_date' => '1988-09-03',
-                'client_type' => 'inversor',
-                'source' => 'formulario_web',
-                'status' => 'contacto_inicial',
-                'score' => 65,
-                'notes' => 'Inversora en propiedades de playa',
-            ],
-            [
-                'name' => 'Alberto García Paredes',
-                'phone' => '+51 999 789 012',
-                'document_type' => 'DNI',
-                'document_number' => '56789012',
-                'address' => 'Av. Angamos 6789',
-                'birth_date' => '1980-01-25',
-                'client_type' => 'comprador',
-                'source' => 'referidos',
-                'status' => 'cierre',
-                'score' => 95,
-                'notes' => 'Cliente que ya compró, mantener relación',
-            ],
-            [
-                'name' => 'Lucía Herrera Vega',
-                'phone' => '+51 999 890 123',
-                'document_type' => 'DNI',
-                'document_number' => '67890123',
-                'address' => 'Av. Arequipa 7890',
-                'birth_date' => '1992-06-18',
-                'client_type' => 'comprador',
-                'source' => 'redes_sociales',
-                'status' => 'en_seguimiento',
-                'score' => 80,
-                'notes' => 'Interesada en propiedades con vista al mar',
-            ],
         ];
 
-        foreach ($clients as $index => $clientData) {
+        foreach ($clients as $clientData) {
             $advisor = $advisors->random();
-
             Client::create([
                 ...$clientData,
+                'create_mode' => 'dni',
+                'city_id' => $cityId,
                 'assigned_advisor_id' => $advisor->id,
                 'create_type' => $advisor->getRoleName() === 'datero' ? 'datero' : 'propio',
                 'created_by' => $advisor->id,
@@ -167,7 +118,7 @@ class ClientSeeder extends Seeder
         $this->createClientsForHierarchy($advisors, $admin, $faker);
         $this->createClientsForAdmin($admin, $faker);
 
-        $this->command->info('Clientes creados exitosamente');
+        $this->command->info('Clientes creados exitosamente (mínimo)');
     }
 
     private function createClientsForHierarchy($advisors, $admin, $faker): void
@@ -176,25 +127,18 @@ class ClientSeeder extends Seeder
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $statuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
         
+        $cityId = City::first()?->id;
         foreach ($advisors as $advisor) {
-            // Determinar cuántos clientes crear según el rol
-            $clientCount = match($advisor->getRoleName()) {
-                'admin' => 150,
-                'lider' => 80,
-                'vendedor' => 40,
-                'datero' => 20,
-                default => 10
-            };
-
+            $clientCount = 2;
             for ($i = 0; $i < $clientCount; $i++) {
-                $documentType = $faker->randomElement(['DNI', 'RUC', 'CE', 'PASAPORTE']);
+                $documentType = $faker->randomElement(['DNI', 'RUC']);
                 $documentNumber = $documentType === 'RUC'
                     ? $faker->numerify('20#########')
                     : $faker->numerify('########');
 
                 Client::create([
                     'name' => $faker->name(),
-                    'phone' => $faker->numerify('+51 9########'),
+                    'phone' => $faker->unique()->numerify('9########'),
                     'document_type' => $documentType,
                     'document_number' => $documentNumber,
                     'address' => $faker->streetAddress(),
@@ -204,6 +148,8 @@ class ClientSeeder extends Seeder
                     'status' => $statuses[array_rand($statuses)],
                     'score' => rand(40, 100),
                     'notes' => "Cliente generado para {$advisor->name} - {$advisor->getRoleName()}",
+                    'create_mode' => 'dni',
+                    'city_id' => $cityId,
                     'assigned_advisor_id' => $advisor->id,
                     'create_type' => $advisor->getRoleName() === 'datero' ? 'datero' : 'propio',
                     'created_by' => $advisor->id,
@@ -218,16 +164,17 @@ class ClientSeeder extends Seeder
         $clientTypes = ['inversor', 'comprador', 'empresa', 'constructor'];
         $sources = ['redes_sociales', 'ferias', 'referidos', 'formulario_web', 'publicidad'];
         $statuses = ['nuevo', 'contacto_inicial', 'en_seguimiento', 'cierre', 'perdido'];
+        $cityId = City::first()?->id;
 
-        for ($i = 0; $i < 200; $i++) {
-            $documentType = $faker->randomElement(['DNI', 'RUC', 'CE', 'PASAPORTE']);
+        for ($i = 0; $i < 3; $i++) {
+            $documentType = $faker->randomElement(['DNI', 'RUC']);
             $documentNumber = $documentType === 'RUC'
                 ? $faker->numerify('20#########')
                 : $faker->numerify('########');
 
             Client::create([
                 'name' => $faker->name(),
-                'phone' => $faker->numerify('+51 9########'),
+                'phone' => $faker->unique()->numerify('9########'),
                 'document_type' => $documentType,
                 'document_number' => $documentNumber,
                 'address' => $faker->streetAddress(),
@@ -237,6 +184,8 @@ class ClientSeeder extends Seeder
                 'status' => $statuses[array_rand($statuses)],
                 'score' => rand(40, 100),
                 'notes' => 'Cliente generado para pruebas (admin).',
+                'create_mode' => 'dni',
+                'city_id' => $cityId,
                 'assigned_advisor_id' => null,
                 'create_type' => 'propio',
                 'created_by' => $admin->id,

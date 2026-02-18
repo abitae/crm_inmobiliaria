@@ -18,7 +18,9 @@ trait ClientFormTrait
     public string $phone = '';
     public string $document_type = 'DNI';
     public string $document_number = '';
+    public string $create_mode = 'dni';
     public ?string $address = null;
+    public ?int $city_id = null;
     public ?string $birth_date = null;
     public string $client_type = 'comprador';
     public string $source = 'formulario_web';
@@ -96,6 +98,7 @@ trait ClientFormTrait
             'document_type' => $this->document_type,
             'document_number' => $this->document_number,
             'address' => $this->address,
+            'city_id' => $this->city_id,
             'birth_date' => $this->parseBirthDate(),
             'client_type' => $this->client_type,
             'source' => $this->source,
@@ -103,6 +106,7 @@ trait ClientFormTrait
             'score' => $this->score,
             'notes' => $this->notes,
             'assigned_advisor_id' => $this->assigned_advisor_id,
+            'create_mode' => $this->create_mode,
         ];
     }
 
@@ -117,6 +121,7 @@ trait ClientFormTrait
             'document_type',
             'document_number',
             'address',
+            'city_id',
             'birth_date',
             'client_type',
             'source',
@@ -134,6 +139,7 @@ trait ClientFormTrait
     protected function setDefaultValues(): void
     {
         $this->document_type = 'DNI';
+        $this->create_mode = 'dni';
         $this->client_type = 'comprador';
         $this->source = 'formulario_web';
         $this->status = 'nuevo';
@@ -150,7 +156,9 @@ trait ClientFormTrait
         $this->phone = $client->phone;
         $this->document_type = $client->document_type;
         $this->document_number = $client->document_number;
+        $this->create_mode = $client->document_number ? 'dni' : 'phone';
         $this->address = $client->address;
+        $this->city_id = $client->city_id;
         $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : null;
         $this->client_type = $client->client_type;
         $this->source = $client->source;

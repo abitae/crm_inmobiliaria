@@ -75,28 +75,48 @@
                     </h2>
 
                     <div class="grid grid-cols-1 gap-3">
-                        <!-- Documento - Mobile Stack -->
-                        <div class="space-y-2 sm:space-y-0 sm:flex sm:gap-2">
-                            <div class="w-full">
-                                <flux:input.group class="flex items-end w-full">
-                                    <flux:select wire:model.live="document_type" label="Tipo" size="xs"
-                                        class="w-full">
-                                        @foreach ($documentTypes as $value => $label)
-                                            <option value="{{ $value }}">{{ $label }}</option>
-                                        @endforeach
-                                    </flux:select>
-                                    <flux:input mask="99999999" class="flex-1" label="Documento" placeholder="Número de documento"
-                                        wire:model.live="document_number" size="xs" />
-                                    @if ($document_type == 'DNI')
-                                        <flux:button icon="magnifying-glass" wire:click="buscarDocumento"
-                                            variant="outline" label="Buscar" size="xs" class="self-end" />
-                                    @endif
-                                </flux:input.group>
+                        <!-- Modo de alta -->
+                        <div>
+                            <div class="text-xs font-medium text-gray-700">Modo de alta</div>
+                            <div class="mt-1 flex items-center space-x-4 text-xs text-gray-700">
+                                <label class="flex items-center space-x-1">
+                                    <input type="radio" wire:model.live="create_mode" value="dni"
+                                        class="text-blue-600 border-gray-300">
+                                    <span>Por DNI</span>
+                                </label>
+                                <label class="flex items-center space-x-1">
+                                    <input type="radio" wire:model.live="create_mode" value="phone"
+                                        class="text-blue-600 border-gray-300">
+                                    <span>Por teléfono</span>
+                                </label>
                             </div>
                         </div>
 
+                        @if ($create_mode === 'dni')
+                            <!-- Documento - Mobile Stack -->
+                            <div class="space-y-2 sm:space-y-0 sm:flex sm:gap-2">
+                                <div class="w-full">
+                                    <flux:input.group class="flex items-end w-full">
+                                        <flux:select wire:model.live="document_type" label="Tipo" size="xs"
+                                            class="w-full">
+                                            @foreach ($documentTypes as $value => $label)
+                                                <option value="{{ $value }}">{{ $label }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                        <flux:input mask="99999999" class="flex-1" label="Documento" placeholder="Número de documento"
+                                            wire:model.live="document_number" size="xs" />
+                                        @if ($document_type == 'DNI')
+                                            <flux:button icon="magnifying-glass" wire:click="buscarDocumento"
+                                                variant="outline" label="Buscar" size="xs" class="self-end" />
+                                        @endif
+                                    </flux:input.group>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Nombre -->
-                        <flux:input label="Nombre Completo" wire:model.live="name" disabled
+                        <flux:input label="Nombre Completo" wire:model.live="name"
+                            @if ($create_mode === 'dni') disabled @endif
                             placeholder="Nombre completo del cliente" size="xs" />
 
                         <!-- Teléfono -->
@@ -104,6 +124,7 @@
 
                         <!-- Fecha de Nacimiento -->
                         <flux:input label="Fecha de Nacimiento" type="date" wire:model.live="birth_date"
+                            @if ($create_mode === 'dni') disabled @endif
                             size="xs" />
 
                         <!-- Dirección -->
@@ -112,6 +133,16 @@
                             <textarea wire:model="address" rows="2"
                                 class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 @enderror resize-none"
                                 placeholder="Ingrese la dirección"></textarea>
+                        </div>
+
+                        <!-- Ciudad -->
+                        <div>
+                            <flux:select label="Ciudad" wire:model="city_id" size="xs" class="w-full">
+                                <option value="">Sin ciudad</option>
+                                @foreach ($cities as $city)
+                                    <option value="{{ $city->id }}">{{ $city->name }}</option>
+                                @endforeach
+                            </flux:select>
                         </div>
                     </div>
                 </div>

@@ -167,11 +167,11 @@ class TaskSeeder extends Seeder
         foreach ($advisors as $advisor) {
             // Determinar cuántas tareas crear según el rol
             $taskCount = match($advisor->getRoleName()) {
-                'admin' => 50,
-                'lider' => 30,
-                'vendedor' => 15,
-                'datero' => 8,
-                default => 5
+                'admin' => 2,
+                'lider' => 2,
+                'vendedor' => 2,
+                'datero' => 2,
+                default => 2
             };
 
             for ($i = 0; $i < $taskCount; $i++) {

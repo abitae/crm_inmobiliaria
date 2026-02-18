@@ -190,7 +190,7 @@ class ActivitySeeder extends Seeder
         $statuses = ['programada', 'en_progreso', 'completada', 'cancelada'];
         $priorities = ['baja', 'media', 'alta', 'urgente'];
 
-        for ($i = 0; $i < 500; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $activityType = $activityTypes[array_rand($activityTypes)];
             $status = $statuses[array_rand($statuses)];
             $priority = $priorities[array_rand($priorities)];
@@ -277,7 +277,7 @@ class ActivitySeeder extends Seeder
         $priorities = ['baja', 'media', 'alta', 'urgente'];
 
         // Crear actividades de los últimos 7 días para el dashboard
-        for ($i = 0; $i < 200; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $activityType = $activityTypes[array_rand($activityTypes)];
             $status = $statuses[array_rand($statuses)];
             $priority = $priorities[array_rand($priorities)];

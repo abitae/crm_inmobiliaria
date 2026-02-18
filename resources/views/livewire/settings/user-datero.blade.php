@@ -383,6 +383,19 @@
                                 @enderror
                             </div>
 
+                            <!-- Ciudad -->
+                            <div class="col-span-2">
+                                <flux:select id="city_id" wire:model="city_id" size="xs" class="w-full">
+                                    <option value="">Sin ciudad</option>
+                                    @foreach ($cities as $city)
+                                        <option value="{{ $city->id }}">{{ $city->name }}</option>
+                                    @endforeach
+                                </flux:select>
+                                @error('city_id')
+                                    <span class="text-red-500 text-xs">{{ $message }}</span>
+                                @enderror
+                            </div>
+
                             <!-- Rol -->
                             <div class="col-span-2">
                                 <flux:select id="selectedRole" wire:model="selectedRole" size="xs"

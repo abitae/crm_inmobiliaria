@@ -256,36 +256,54 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 
                     <div class="col-span-2">
-                        <!-- Número de Documento -->
-                        <flux:input.group class="flex items-end w-full">
-                            <flux:select wire:model.live="document_type" label="Tipo" size="xs"
-                                class="w-full">
-                                <option value="DNI">DNI</option>
-                            </flux:select>
-                            <flux:input mask="99999999" class="flex-1" label="Documento"
-                                placeholder="Número de documento" wire:model="document_number" size="xs" />
-                            @if ($document_type == 'DNI')
-                                <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
-                                    size="xs" class="self-end" wire:loading.attr="disabled"
-                                    wire:target="buscarDocumento" title="Buscar datos del documento">
-                                    <span wire:loading.remove wire:target="buscarDocumento">
-                                        <flux:icon name="magnifying-glass" class="w-3 h-3" />
-                                    </span>
-                                    <span wire:loading wire:target="buscarDocumento">
-                                        <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
-                                    </span>
-                                </flux:button>
-                                @if ($name || $birth_date)
-                                    <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
-                                        size="xs" class="self-end" title="Limpiar datos de búsqueda">
-                                    </flux:button>
-                                @endif
-                            @endif
-                        </flux:input.group>
-                        @error('document_number')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
+                        <div class="text-xs font-medium text-gray-700">Modo de alta</div>
+                        <div class="mt-1 flex items-center space-x-4 text-xs text-gray-700">
+                            <label class="flex items-center space-x-1">
+                                <input type="radio" wire:model.live="create_mode" value="dni"
+                                    class="text-blue-600 border-gray-300">
+                                <span>Por DNI</span>
+                            </label>
+                            <label class="flex items-center space-x-1">
+                                <input type="radio" wire:model.live="create_mode" value="phone"
+                                    class="text-blue-600 border-gray-300">
+                                <span>Por teléfono</span>
+                            </label>
+                        </div>
                     </div>
+
+                    @if ($create_mode === 'dni')
+                        <div class="col-span-2">
+                            <!-- Número de Documento -->
+                            <flux:input.group class="flex items-end w-full">
+                                <flux:select wire:model.live="document_type" label="Tipo" size="xs"
+                                    class="w-full">
+                                    <option value="DNI">DNI</option>
+                                </flux:select>
+                                <flux:input mask="99999999" class="flex-1" label="Documento"
+                                    placeholder="Número de documento" wire:model="document_number" size="xs" />
+                                @if ($document_type == 'DNI' && !$editingClient)
+                                    <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
+                                        size="xs" class="self-end" wire:loading.attr="disabled"
+                                        wire:target="buscarDocumento" title="Buscar datos del documento">
+                                        <span wire:loading.remove wire:target="buscarDocumento">
+                                            <flux:icon name="magnifying-glass" class="w-3 h-3" />
+                                        </span>
+                                        <span wire:loading wire:target="buscarDocumento">
+                                            <flux:icon name="arrow-path" class="w-3 h-3 animate-spin" />
+                                        </span>
+                                    </flux:button>
+                                    @if ($name || $birth_date)
+                                        <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
+                                            size="xs" class="self-end" title="Limpiar datos de búsqueda">
+                                        </flux:button>
+                                    @endif
+                                @endif
+                            </flux:input.group>
+                            @error('document_number')
+                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
                     <!-- Nombre -->
                     <div class="col-span-2">
                         <flux:input label="Nombre completo" wire:model="name" size="xs"
@@ -371,6 +389,16 @@
                         <flux:input label="Dirección" wire:model="address" size="xs" placeholder="Dirección"
                             class="w-full" />
 
+                    </div>
+
+                    <!-- Ciudad -->
+                    <div class="col-span-2">
+                        <flux:select label="Ciudad" wire:model="city_id" size="xs" class="w-full">
+                            <option value="">Sin ciudad</option>
+                            @foreach ($cities as $city)
+                                <option value="{{ $city->id }}">{{ $city->name }}</option>
+                            @endforeach
+                        </flux:select>
                     </div>
 
 

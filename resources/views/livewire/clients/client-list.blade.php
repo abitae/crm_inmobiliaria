@@ -359,6 +359,16 @@
 
                     </div>
 
+                    <!-- Ciudad -->
+                    <div class="col-span-2">
+                        <flux:select label="Ciudad" wire:model="city_id" size="xs" class="w-full">
+                            <option value="">Sin ciudad</option>
+                            @foreach ($cities as $city)
+                                <option value="{{ $city->id }}">{{ $city->name }}</option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
 
                     <!-- Notas -->
                     <div class="col-span-2">

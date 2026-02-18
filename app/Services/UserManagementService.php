@@ -169,6 +169,7 @@ class UserManagementService
                 'phone' => $userData['phone'] ?: null,
                 'dni' => $userData['dni'] ?? null,
                 'lider_id' => $userData['lider_id'],
+                'city_id' => $userData['city_id'] ?? null,
                 'password' => bcrypt($password),
                 'pin' => $pin, // El cast 'hashed' del modelo hasheará automáticamente
                 'is_active' => true,
@@ -200,6 +201,7 @@ class UserManagementService
                 'email' => $userData['email'],
                 'phone' => $userData['phone'] ?: null,
                 'lider_id' => $userData['lider_id'],
+                'city_id' => $userData['city_id'] ?? null,
                 'banco' => $userData['banco'] ?? '',
                 'cuenta_bancaria' => $userData['cuenta_bancaria'] ?? '',
                 'cci_bancaria' => $userData['cci_bancaria'] ?? '',
@@ -241,6 +243,7 @@ class UserManagementService
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'lider_id' => 'nullable|exists:users,id',
+            'city_id' => 'nullable|exists:cities,id',
             'selectedRole' => 'required|exists:roles,name',
             'banco' => 'nullable|string|max:255',
             'cuenta_bancaria' => 'nullable|string|max:255',
@@ -282,6 +285,7 @@ class UserManagementService
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'selectedRole.required' => 'Debe seleccionar un rol.',
             'selectedRole.exists' => 'El rol seleccionado no es válido.',
+            'city_id.exists' => 'La ciudad seleccionada no es válida.',
         ];
 
         $validator = validator($data, $rules, $messages);

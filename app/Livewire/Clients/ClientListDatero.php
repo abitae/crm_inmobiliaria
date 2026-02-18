@@ -8,6 +8,7 @@ use App\Services\ActivityService;
 use App\Services\TaskService;
 use App\Services\DocumentSearchService;
 use App\Models\User;
+use App\Models\City;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -44,7 +45,9 @@ class ClientListDatero extends Component
     public $phone = '';
     public $document_type = 'DNI';
     public $document_number = '';
+    public $create_mode = 'dni';
     public $address = '';
+    public $city_id = null;
     public $birth_date = '';
     public $client_type = 'comprador';
     public $source = 'redes_sociales';
@@ -76,12 +79,13 @@ class ClientListDatero extends Component
     protected $activityService;
     protected $taskService;
     public $advisors = [];
+    public $cities = [];
     public $searchingDocument = false;
 
     public function getRules(): array
     {
         $clientId = $this->editingClient ? $this->editingClient->id : null;
-        return $this->clientService->getValidationRules($clientId);
+        return $this->clientService->getValidationRules($clientId, $this->create_mode);
     }
     public function getMessages(): array
     {
@@ -109,6 +113,7 @@ class ClientListDatero extends Component
         $this->advisors = Cache::remember($cacheKey, 300, function () use ($user) {
             return User::getAvailableAdvisors($user);
         });
+        $this->cities = City::orderBy('name')->get(['id', 'name']);
         
         $this->advisorFilter = $user->id;
         $this->status = 'nuevo';
@@ -134,6 +139,20 @@ class ClientListDatero extends Component
     public function updatedAdvisorFilter()
     {
         $this->resetPage();
+    }
+
+    public function updatedCreateMode(): void
+    {
+        if ($this->create_mode === 'phone') {
+            $this->document_type = '';
+            $this->document_number = '';
+        }
+
+        if ($this->create_mode === 'dni' && !$this->document_type) {
+            $this->document_type = 'DNI';
+        }
+
+        $this->resetErrorBag(['document_number', 'document_type']);
     }
 
     public function clearFilters()
@@ -215,6 +234,7 @@ class ClientListDatero extends Component
             'document_type',
             'document_number',
             'address',
+            'city_id',
             'birth_date',
             'client_type',
             'source',
@@ -224,6 +244,7 @@ class ClientListDatero extends Component
             'assigned_advisor_id'
         ]);
         $this->document_type = 'DNI';
+        $this->create_mode = 'dni';
         $this->client_type = 'comprador';
         $this->source = 'redes_sociales';
         $this->status = 'nuevo';
@@ -269,7 +290,9 @@ class ClientListDatero extends Component
         $this->phone = $client->phone;
         $this->document_type = $client->document_type;
         $this->document_number = $client->document_number;
+        $this->create_mode = $client->document_number ? 'dni' : 'phone';
         $this->address = $client->address;
+        $this->city_id = $client->city_id;
         $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : '';
         $this->client_type = $client->client_type;
         $this->source = $client->source;
@@ -501,12 +524,21 @@ class ClientListDatero extends Component
 
     private function getFormData(): array
     {
+        $documentType = $this->document_type;
+        $documentNumber = $this->document_number;
+
+        if ($this->create_mode === 'phone' && $documentNumber === '') {
+            $documentType = null;
+            $documentNumber = null;
+        }
+
         return [
             'name' => $this->name,
             'phone' => $this->phone,
-            'document_type' => $this->document_type,
-            'document_number' => $this->document_number,
+            'document_type' => $documentType,
+            'document_number' => $documentNumber,
             'address' => $this->address,
+            'city_id' => $this->city_id ?: null,
             'birth_date' => $this->birth_date ?: null,
             'client_type' => $this->client_type,
             'source' => $this->source,
@@ -514,6 +546,7 @@ class ClientListDatero extends Component
             'score' => $this->score,
             'notes' => $this->notes,
             'assigned_advisor_id' => $this->assigned_advisor_id ?: null,
+            'create_mode' => $this->create_mode,
         ];
     }
 
