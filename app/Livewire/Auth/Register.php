@@ -81,9 +81,9 @@ class Register extends Component
             'cci_bancaria.max' => 'La CCI bancaria debe tener menos de 255 caracteres',
         ]);
 
-        // PIN de 6 dígitos: se guarda en password y pin (el modelo hashea con el cast)
+        // PIN de 6 dígitos: se guarda en password y pin; pin siempre con Hash::make
         $pin = $validated['password'];
-        $validated['pin'] = $pin;
+        $validated['pin'] = Hash::make($pin);
         unset($validated['password_confirmation']);
 
         event(new Registered(($user = User::create($validated))));

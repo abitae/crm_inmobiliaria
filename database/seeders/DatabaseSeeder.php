@@ -52,14 +52,16 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info('¡Base de datos poblada exitosamente con jerarquías!');
         $this->command->info('');
-        $this->command->info('🔐 USUARIOS DE PRUEBA:');
-        $this->command->info('👑 Admin: abel.arana@hotmail.com / lobomalo123');
-        $this->command->info('👥 Líderes fijos: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / password');
-        $this->command->info('💼 Vendedores/Dateros: usuarios generados con password "password"');
+        $this->command->info('🔐 USUARIOS DE PRUEBA (login por correo + PIN de 6 dígitos):');
+        $this->command->info('👑 Admin: abel.arana@hotmail.com / PIN 123456');
+        $this->command->info('👥 Líderes fijos: maria.gonzalez@crm.com, carlos.rodriguez@crm.com / PIN 123456');
+        $this->command->info('💼 Vendedores/Dateros: PIN aleatorio de 6 dígitos (o 123456 por defecto)');
         $this->command->info('');
         $this->command->info('🏢 JERARQUÍAS (mínimo):');
         $this->command->info('├── Admin (Abel Arana)');
         $this->command->info('│   ├── Líder 1 (María González) → 1 vendedor → 1 datero');
         $this->command->info('│   └── Líder 2 (Carlos Rodríguez) → 1 vendedor → 1 datero');
+        $this->command->info('');
+        $this->command->info('👥 CLIENTES: 15-30 por cada líder y vendedor (solo ven los asignados a ellos).');
     }
 }

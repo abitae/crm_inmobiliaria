@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -32,14 +34,17 @@ class Login extends Component
 
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        // Login por correo y PIN: verificar contra user->pin (siempre guardado con Hash::make)
+        $user = User::where('email', $this->email)->first();
+        if (! $user || ! $user->pin || ! Hash::check($this->password, $user->pin)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => 'El email o el PIN son incorrectos',
             ]);
         }
 
+        Auth::login($user, $this->remember);
         RateLimiter::clear($this->throttleKey());
         Session::regenerate();
 
@@ -60,10 +65,9 @@ class Login extends Component
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => __('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'Demasiados intentos de inicio de sesión. Por favor, inténtelo de nuevo en ' . ceil($seconds / 60) . ' minutos.',
+            'seconds' => $seconds,
+            'minutes' => ceil($seconds / 60),
         ]);
     }
 

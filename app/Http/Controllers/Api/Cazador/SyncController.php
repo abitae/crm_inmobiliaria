@@ -30,10 +30,7 @@ class SyncController extends Controller
 
             $clientsQuery = Client::where('updated_at', '>', $sinceDate);
             if (!$isAdminOrLider) {
-                $clientsQuery->where(function ($q) use ($user) {
-                    $q->where('assigned_advisor_id', $user->id)
-                        ->orWhere('created_by', $user->id);
-                });
+                $clientsQuery->where('assigned_advisor_id', $user->id);
             }
 
             $reservationsQuery = Reservation::where('updated_at', '>', $sinceDate);

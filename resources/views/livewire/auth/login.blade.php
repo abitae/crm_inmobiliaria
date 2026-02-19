@@ -11,7 +11,7 @@
 
         <!-- PIN (6 dígitos) - se usa como contraseña -->
         <div class="relative">
-            <flux:input size="xs" wire:model="password" :label="__('PIN (6 dígitos)')" type="password" required
+            <flux:input size="xs" wire:model="password" :label="__('PIN')" type="password" required
                 autocomplete="current-password" placeholder="000000" maxlength="6" inputmode="numeric" viewable />
         </div>
 

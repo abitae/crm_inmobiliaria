@@ -30,6 +30,7 @@ class ClientList extends Component
     public $statusFilter = '';
     public $typeFilter = '';
     public $sourceFilter = '';
+    public $cityFilter = '';
     public $advisorFilter = '';
     public $searchMinLength = 2;
 
@@ -151,6 +152,10 @@ class ClientList extends Component
     {
         $this->resetPage();
     }
+    public function updatedCityFilter()
+    {
+        $this->resetPage();
+    }
     public function updatedAdvisorFilter()
     {
         $this->resetPage();
@@ -172,7 +177,7 @@ class ClientList extends Component
 
     public function clearFilters()
     {
-        $this->reset(['search', 'statusFilter', 'typeFilter', 'sourceFilter', 'advisorFilter']);
+        $this->reset(['search', 'statusFilter', 'typeFilter', 'sourceFilter', 'cityFilter', 'advisorFilter']);
         $this->advisorFilter = Auth::user()->id;
         $this->resetPage();
     }
@@ -325,7 +330,7 @@ class ClientList extends Component
         $this->phone = $client->phone;
         $this->document_type = $client->document_type;
         $this->document_number = $client->document_number;
-        $this->create_mode = $client->document_number ? 'dni' : 'phone';
+        $this->create_mode = $client->create_mode ?? ($client->document_number ? 'dni' : 'phone');
         $this->address = $client->address;
         $this->city_id = $client->city_id;
         $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : '';
@@ -514,7 +519,6 @@ class ClientList extends Component
             Log::info('Intentando actualizar cliente', [
                 'client_id' => $this->editingClient->id,
                 'user_id' => Auth::id(),
-                'document_number' => $formData['document_number']
             ]);
 
             $this->clientService->updateClient($this->editingClient->id, $formData);
@@ -900,6 +904,7 @@ class ClientList extends Component
             'status' => $this->statusFilter,
             'type' => $this->typeFilter,
             'source' => $this->sourceFilter,
+            'city_id' => $this->cityFilter ?: '',
             'advisor_id' => $this->advisorFilter,
         ];
     }

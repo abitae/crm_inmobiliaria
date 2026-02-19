@@ -92,13 +92,10 @@ class ClientController extends Controller
                 'create_type' => $request->get('create_type'),
             ];
 
-            // Obtener clientes asignados al cazador o creados por él
+            // Solo clientes asignados al cazador (assigned_advisor_id)
             $query = Client::with(array_merge(['city:id,name'], array_values($includes)))
                 ->withCount(['opportunities', 'activities', 'tasks'])
-                ->where(function ($q) {
-                    $q->where('assigned_advisor_id', Auth::id())
-                        ->orWhere('created_by', Auth::id());
-                });
+                ->where('assigned_advisor_id', Auth::id());
 
             // Aplicar filtros
             if (!empty($filters['status'])) {
@@ -176,8 +173,8 @@ class ClientController extends Controller
                 return $this->notFoundResponse('Cliente');
             }
 
-            // Verificar que el cliente esté asignado al cazador o creado por él
-            if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+            // Verificar que el cliente esté asignado al cazador (assigned_advisor_id)
+            if ($client->assigned_advisor_id !== Auth::id()) {
                 return $this->forbiddenResponse('No tienes permiso para acceder a este cliente');
             }
 
@@ -274,31 +271,13 @@ class ClientController extends Controller
                 return $this->notFoundResponse('Cliente');
             }
 
-            // Verificar que el cliente esté asignado al cazador o creado por él
-            if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+            // Verificar que el cliente esté asignado al cazador (assigned_advisor_id)
+            if ($client->assigned_advisor_id !== Auth::id()) {
                 return $this->forbiddenResponse('No tienes permiso para actualizar este cliente');
             }
 
-            // Preparar datos del formulario
-            $formData = $request->only([
-                'name',
-                'phone',
-                'document_type',
-                'document_number',
-                'address',
-                'city_id',
-                'birth_date',
-                'client_type',
-                'source',
-                'status',
-                'create_type',
-                'create_mode',
-                'score',
-                'notes'
-            ]);
-            if (empty($formData['create_mode'])) {
-                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
-            }
+            // En el formulario solo se puede actualizar assigned_advisor_id; updated_by lo establece el servicio
+            $formData = $request->only(['assigned_advisor_id']);
 
             // Actualizar el cliente usando el servicio
             $updated = $this->clientService->updateClient($id, $formData);
@@ -315,16 +294,6 @@ class ClientController extends Controller
                 'Cliente actualizado exitosamente'
             );
         } catch (ValidationException $e) {
-            $duplicateOwner = $this->getDuplicateOwnerInfo(
-                $formData['phone'] ?? null,
-                $formData['document_number'] ?? null
-            );
-            if ($duplicateOwner) {
-                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
-                    'errors' => $e->errors(),
-                    'duplicate_owner' => $duplicateOwner,
-                ], 422);
-            }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al actualizar el cliente en Cazador');
@@ -381,7 +350,7 @@ class ClientController extends Controller
                         continue;
                     }
 
-                    if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+                    if ($client->assigned_advisor_id !== Auth::id()) {
                         $errors[] = [
                             'index' => $index,
                             'errors' => ['permission' => ['No tienes permiso para actualizar este cliente.']],
@@ -390,18 +359,12 @@ class ClientController extends Controller
                     }
 
                     try {
-                        $this->clientService->updateClient($clientId, $formData);
+                        $this->clientService->updateClient($clientId, ['assigned_advisor_id' => $payload['assigned_advisor_id'] ?? $client->assigned_advisor_id]);
                         $updated[] = $this->formatClient($client->fresh());
                     } catch (ValidationException $e) {
-                        $duplicateOwner = $this->getDuplicateOwnerInfo(
-                            $formData['phone'] ?? null,
-                            $formData['document_number'] ?? null
-                        );
                         $errors[] = [
                             'index' => $index,
                             'errors' => $e->errors(),
-                            'duplicate_owner' => $duplicateOwner,
-                            'message' => $duplicateOwner ? $this->buildDuplicateMessage($duplicateOwner) : null,
                         ];
                     }
                 } else {
@@ -454,10 +417,7 @@ class ClientController extends Controller
 
         $clients = Client::with(['assignedAdvisor'])
             ->whereIn('id', $ids)
-            ->where(function ($q) {
-                $q->where('assigned_advisor_id', Auth::id())
-                    ->orWhere('created_by', Auth::id());
-            })
+            ->where('assigned_advisor_id', Auth::id())
             ->get();
 
         return $this->successResponse([
@@ -478,10 +438,7 @@ class ClientController extends Controller
         }
 
         $clients = Client::query()
-            ->where(function ($q) {
-                $q->where('assigned_advisor_id', Auth::id())
-                    ->orWhere('created_by', Auth::id());
-            })
+            ->where('assigned_advisor_id', Auth::id())
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('phone', 'like', "%{$query}%")

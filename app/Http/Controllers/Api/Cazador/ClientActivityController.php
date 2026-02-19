@@ -25,7 +25,7 @@ class ClientActivityController extends Controller
 
     public function index(Client $client, Request $request)
     {
-        if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+        if ($client->assigned_advisor_id !== Auth::id()) {
             return $this->forbiddenResponse('No tienes permiso para este cliente');
         }
 
@@ -71,7 +71,7 @@ class ClientActivityController extends Controller
 
     public function store(Client $client, Request $request)
     {
-        if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+        if ($client->assigned_advisor_id !== Auth::id()) {
             return $this->forbiddenResponse('No tienes permiso para este cliente');
         }
 
@@ -93,7 +93,7 @@ class ClientActivityController extends Controller
 
     public function update(Client $client, Activity $activity, Request $request)
     {
-        if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+        if ($client->assigned_advisor_id !== Auth::id()) {
             return $this->forbiddenResponse('No tienes permiso para este cliente');
         }
 

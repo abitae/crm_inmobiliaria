@@ -42,25 +42,21 @@ class AuthController extends Controller
                 return $this->validationErrorResponse($validator->errors());
             }
 
-            // Sanitizar email
+            // Sanitizar email y PIN (login por correo y PIN; el PIN se guarda con Hash::make)
             $email = strtolower(trim($request->input('email')));
-            $credentials = [
-                'email' => $email,
-                'password' => $request->input('password')
-            ];
+            $pin = $request->input('password'); // campo "password" en request = PIN de 6 dígitos
 
-            // Intentar autenticar
-            if (!$token = JWTAuth::attempt($credentials)) {
+            $user = User::where('email', $email)->first();
+            if (! $user || ! $user->pin || ! Hash::check($pin, $user->pin)) {
                 Log::warning('Intento de login fallido (Cazador)', [
                     'email' => $email,
                     'ip' => $request->ip(),
                 ]);
-                
                 return $this->unauthorizedResponse('Credenciales inválidas');
             }
 
-            // Obtener el usuario autenticado
-            $user = Auth::user();
+            // Generar token JWT
+            $token = JWTAuth::fromUser($user);
 
             // Verificar que el usuario puede acceder al API de Cazador
             // Permite: Administrador, Lider y Cazador (vendedor)
@@ -252,13 +248,13 @@ class AuthController extends Controller
                 return $this->errorResponse('El nuevo PIN debe ser diferente al PIN actual', null, 422);
             }
 
-            // Actualizar password y PIN (mismo valor, ambos hasheados)
+            // Al cambiar contraseña se actualizan siempre pin y password (mismo valor, ambos con Hash::make)
             $user->update([
                 'password' => Hash::make($request->new_password),
-                'pin' => $request->new_password, // el cast 'hashed' del modelo lo hasheará
+                'pin' => Hash::make($request->new_password),
             ]);
 
-            Log::info('PIN actualizado exitosamente (Cazador)', [
+            Log::info('PIN/contraseña actualizados exitosamente (Cazador)', [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'ip' => $request->ip(),

@@ -422,14 +422,18 @@ class ClientListDatero extends Component
                 return;
             }
 
-            $this->validate($this->getRules(), $this->getMessages());
+            // Solo se puede actualizar assigned_advisor_id; validar solo ese campo
+            $this->validate([
+                'assigned_advisor_id' => 'nullable|exists:users,id',
+            ], [
+                'assigned_advisor_id.exists' => 'El asesor seleccionado no existe.',
+            ]);
 
-            $formData = $this->getFormData();
-            
-            Log::info('Intentando actualizar cliente', [
+            $formData = ['assigned_advisor_id' => $this->assigned_advisor_id ?: null];
+
+            Log::info('Intentando actualizar asignación de cliente', [
                 'client_id' => $this->editingClient->id,
                 'user_id' => Auth::id(),
-                'document_number' => $formData['document_number']
             ]);
 
             $this->clientService->updateClient($this->editingClient->id, $formData);

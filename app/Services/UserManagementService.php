@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserManagementService
@@ -161,8 +162,7 @@ class UserManagementService
     {
         try {
             $password = $userData['password'];
-            $pin = $userData['pin'] ?? $password; // Si no se proporciona pin, usar password
-            
+            // Pin siempre igual al password al crear; ambos con Hash::make
             $user = User::create([
                 'name' => $userData['name'],
                 'email' => $userData['email'],
@@ -171,7 +171,7 @@ class UserManagementService
                 'lider_id' => $userData['lider_id'],
                 'city_id' => $userData['city_id'] ?? null,
                 'password' => bcrypt($password),
-                'pin' => $pin, // El cast 'hashed' del modelo hasheará automáticamente
+                'pin' => Hash::make($password),
                 'is_active' => true,
                 'banco' => $userData['banco'] ?? '',
                 'cuenta_bancaria' => $userData['cuenta_bancaria'] ?? '',
@@ -212,12 +212,11 @@ class UserManagementService
                 $updateData['dni'] = $userData['dni'];
             }
 
-            // Si se proporciona password, actualizar también password y PIN
+            // Si se proporciona password, actualizar también password y PIN (ambos con Hash::make)
             if (isset($userData['password']) && !empty($userData['password'])) {
                 $password = $userData['password'];
                 $updateData['password'] = bcrypt($password);
-                // Sincronizar PIN con password (el cast 'hashed' hasheará automáticamente)
-                $updateData['pin'] = $password;
+                $updateData['pin'] = Hash::make($password);
             }
 
             $user->update($updateData);
@@ -336,11 +335,10 @@ class UserManagementService
         }
 
         try {
-            // Actualizar password y PIN con el mismo valor
-            // El PIN se hasheará automáticamente por el cast 'hashed' del modelo
+            // Actualizar password y PIN con el mismo valor (ambos con Hash::make)
             $user->update([
                 'password' => bcrypt($newPassword),
-                'pin' => $newPassword // Sincronizar PIN con password (se hasheará automáticamente)
+                'pin' => Hash::make($newPassword),
             ]);
 
             return [

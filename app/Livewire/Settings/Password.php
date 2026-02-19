@@ -41,7 +41,7 @@ class Password extends Component
             $newPin = $validated['password'];
             $user->update([
                 'password' => Hash::make($newPin),
-                'pin' => $newPin, // el cast 'hashed' del modelo lo hasheará
+                'pin' => Hash::make($newPin),
             ]);
         }
 

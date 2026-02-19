@@ -67,11 +67,11 @@ class ClientController extends Controller
     }
 
     /**
-     * Verificar que el cliente pertenezca al datero autenticado
+     * Verificar que el cliente esté asignado al datero autenticado (assigned_advisor_id)
      */
     protected function ensureClientOwnership(Client $client): ?\Illuminate\Http\JsonResponse
     {
-        if ($client->created_by !== Auth::id()) {
+        if ($client->assigned_advisor_id !== Auth::id()) {
             return $this->forbiddenResponse('No tienes permiso para acceder a este cliente');
         }
         return null;
@@ -102,10 +102,10 @@ class ClientController extends Controller
                 'source' => $request->get('source'),
             ];
 
-            // Obtener solo clientes creados por este datero
+            // Solo clientes asignados a este datero (assigned_advisor_id)
             $query = Client::with(['assignedAdvisor', 'city:id,name'])
                 ->withCount(['opportunities', 'activities', 'tasks'])
-                ->where('created_by', Auth::id());
+                ->where('assigned_advisor_id', Auth::id());
 
             // Aplicar filtros
             if (!empty($filters['status'])) {
@@ -289,25 +289,8 @@ class ClientController extends Controller
                 return $forbidden;
             }
 
-            $formData = $request->only([
-                'name',
-                'phone',
-                'document_type',
-                'document_number',
-                'address',
-                'city_id',
-                'birth_date',
-                'client_type',
-                'source',
-                'status',
-                'create_type',
-                'create_mode',
-                'score',
-                'notes',
-            ]);
-            if (empty($formData['create_mode'])) {
-                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
-            }
+            // En el formulario solo se puede actualizar assigned_advisor_id; updated_by lo establece el servicio
+            $formData = $request->only(['assigned_advisor_id']);
 
             $updated = $this->clientService->updateClient($id, $formData);
 
@@ -322,16 +305,6 @@ class ClientController extends Controller
                 'Cliente actualizado exitosamente'
             );
         } catch (ValidationException $e) {
-            $duplicateOwner = $this->getDuplicateOwnerInfo(
-                $formData['phone'] ?? null,
-                $formData['document_number'] ?? null
-            );
-            if ($duplicateOwner) {
-                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
-                    'errors' => $e->errors(),
-                    'duplicate_owner' => $duplicateOwner,
-                ], 422);
-            }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al actualizar el cliente');

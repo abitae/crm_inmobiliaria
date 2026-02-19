@@ -5,7 +5,7 @@
             <div class="flex justify-between items-center py-4">
                 <div>
                     <h1 class="text-xl font-semibold text-gray-900">Clientes</h1>
-                    <p class="text-sm text-gray-600">Gestión de clientes del CRM</p>
+                    <p class="text-sm text-gray-600">Solo ves los clientes asignados a ti. Gestión de clientes del CRM.</p>
                 </div>
                 <div class="flex space-x-2">
                     <flux:button icon="user-group" size="xs" color="primary"
@@ -66,12 +66,10 @@
                     </flux:select>
                 </div>
                 <div>
-                    <flux:select size="xs" wire:model.live="advisorFilter">
-                        @if (Auth::user()->isAdmin())
-                            <option value="">Todos los asesores</option>
-                        @endif
-                        @foreach ($advisors as $advisor)
-                            <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
+                    <flux:select size="xs" wire:model.live="cityFilter">
+                        <option value="">Todas las ciudades</option>
+                        @foreach ($cities as $city)
+                            <option value="{{ $city->id }}">{{ $city->name }}</option>
                         @endforeach
                     </flux:select>
                 </div>
@@ -86,15 +84,15 @@
         <!-- Tabla de Clientes Compacta -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto" wire:loading.class="opacity-60"
-                wire:target="search,statusFilter,sourceFilter,typeFilter,advisorFilter,clearFilters">
+                wire:target="search,statusFilter,sourceFilter,typeFilter,cityFilter,clearFilters">
                 <table class="min-w-full divide-y divide-gray-200 text-xs">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Cliente</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Contacto</th>
-                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Tipo/Score</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Ciudad</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Estado/Fuente</th>
-                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor asignado</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Últ. Interacción</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Acciones</th>
                         </tr>
@@ -128,13 +126,8 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="px-2 py-2 whitespace-nowrap">
-                                    <div>
-                                        <span class="font-medium">{{ $client->client_type_formatted }}</span>
-                                    </div>
-                                    <div class="text-[10px] text-gray-400">
-                                        {{ $client->score }}/100
-                                    </div>
+                                <td class="px-2 py-2 whitespace-nowrap text-gray-900">
+                                    {{ $client->city?->name ?? '-' }}
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
                                     <span
@@ -156,10 +149,7 @@
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
                                     <div class="text-gray-900">
-                                        Asesor: {{ $client->assignedAdvisor ? $client->assignedAdvisor->name : '-' }}
-                                    </div>
-                                    <div class="text-[10px] text-gray-400">
-                                        Created: {{ $client->createdBy ? $client->createdBy->name : '-' }}
+                                        {{ $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar' }}
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
@@ -212,7 +202,7 @@
                 </table>
             </div>
             <div class="px-2 py-1 text-[11px] text-gray-500" wire:loading
-                wire:target="search,statusFilter,sourceFilter,typeFilter,advisorFilter,clearFilters">
+                wire:target="search,statusFilter,sourceFilter,typeFilter,cityFilter,clearFilters">
                 Buscando...
             </div>
             <!-- Paginación -->
@@ -224,7 +214,7 @@
         </div>
     </div>
 
-    <!-- Modal de Creación/Edición de Cliente Minimalista -->
+    <!-- Modal de Creación/Edición de Cliente -->
     <flux:modal variant="flyout" wire:model="showFormModal" size="md">
         <div class="p-4">
             <div class="flex justify-between items-center mb-2">
@@ -235,7 +225,7 @@
 
             <form wire:submit.prevent="{{ $editingClient ? 'updateClient' : 'createClient' }}">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-
+                    {{-- Modo de alta: DNI o Teléfono (crear y editar) --}}
                     <div class="col-span-2">
                         <div class="mt-1 flex items-center space-x-4 text-xs text-gray-700">
                             <flux:radio.group wire:model.live="create_mode" label="Modo de alta">
@@ -245,17 +235,19 @@
                         </div>
                     </div>
 
+                    {{-- Documento: obligatorio si modo DNI; en modo Teléfono solo se muestra al editar (opcional) --}}
                     @if ($create_mode === 'dni')
                         <div class="col-span-2">
-                            <!-- Número de Documento -->
                             <flux:input.group class="flex items-end w-full">
-                                <flux:select wire:model.live="document_type" label="Tipo" size="xs"
-                                    class="w-full">
+                                <flux:select wire:model.live="document_type" label="Tipo" size="xs" class="w-full">
                                     <option value="DNI">DNI</option>
+                                    <option value="RUC">RUC</option>
+                                    <option value="CE">CE</option>
+                                    <option value="PASAPORTE">PASAPORTE</option>
                                 </flux:select>
                                 <flux:input mask="99999999" class="flex-1" label="Documento"
                                     placeholder="Número de documento" wire:model="document_number" size="xs" />
-                                @if ($document_type == 'DNI' && !$editingClient)
+                                @if (!$editingClient)
                                     <flux:button icon="magnifying-glass" wire:click="buscarDocumento"
                                         variant="outline" size="xs" class="self-end"
                                         wire:loading.attr="disabled" wire:target="buscarDocumento"
@@ -272,17 +264,31 @@
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
+                    @elseif ($editingClient)
+                        {{-- Modo Teléfono en edición: documento opcional --}}
+                        <div class="col-span-2">
+                            <flux:input.group class="flex items-end w-full">
+                                <flux:select wire:model.live="document_type" label="Tipo doc. (opcional)" size="xs" class="w-full">
+                                    <option value="">—</option>
+                                    <option value="DNI">DNI</option>
+                                    <option value="RUC">RUC</option>
+                                    <option value="CE">CE</option>
+                                    <option value="PASAPORTE">PASAPORTE</option>
+                                </flux:select>
+                                <flux:input class="flex-1" label="Documento (opcional)"
+                                    placeholder="Número de documento" wire:model="document_number" size="xs" />
+                            </flux:input.group>
+                        </div>
                     @endif
-                    <!-- Nombre -->
+
                     <div class="col-span-2">
-                        <flux:input label="Nombre completo" wire:model="name" size="xs"
-                            placeholder="Nombre completo *" class="w-full" />
+                        <flux:input label="Nombre completo (Cliente)" wire:model="name" size="xs"
+                            placeholder="Ej: Ing. Damián Ledesma Ávila Hijo" class="w-full" />
                         @error('name')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Fecha de Nacimiento -->
                     <div class="col-span-2">
                         <flux:input label="Fecha de nacimiento" type="date" wire:model="birth_date"
                             size="xs" placeholder="Fecha de nacimiento" class="w-full" />
@@ -291,13 +297,14 @@
                         @enderror
                     </div>
 
-                    <!-- Teléfono -->
                     <div class="col-span-2">
                         <flux:input mask="999999999" label="Teléfono" wire:model="phone" size="xs"
-                            placeholder="Teléfono" class="w-full" />
+                            placeholder="Ej: 993847888" class="w-full" />
+                        @error('phone')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                    <!-- Tipo de Cliente -->
                     <div>
                         <flux:select label="Tipo Cliente" wire:model="client_type" size="xs" class="w-full">
                             <option value="">Tipo Cliente *</option>
@@ -306,10 +313,8 @@
                             <option value="empresa">Empresa</option>
                             <option value="constructor">Constructor</option>
                         </flux:select>
-
                     </div>
 
-                    <!-- Fuente -->
                     <div>
                         <flux:select label="Fuente" wire:model="source" size="xs" class="w-full">
                             <option value="">Fuente *</option>
@@ -319,10 +324,8 @@
                             <option value="formulario_web">Formulario Web</option>
                             <option value="publicidad">Publicidad</option>
                         </flux:select>
-
                     </div>
 
-                    <!-- Estado -->
                     <div>
                         <flux:select label="Estado" wire:model="status" size="xs" class="w-full">
                             <option value="">Estado *</option>
@@ -332,34 +335,26 @@
                             <option value="cierre">Cierre</option>
                             <option value="perdido">Perdido</option>
                         </flux:select>
-
                     </div>
 
-                    <!-- Score -->
                     <div>
                         <flux:input label="Score" type="number" wire:model="score" min="0" max="100"
                             size="xs" placeholder="Score *" class="w-full" />
-
                     </div>
 
-                    <!-- Asesor Asignado -->
                     <div>
-                        <flux:select label="Asesor" wire:model="assigned_advisor_id" size="xs" class="w-full">
+                        <flux:select label="Asesor asignado" wire:model="assigned_advisor_id" size="xs" class="w-full">
+                            <option value="">Sin asignar</option>
                             @foreach ($advisors as $advisor)
                                 <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
                             @endforeach
                         </flux:select>
-
                     </div>
 
-                    <!-- Dirección -->
                     <div class="col-span-2">
-                        <flux:input label="Dirección" wire:model="address" size="xs" placeholder="Dirección"
-                            class="w-full" />
-
+                        <flux:input label="Dirección" wire:model="address" size="xs" placeholder="Dirección" class="w-full" />
                     </div>
 
-                    <!-- Ciudad -->
                     <div class="col-span-2">
                         <flux:select label="Ciudad" wire:model="city_id" size="xs" class="w-full">
                             <option value="">Sin ciudad</option>
@@ -369,8 +364,6 @@
                         </flux:select>
                     </div>
 
-
-                    <!-- Notas -->
                     <div class="col-span-2">
                         <flux:textarea label="Notas" wire:model="notes" rows="2" placeholder="Notas"
                             class="w-full text-xs px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400">
@@ -378,7 +371,6 @@
                     </div>
                 </div>
 
-                <!-- Botones de acción -->
                 <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
                     <flux:button type="button" variant="outline" size="xs" wire:click="closeModals">
                         Cancelar
@@ -395,7 +387,6 @@
                     </flux:button>
                 </div>
             </form>
-
         </div>
     </flux:modal>
 

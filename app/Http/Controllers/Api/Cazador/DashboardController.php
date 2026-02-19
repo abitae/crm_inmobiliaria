@@ -30,10 +30,7 @@ class DashboardController extends Controller
             $stats = Cache::remember($cacheKey, 300, function () use ($user, $scopeKey) {
                 $clientsQuery = Client::query();
                 if ($scopeKey === 'own') {
-                    $clientsQuery->where(function ($q) use ($user) {
-                        $q->where('assigned_advisor_id', $user->id)
-                            ->orWhere('created_by', $user->id);
-                    });
+                    $clientsQuery->where('assigned_advisor_id', $user->id);
                 }
 
                 $daterosQuery = User::bySingleRole('datero');

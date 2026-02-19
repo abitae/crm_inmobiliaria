@@ -23,7 +23,7 @@ class ClientTaskController extends Controller
 
     public function store(Client $client, Request $request)
     {
-        if ($client->assigned_advisor_id !== Auth::id() && $client->created_by !== Auth::id()) {
+        if ($client->assigned_advisor_id !== Auth::id()) {
             return $this->forbiddenResponse('No tienes permiso para este cliente');
         }
 

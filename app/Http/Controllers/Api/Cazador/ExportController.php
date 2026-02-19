@@ -24,10 +24,7 @@ class ExportController extends Controller
             ];
 
             $query = Client::query()
-                ->where(function ($q) {
-                    $q->where('assigned_advisor_id', Auth::id())
-                        ->orWhere('created_by', Auth::id());
-                });
+                ->where('assigned_advisor_id', Auth::id());
 
             if (!empty($filters['status'])) {
                 $query->byStatus($filters['status']);

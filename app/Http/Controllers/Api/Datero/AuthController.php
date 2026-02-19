@@ -386,12 +386,13 @@ class AuthController extends Controller
                 return $this->errorResponse('El nuevo PIN debe ser diferente al PIN actual', null, 422);
             }
 
-            // Actualizar PIN
+            // Al cambiar PIN/contraseña se actualizan siempre pin y password (mismo valor) en Datero
             $user->update([
-                'pin' => Hash::make($request->new_pin)
+                'pin' => Hash::make($request->new_pin),
+                'password' => Hash::make($request->new_pin),
             ]);
 
-            Log::info('PIN cambiado exitosamente (Datero)', [
+            Log::info('PIN/contraseña actualizados exitosamente (Datero)', [
                 'user_id' => $user->id,
                 'dni' => $user->dni,
                 'ip' => $request->ip(),

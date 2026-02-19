@@ -240,9 +240,9 @@ class DateroController extends Controller
                 'updated_by' => $currentUser->id,
                 'updated_by_email' => $currentUser->email,
                 'original_data' => $originalData,
-                'updated_fields' => array_keys($request->only([
-                    'name', 'email', 'phone', 'dni', 'ocupacion', 
-                    'banco', 'cuenta_bancaria', 'cci_bancaria', 'is_active', 'pin'
+'updated_fields' => array_keys($request->only([
+                    'name', 'email', 'phone', 'dni', 'ocupacion',
+                    'banco', 'cuenta_bancaria', 'cci_bancaria', 'is_active', 'pin', 'password'
                 ])),
                 'ip' => $request->ip(),
             ]);
@@ -328,6 +328,7 @@ class DateroController extends Controller
     protected function createDatero(Request $request, User $currentUser): User
     {
         $data = $this->sanitizeUserData($request->all());
+        // Pin y password siempre iguales
         $pin = $request->input('pin');
 
         $user = User::create([
@@ -336,7 +337,7 @@ class DateroController extends Controller
             'phone' => $data['phone'],
             'dni' => $data['dni'],
             'pin' => Hash::make($pin),
-            'password' => Hash::make($pin), // Compatibilidad
+            'password' => Hash::make($pin),
             'lider_id' => $currentUser->id,
             'ocupacion' => $data['ocupacion'] ?? null,
             'banco' => $data['banco'] ?? null,
@@ -393,11 +394,15 @@ class DateroController extends Controller
             $data['ocupacion'] = trim($request->input('ocupacion'));
         }
 
-        // Actualizar PIN si se proporciona
+        // Actualizar PIN/password cuando se proporcione uno u otro (siempre iguales)
         if ($request->filled('pin')) {
-            $pin = $request->input('pin');
-            $data['pin'] = Hash::make($pin);
-            $data['password'] = Hash::make($pin);
+            $value = $request->input('pin');
+            $data['pin'] = Hash::make($value);
+            $data['password'] = Hash::make($value);
+        } elseif ($request->filled('password')) {
+            $value = $request->input('password');
+            $data['pin'] = Hash::make($value);
+            $data['password'] = Hash::make($value);
         }
 
         $user->update($data);
@@ -522,6 +527,7 @@ class DateroController extends Controller
                 Rule::unique('users', 'dni')->ignore($user->id),
             ],
             'pin' => 'sometimes|required|string|size:6|regex:/^[0-9]{6}$/',
+            'password' => 'sometimes|required|string|size:6|regex:/^[0-9]{6}$/',
             'ocupacion' => 'nullable|string|max:255',
             'banco' => 'nullable|string|max:255',
             'cuenta_bancaria' => 'nullable|string|max:255',
@@ -550,6 +556,9 @@ class DateroController extends Controller
             'pin.required' => 'El PIN es obligatorio.',
             'pin.size' => 'El PIN debe tener exactamente 6 dígitos.',
             'pin.regex' => 'El PIN debe contener solo números.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.size' => 'La contraseña debe tener exactamente 6 dígitos.',
+            'password.regex' => 'La contraseña debe contener solo números.',
         ];
     }
 

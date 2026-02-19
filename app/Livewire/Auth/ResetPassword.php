@@ -53,7 +53,7 @@ class ResetPassword extends Component
                 $newPin = $this->password;
                 $user->forceFill([
                     'password' => Hash::make($newPin),
-                    'pin' => $newPin, // el cast 'hashed' del modelo lo hasheará al guardar
+                    'pin' => Hash::make($newPin),
                     'remember_token' => Str::random(60),
                 ])->save();
 

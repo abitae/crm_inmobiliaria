@@ -36,9 +36,11 @@ class ClientService
                 'score',
                 'assigned_advisor_id',
                 'created_by',
+                'city_id',
             ])->with([
                 'assignedAdvisor:id,name',
                 'createdBy:id,name',
+                'city:id,name',
                 'activities' => function ($q) {
                     $q->select('id', 'client_id', 'title', 'start_date')
                         ->latest('start_date')
@@ -64,6 +66,11 @@ class ClientService
                     $roleQuery->where('name', 'datero');
                 });
             });
+        }
+
+        // Cada usuario solo ve los clientes asignados a él (assigned_advisor_id)
+        if (Auth::check()) {
+            $query->where('assigned_advisor_id', Auth::id());
         }
 
         return $query;
@@ -139,6 +146,10 @@ class ClientService
             $query->byAdvisor($filters['advisor_id']);
         }
 
+        if (!empty($filters['city_id'])) {
+            $query->where('city_id', $filters['city_id']);
+        }
+
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
             $query->where(function ($q) use ($search) {
@@ -159,13 +170,19 @@ class ClientService
                 throw new \Exception('ID de cliente inválido');
             }
 
-            return Client::with([
+            $query = Client::with([
                 'assignedAdvisor',
                 'createdBy',
                 'opportunities.project',
                 'activities',
                 'tasks'
-            ])->find($id);
+            ])->where('id', $id);
+
+            if (Auth::check()) {
+                $query->where('assigned_advisor_id', Auth::id());
+            }
+
+            return $query->first();
         } catch (\Exception $e) {
             Log::error("Error al obtener cliente ID {$id}: " . $e->getMessage());
             throw new \Exception('Error al obtener la información del cliente');
@@ -221,12 +238,16 @@ class ClientService
                 throw new \Exception('Cliente no encontrado');
             }
 
+            if (Auth::check() && $client->assigned_advisor_id !== Auth::id()) {
+                throw new \Exception('No tienes permiso para actualizar este cliente');
+            }
+
             $data = $this->prepareFormData($formData, null, $client);
+
             $createMode = $formData['create_mode'] ?? null;
             if (!$createMode) {
                 $createMode = empty($data['document_number']) ? 'phone' : 'dni';
             }
-
             $this->validateClientData($data, $id, $createMode);
 
             $updated = $client->update($data);
@@ -392,6 +413,10 @@ class ClientService
                         ->orWhere('address', 'like', "%{$searchTerm}%");
                 });
 
+            if (Auth::check()) {
+                $query->where('assigned_advisor_id', Auth::id());
+            }
+
             return $query->orderBy('created_at', 'desc')->paginate($perPage);
         } catch (\Exception $e) {
             Log::error('Error al buscar clientes: ' . $e->getMessage());
@@ -429,6 +454,10 @@ class ClientService
             $client = Client::find($id);
             if (!$client) {
                 throw new \Exception('Cliente no encontrado');
+            }
+
+            if (Auth::check() && $client->assigned_advisor_id !== Auth::id()) {
+                throw new \Exception('No tienes permiso para eliminar este cliente');
             }
 
             $deleted = $client->delete();
@@ -475,51 +504,21 @@ class ClientService
 
         // Agregar campos de auditoría
         if (!$editingClient) {
-            // Al crear un nuevo cliente
-            // Usar created_by del formData si existe y no es null, sino usar Auth::id()
+            // Al crear: assigned_advisor_id, created_by y updated_by = usuario autenticado
             $userId = $createdById ?? Auth::id();
-
-            // Validar que userId no sea null
             if ($userId === null) {
                 throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
             }
 
-            // Obtener el usuario para determinar si es datero
             $user = User::find($userId);
             if (!$user) {
                 throw new \Exception('Usuario creador no encontrado');
             }
 
-            $isDatero = $user->isDatero();
-
-            // Aplicar lógica según el tipo de usuario
-            if ($isDatero) {
-                // Si es datero: assigned_advisor_id = lider_id del datero
-                if (!$user->lider_id) {
-                    throw new \Exception('El datero debe tener un líder asignado para crear clientes');
-                }
-                $data['assigned_advisor_id'] = $user->lider_id;
-                $data['created_by'] = $userId;
-                $data['updated_by'] = $userId;
-                $data['create_type'] = 'datero';
-            } else {
-                // Si no es datero: assigned_advisor_id, created_by y updated_by = id del usuario
-                // Solo establecer assigned_advisor_id si no viene en formData
-                if (!isset($formData['assigned_advisor_id']) || $formData['assigned_advisor_id'] === null) {
-                    $data['assigned_advisor_id'] = $userId;
-                }
-                $data['created_by'] = $userId;
-                $data['updated_by'] = $userId;
-                $data['create_type'] = 'propio';
-            }
-
-            // Si create_type viene explícitamente en formData, respetarlo (pero solo si no es datero)
-            if (isset($formData['create_type']) && in_array($formData['create_type'], ['datero', 'propio'])) {
-                // Solo permitir cambiar create_type si no es datero (para mantener consistencia)
-                if (!$isDatero) {
-                    $data['create_type'] = $formData['create_type'];
-                }
-            }
+            $data['assigned_advisor_id'] = $userId;
+            $data['created_by'] = $userId;
+            $data['updated_by'] = $userId;
+            $data['create_type'] = $user->isDatero() ? 'datero' : 'propio';
 
             if (!isset($formData['status'])) {
                 $data['status'] = 'nuevo';
@@ -528,8 +527,8 @@ class ClientService
                 $data['score'] = 0;
             }
         } else {
-            // Al actualizar un cliente existente
-            $data['updated_by'] = $formData['updated_by'] ?? Auth::id();
+            // Al actualizar: todos los campos editables; updated_by = usuario que modifica
+            $data['updated_by'] = Auth::id();
         }
 
         return $data;
