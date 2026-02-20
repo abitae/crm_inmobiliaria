@@ -4,8 +4,11 @@ namespace App\Livewire\Tasks;
 
 use App\Models\Client;
 use App\Services\TaskService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
+
+#[Layout('components.layouts.app')]
 class TaskList extends Component
 {
     use WithPagination;

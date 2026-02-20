@@ -4,10 +4,13 @@ namespace App\Livewire\Projects;
 
 use App\Services\ProjectService;
 use App\Models\User;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
+
+#[Layout('components.layouts.app')]
 class ProjectList extends Component
 {
     use WithPagination, WithFileUploads;

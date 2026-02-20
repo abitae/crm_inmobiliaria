@@ -1,10 +1,10 @@
-<div class="flex flex-col p-6 border-2 border-gray-500 gap-6 rounded-xl">
+<div class="flex flex-col p-3 sm:p-4 border-2 border-gray-300 gap-3 sm:gap-4 rounded-xl bg-white shadow-sm">
     <x-auth-header :title="__('REGISTRO DATERO')" :description="__('Regístrate como datero para gestionar tus clientes')" />
 
     <!-- Session Status -->
-    <x-auth-session-status class="text-center" :status="session('status')" />
+    <x-auth-session-status class="text-center text-sm" :status="session('status')" />
 
-    <form method="POST" wire:submit="register" class="flex flex-col gap-6">
+    <form method="POST" wire:submit="register" class="flex flex-col gap-2 sm:gap-3">
         <!-- Name -->
         <flux:input size="xs" wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name"
             :placeholder="__('Nombres y Apellidos')" />
@@ -38,14 +38,14 @@
             autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
 
 
-        <div class="flex items-center justify-end">
+        <div class="flex items-center justify-end pt-1">
             <flux:button type="submit" variant="primary" class="w-full" size="xs">
                 {{ __('Crear cuenta') }}
             </flux:button>
         </div>
     </form>
 
-    <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
+    <div class="space-x-1 rtl:space-x-reverse text-center text-xs sm:text-sm text-gray-600">
         <span>{{ __('Ya tienes una cuenta?') }}</span>
         <flux:link :href="route('login')" wire:navigate size="xs">{{ __('Iniciar sesión') }}</flux:link>
     </div>

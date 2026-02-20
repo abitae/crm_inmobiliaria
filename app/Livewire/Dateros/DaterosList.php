@@ -5,10 +5,12 @@ namespace App\Livewire\Dateros;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
+#[Layout('components.layouts.app')]
 class DaterosList extends Component
 {
     use Toast;

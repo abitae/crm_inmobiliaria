@@ -12,12 +12,14 @@ use App\Models\City;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use Mary\Traits\Toast;
 
+#[Layout('components.layouts.app')]
 class ClientListDatero extends Component
 {
     use Toast;

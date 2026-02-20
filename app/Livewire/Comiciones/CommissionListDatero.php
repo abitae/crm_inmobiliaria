@@ -5,9 +5,11 @@ namespace App\Livewire\Comiciones;
 use App\Models\Commission;
 use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Layout('components.layouts.app')]
 class CommissionListDatero extends Component
 {
     use WithPagination;

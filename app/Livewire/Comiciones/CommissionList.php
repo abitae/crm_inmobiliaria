@@ -8,9 +8,11 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\Opportunity;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Layout('components.layouts.app')]
 class CommissionList extends Component
 {
     use WithPagination;

@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
-#[Layout('components.layouts.auth')]
+#[Layout('components.layouts.auth.mobile')]
 class RegisterDatero extends Component
 {
+    use Toast;
     public string $name = '';
     public string $email = '';
     public string $phone = '';
@@ -27,7 +29,8 @@ class RegisterDatero extends Component
     }
     public function register(): void
     {
-        $validated = $this->validate([
+        try {
+            $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['required', 'string', 'max:255'],
@@ -80,5 +83,14 @@ class RegisterDatero extends Component
         Auth::login($user);
         $user->assignRole('datero');
         $this->redirect(route('dashboard', absolute: true));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->reset([
+                'name', 'email', 'phone', 'password', 'password_confirmation',
+                'lider_id', 'banco', 'cuenta_bancaria', 'cci_bancaria'
+            ]);
+            $this->error(__('Error'), $e->getMessage(), 'toast-top toast-center');
+        }
     }
 }

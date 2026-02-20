@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Models\Activity;
 use App\Models\Task;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Validation\ValidationException;
@@ -16,6 +17,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+#[Layout('components.layouts.app')]
 class OpportunityList extends Component
 {
     use WithPagination;

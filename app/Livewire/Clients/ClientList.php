@@ -20,7 +20,9 @@ use Livewire\WithPagination;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Layout;
 
+#[Layout('components.layouts.app')]
 class ClientList extends Component
 {
     use Toast;

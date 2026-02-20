@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Settings;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Livewire\Attributes\Url;
 
+#[Layout('components.layouts.app')]
 class RoleList extends Component
 {
     use WithPagination;

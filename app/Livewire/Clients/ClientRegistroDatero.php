@@ -12,11 +12,12 @@ use App\Traits\SearchDocument;
 use App\Models\City;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mary\Traits\Toast;
 
-#[Layout('components.layouts.auth')]
+#[Layout('components.layouts.auth.mobile')]
 class ClientRegistroDatero extends Component
 {
-    use SearchDocument;
+    use SearchDocument, Toast;
     // Constantes para configuraciones
     private const DEFAULT_SCORE = 50;
     private const QR_SIZE = 150;
@@ -197,13 +198,10 @@ class ClientRegistroDatero extends Component
             $client = $this->clientService->createClient($data, $this->created_by);
 
             $this->resetForm();
-            $this->showSuccessMessage = true;
-            $this->successMessage = "Cliente '{$client->name}' registrado exitosamente.";
-            $this->showErrorMessage = false;
+            $this->success(__('Éxito'), "Cliente '{$client->name}' registrado exitosamente.", 'toast-top toast-center');
         } catch (\Exception $e) {
-            $this->showErrorMessage = true;
-            $this->errorMessage = $e->getMessage();
-            $this->showSuccessMessage = false;
+            $this->resetForm();
+            $this->error(__('Error'), $e->getMessage(), 'toast-top toast-center');
         }
     }
 
@@ -223,20 +221,15 @@ class ClientRegistroDatero extends Component
             'status',
             'score',
             'notes',
-            'assigned_advisor_id',
-            'created_by',
-            'updated_by'
         ]);
 
-        // Resetear a valores por defecto
+        // Resetear a valores por defecto (mantener created_by/updated_by del datero en mount)
         $this->document_type = 'DNI';
         $this->create_mode = 'dni';
         $this->client_type = 'comprador';
         $this->source = 'formulario_web';
         $this->status = 'nuevo';
         $this->score = 50;
-        // Mantener los campos de auditoría con el id del datero (ya establecido en mount)
-        // No es necesario resetearlos ya que se mantienen del mount
     }
 
     public function closeMessages()
@@ -356,13 +349,14 @@ class ClientRegistroDatero extends Component
     }
 
     /**
-     * Manejar errores de manera consistente
+     * Manejar errores de manera consistente (toast Mary al centro)
      */
     private function handleError(string $message): void
     {
         $this->showErrorMessage = true;
         $this->errorMessage = $message;
         $this->showSuccessMessage = false;
+        $this->error(__('Error'), $message, 'toast-top toast-center');
     }
     public function render()
     {

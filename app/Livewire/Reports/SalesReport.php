@@ -6,6 +6,7 @@ use App\Services\DashboardService;
 use App\Models\Opportunity;
 use App\Models\Client;
 use App\Models\Project;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+#[Layout('components.layouts.app')]
 class SalesReport extends Component
 {
     use WithPagination;

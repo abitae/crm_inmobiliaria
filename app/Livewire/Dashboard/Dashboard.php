@@ -3,11 +3,13 @@
 namespace App\Livewire\Dashboard;
 
 use App\Services\DashboardService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
+#[Layout('components.layouts.app')]
 class Dashboard extends Component
 {
     use WithPagination;

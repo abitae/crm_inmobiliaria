@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Mary\Traits\Toast;
 
+#[Layout('components.layouts.app')]
 class UserList extends Component
 {
     use Toast;

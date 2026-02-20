@@ -1,235 +1,128 @@
-<div class="max-w-4xl mx-auto p-2 sm:p-3">
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
-        <!-- Header Compacto Azul - Mobile Optimized -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 sm:px-4 py-3 rounded-t-lg">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div class="flex-1">
-                    <h1 class="text-base sm:text-lg font-semibold flex items-center gap-2">
-                        <flux:icon name="user-plus" class="w-4 h-4 sm:w-5 sm:h-5" />
-                        Cazador
-                    </h1>
-                    <p class="text-blue-100 text-xs sm:text-sm mt-1">
-                        Completa el formulario para registrar un nuevo cliente
+<div class="flex flex-col p-3 sm:p-4 border-2 border-gray-300 gap-3 sm:gap-4 rounded-xl bg-white shadow-sm">
+    <x-auth-header title="Cazador" :description="__('Completa el formulario para registrar un nuevo cliente')" />
+
+    <form wire:submit.prevent="save" class="flex flex-col gap-3 sm:gap-4">
+        <div class="flex flex-col gap-2 sm:gap-3">
+            <flux:subheading class="text-sm">{{ __('Información Personal') }}</flux:subheading>
+
+            <div class="flex flex-col gap-2 sm:gap-3">
+                <div>
+                    <div class="mb-0.5 text-xs font-medium text-gray-600">{{ __('Modo de alta') }}</div>
+                    <div class="flex items-center gap-3 text-xs sm:text-sm text-gray-700">
+                        <label class="flex items-center gap-1">
+                            <input type="radio" wire:model.live="create_mode" value="dni"
+                                class="rounded border-gray-300 bg-white text-gray-700" />
+                            <span>{{ __('Por DNI') }}</span>
+                        </label>
+                        <label class="flex items-center gap-1">
+                            <input type="radio" wire:model.live="create_mode" value="phone"
+                                class="rounded border-gray-300 bg-white text-gray-700" />
+                            <span>{{ __('Por teléfono') }}</span>
+                        </label>
+                    </div>
+                    <p class="mt-0.5 text-[11px] sm:text-xs text-gray-500">
+                        @if ($create_mode === 'dni')
+                            {{ __('Por DNI: use el botón Buscar para rellenar nombre y fecha de nacimiento.') }}
+                        @else
+                            {{ __('Por teléfono: ingrese directamente el nombre y el resto de datos.') }}
+                        @endif
                     </p>
                 </div>
-                <div class="flex gap-2 justify-end sm:justify-start">
-                    <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}" variant="outline"
-                        class="text-blue-700 bg-white border-white hover:bg-blue-50 text-xs px-2 py-1">
-                        <span class="hidden sm:inline">Lista</span>
-                        <span class="sm:hidden">📋</span>
-                    </flux:button>
-                    <flux:button size="xs" icon="qr-code" wire:click="verQR" variant="outline"
-                        class="text-blue-700 bg-white border-white hover:bg-blue-50 text-xs px-2 py-1">
-                        QR
-                    </flux:button>
-                </div>
-            </div>
-        </div>
 
-        <!-- Mensajes Compactos - Mobile Optimized -->
-        @if ($showSuccessMessage)
-            <div class="bg-green-50 border-l-4 border-green-400 p-2 sm:p-3 mx-2 sm:mx-4 mt-2 sm:mt-3">
-                <div class="flex items-start sm:items-center justify-between gap-2">
-                    <div class="flex items-start sm:items-center flex-1 min-w-0">
-                        <flux:icon name="check-circle"
-                            class="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
-                        <div class="min-w-0 flex-1">
-                            <h4 class="text-xs font-medium text-green-800">Éxito</h4>
-                            <p class="text-xs text-green-600 mt-1 break-words">{{ $successMessage }}</p>
-                        </div>
-                    </div>
-                    <button type="button" wire:click="closeMessages"
-                        class="text-green-500 hover:text-green-700 flex-shrink-0 p-1">
-                        <flux:icon name="x-mark" class="w-3 h-3" />
-                    </button>
-                </div>
-            </div>
-        @endif
-
-        @if ($showErrorMessage)
-            <div class="bg-red-50 border-l-4 border-red-400 p-2 sm:p-3 mx-2 sm:mx-4 mt-2 sm:mt-3">
-                <div class="flex items-start sm:items-center justify-between gap-2">
-                    <div class="flex items-start sm:items-center flex-1 min-w-0">
-                        <flux:icon name="exclamation-triangle"
-                            class="w-4 h-4 text-red-500 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
-                        <div class="min-w-0 flex-1">
-                            <h4 class="text-xs font-medium text-red-800">Error</h4>
-                            <p class="text-xs text-red-600 mt-1 break-words">{{ $errorMessage }}</p>
-                        </div>
-                    </div>
-                    <button type="button" wire:click="closeMessages"
-                        class="text-red-500 hover:text-red-700 flex-shrink-0 p-1">
-                        <flux:icon name="x-mark" class="w-3 h-3" />
-                    </button>
-                </div>
-            </div>
-        @endif
-
-        <!-- Formulario Compacto - Mobile Optimized -->
-        <div class="p-3 sm:p-4">
-            <form wire:submit.prevent="save" class="space-y-3 sm:space-y-4">
-                <!-- Información Personal -->
-                <div class="space-y-3">
-                    <h2 class="text-sm sm:text-base font-medium text-gray-900 border-b border-gray-200 pb-1">
-                        Información Personal
-                    </h2>
-
-                    <div class="grid grid-cols-1 gap-3">
-                        <!-- Modo de alta -->
-                        <div>
-                            <div class="text-xs font-medium text-gray-700">Modo de alta</div>
-                            <div class="mt-1 flex items-center space-x-4 text-xs text-gray-700">
-                                <label class="flex items-center space-x-1">
-                                    <input type="radio" wire:model.live="create_mode" value="dni"
-                                        class="text-blue-600 border-gray-300">
-                                    <span>Por DNI</span>
-                                </label>
-                                <label class="flex items-center space-x-1">
-                                    <input type="radio" wire:model.live="create_mode" value="phone"
-                                        class="text-blue-600 border-gray-300">
-                                    <span>Por teléfono</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        @if ($create_mode === 'dni')
-                            <!-- Documento - Mobile Stack -->
-                            <div class="space-y-2 sm:space-y-0 sm:flex sm:gap-2">
-                                <div class="w-full">
-                                    <flux:input.group class="flex items-end w-full">
-                                        <flux:select wire:model.live="document_type" label="Tipo" size="xs"
-                                            class="w-full">
-                                            @foreach ($documentTypes as $value => $label)
-                                                <option value="{{ $value }}">{{ $label }}</option>
-                                            @endforeach
-                                        </flux:select>
-                                        <flux:input mask="99999999" class="flex-1" label="Documento" placeholder="Número de documento"
-                                            wire:model.live="document_number" size="xs" />
-                                        @if ($document_type == 'DNI')
-                                            <flux:button icon="magnifying-glass" wire:click="buscarDocumento"
-                                                variant="outline" label="Buscar" size="xs" class="self-end" />
-                                        @endif
-                                    </flux:input.group>
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- Nombre -->
-                        <flux:input label="Nombre Completo" wire:model.live="name"
-                            @if ($create_mode === 'dni') disabled @endif
-                            placeholder="Nombre completo del cliente" size="xs" />
-
-                        <!-- Teléfono -->
-                        <flux:input mask="999999999" label="Teléfono" wire:model="phone" placeholder="Ej: 999999999" size="xs" />
-
-                        <!-- Fecha de Nacimiento -->
-                        <flux:input label="Fecha de Nacimiento" type="date" wire:model.live="birth_date"
-                            @if ($create_mode === 'dni') disabled @endif
+                @if ($create_mode === 'dni')
+                    <flux:input.group class="flex w-full items-end gap-1.5 sm:gap-2">
+                        <flux:select wire:model.live="document_type" label="{{ __('Tipo') }}" size="xs"
+                            class="w-full">
+                            @foreach ($documentTypes as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
+                        <flux:input mask="99999999" class="flex-1" label="{{ __('Documento') }}"
+                            placeholder="{{ __('Número de documento') }}" wire:model.live="document_number"
                             size="xs" />
+                        @if ($document_type == 'DNI')
+                            <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
+                                size="xs" class="self-end">{{ __('Buscar') }}</flux:button>
+                        @endif
+                    </flux:input.group>
+                @endif
 
-                        <!-- Dirección -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Dirección</label>
-                            <textarea wire:model="address" rows="2"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('address') border-red-500 @enderror resize-none"
-                                placeholder="Ingrese la dirección"></textarea>
-                        </div>
+                <flux:input size="xs" label="{{ __('Nombre completo (Cliente)') }}" wire:model.live="name"
+                    placeholder="{{ __('Nombre completo del cliente') }}" required />
 
-                        <!-- Ciudad -->
-                        <div>
-                            <flux:select label="Ciudad" wire:model="city_id" size="xs" class="w-full">
-                                <option value="">Sin ciudad</option>
-                                @foreach ($cities as $city)
-                                    <option value="{{ $city->id }}">{{ $city->name }}</option>
-                                @endforeach
-                            </flux:select>
-                        </div>
-                    </div>
+                <flux:input size="xs" mask="999999999" label="{{ __('Teléfono') }}" wire:model="phone"
+                    placeholder="Ej: 999999999" />
+
+                <flux:input size="xs" label="{{ __('Fecha de Nacimiento') }}" type="date"
+                    wire:model.live="birth_date" />
+
+                <div>
+                    <flux:label class="text-xs">{{ __('Dirección') }}</flux:label>
+                    <flux:textarea wire:model="address" rows="2" placeholder="{{ __('Ingrese la dirección') }}"
+                        size="xs" class="mt-0.5" />
                 </div>
 
-                <!-- Información Comercial -->
-                <div class="space-y-3">
-                    <h2 class="text-sm sm:text-base font-medium text-gray-900 border-b border-gray-200 pb-1">
-                        Información Comercial
-                    </h2>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- Tipo de Cliente -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Tipo de Cliente</label>
-                            <select wire:model="client_type"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('client_type') border-red-500 @enderror">
-                                @foreach ($clientTypes as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Fuente -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Fuente</label>
-                            <select wire:model="source"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('source') border-red-500 @enderror">
-                                @foreach ($sources as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Estado -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Estado</label>
-                            <select wire:model="status"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
-                                @foreach ($statuses as $value => $label)
-                                    <option value="{{ $value }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Score -->
-                        <flux:input label="Score (0-100)" type="number" wire:model="score" min="0"
-                            max="100" size="xs" />
-                    </div>
-
-                    <!-- Notas -->
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Notas</label>
-                        <textarea wire:model="notes" rows="2"
-                            class="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('notes') border-red-500 @enderror resize-none"
-                            placeholder="Información adicional sobre el cliente"></textarea>
-                    </div>
-                </div>
-
-                <!-- Botones Compactos - Mobile Optimized -->
-                <div class="flex flex-col sm:flex-row justify-end gap-2 pt-3 border-t border-gray-200">
-                    <flux:button icon="x-mark" type="button" variant="outline" wire:click="resetForm" size="xs"
-                        class="w-full sm:w-auto order-2 sm:order-1">
-                        Limpiar
-                    </flux:button>
-                    <flux:button  icon="plus" type="submit" color="primary" size="xs"
-                        class="w-full sm:w-auto order-1 sm:order-2">
-                        Registrar Cliente
-                    </flux:button>
-                </div>
-            </form>
+                <flux:select size="xs" label="{{ __('Ciudad') }}" wire:model="city_id" class="w-full">
+                    <option value="">{{ __('Sin ciudad') }}</option>
+                    @foreach ($cities as $city)
+                        <option value="{{ $city->id }}">{{ $city->name }}</option>
+                    @endforeach
+                </flux:select>
+            </div>
         </div>
 
-        <!-- Modal QR Compacto - Mobile Optimized -->
-        <flux:modal wire:model="showQRModal" class="w-full max-w-xs sm:max-w-sm">
-            <div class="p-3 sm:p-4 text-center">
-                <h2 class="text-sm sm:text-base font-medium text-gray-900 mb-3 flex items-center justify-center gap-2">
-                    <flux:icon name="qr-code" class="w-4 h-4 text-blue-600" />
-                    Mi Código QR
-                </h2>
-                <div class="bg-white p-2 sm:p-3 rounded-lg border border-gray-200 flex justify-center items-center">
-                    {!! $qrcode !!}
+        <div class="flex flex-col gap-2 sm:gap-3">
+            <flux:subheading class="text-sm">{{ __('Información Comercial') }}</flux:subheading>
+
+            <div class="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2">
+                <div>
+                    <flux:label class="mb-0.5 text-xs">{{ __('Tipo de Cliente') }}</flux:label>
+                    <flux:select wire:model="client_type" size="xs" class="w-full">
+                        @foreach ($clientTypes as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
                 </div>
-                <flux:button type="button" variant="outline" class="mt-3 w-full" wire:click="closeQRModal"
-                    size="xs">
-                    Cerrar
-                </flux:button>
+                <div>
+                    <flux:label class="mb-0.5 text-xs">{{ __('Fuente') }}</flux:label>
+                    <flux:select wire:model="source" size="xs" class="w-full">
+                        @foreach ($sources as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
+                </div>
+                <div>
+                    <flux:label class="mb-0.5 text-xs">{{ __('Estado') }}</flux:label>
+                    <flux:select wire:model="status" size="xs" class="w-full">
+                        @foreach ($statuses as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
+                </div>
+                <flux:input size="xs" label="{{ __('Score (0-100)') }}" type="number" wire:model="score"
+                    min="0" max="100" />
             </div>
-        </flux:modal>
-    </div>
+
+            <div>
+                <flux:label class="mb-0.5 text-xs">{{ __('Notas') }}</flux:label>
+                <flux:textarea wire:model="notes" rows="2"
+                    placeholder="{{ __('Información adicional sobre el cliente') }}" size="xs"
+                    class="mt-0.5" />
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5 sm:flex-row sm:justify-end sm:gap-2 pt-1">
+            <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}" variant="outline"
+                wire:navigate class="w-full sm:w-auto">
+                {{ __('Lista') }}
+            </flux:button>
+            <flux:button icon="x-mark" type="button" variant="outline" wire:click="resetForm" size="xs"
+                class="w-full sm:w-auto">
+                {{ __('Limpiar') }}
+            </flux:button>
+            <flux:button icon="plus" type="submit" variant="primary" size="xs" class="w-full sm:w-auto">
+                {{ __('Registrar Cliente') }}
+            </flux:button>
+        </div>
+    </form>
 </div>

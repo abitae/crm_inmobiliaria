@@ -5,9 +5,11 @@ namespace App\Livewire\Actividades;
 use App\Models\Client;
 use App\Services\ActivityService;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Layout('components.layouts.app')]
 class ActivityList extends Component
 {
     use WithPagination;

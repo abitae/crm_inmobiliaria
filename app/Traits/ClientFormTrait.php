@@ -6,9 +6,11 @@ use App\Services\ClientService;
 use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mary\Traits\Toast;
 
 trait ClientFormTrait
 {
+    use Toast;
     // Constantes comunes
     protected const DEFAULT_SCORE = 50;
     protected const DATE_FORMATS = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'Y/m/d'];
@@ -222,23 +224,25 @@ trait ClientFormTrait
     }
 
     /**
-     * Manejar errores de manera consistente
+     * Manejar errores de manera consistente (toast Mary al centro)
      */
     protected function handleError(string $message): void
     {
         $this->showErrorMessage = true;
         $this->errorMessage = $message;
         $this->showSuccessMessage = false;
+        $this->error(__('Error'), $message, 'toast-top toast-center');
     }
 
     /**
-     * Manejar éxito de manera consistente
+     * Manejar éxito de manera consistente (toast Mary al centro)
      */
     protected function handleSuccess(string $message): void
     {
         $this->showSuccessMessage = true;
         $this->successMessage = $message;
         $this->showErrorMessage = false;
+        $this->success(__('Éxito'), $message, 'toast-top toast-center');
     }
 
     /**

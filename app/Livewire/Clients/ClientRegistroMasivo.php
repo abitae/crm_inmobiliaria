@@ -9,6 +9,7 @@ use App\Traits\ClientFormTrait;
 use App\Traits\SearchDocument;
 use App\Models\City;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 /**
@@ -16,7 +17,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
  * 
  * @package App\Livewire\Clients
  */
-#[Layout('components.layouts.auth')]
+#[Layout('components.layouts.auth.mobile')]
 class ClientRegistroMasivo extends Component
 {
     use SearchDocument, ClientFormTrait;
@@ -32,12 +33,13 @@ class ClientRegistroMasivo extends Component
     public $cities = [];
 
     // Reglas de validación específicas para este componente
-    protected function rules()
+    protected function rules(): array
     {
         $rules = $this->clientService->getValidationRules(null, $this->create_mode);
+
         if ($this->create_mode === 'dni') {
-            $rules['document_type'] = 'required|in:DNI';
-            $rules['document_number'] .= '|size:8';
+            $rules['document_type'] = ['required', 'in:DNI'];
+            $rules['document_number'] = ['required', 'string', 'size:8', Rule::unique('clients', 'document_number')];
         }
 
         return $rules;
@@ -93,13 +95,14 @@ class ClientRegistroMasivo extends Component
             $data = $this->prepareFormData();
             $data['created_by'] = Auth::id();
             $data['updated_by'] = Auth::id();
-            
+
             $client = $this->clientService->createClient($data);
 
             $this->resetForm();
-            $this->handleSuccess("Cliente '{$client->name}' registrado exitosamente.");
+            $this->success(__('Éxito'), "Cliente '{$client->name}' registrado exitosamente.", 'toast-top toast-center');
         } catch (\Exception $e) {
-            $this->handleError($e->getMessage());
+            $this->resetForm();
+            $this->error(__('Error'), $e->getMessage(), 'toast-top toast-center');
         }
     }
 

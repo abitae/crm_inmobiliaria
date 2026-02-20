@@ -6,11 +6,13 @@ use App\Models\Reservation;
 use App\Models\User;
 use App\Services\ReservationService;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
+#[Layout('components.layouts.app')]
 class ReservationList extends Component
 {
     use WithPagination, WithFileUploads, Toast;

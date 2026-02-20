@@ -4,11 +4,13 @@ namespace App\Livewire\Settings;
 
 use App\Models\City;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use Illuminate\Validation\Rule;
 
+#[Layout('components.layouts.app')]
 class CityList extends Component
 {
     use Toast;

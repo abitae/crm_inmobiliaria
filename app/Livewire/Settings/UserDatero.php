@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Settings;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Services\UserManagementService;
 use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
 
+#[Layout('components.layouts.app')]
 class UserDatero extends Component
 {
 

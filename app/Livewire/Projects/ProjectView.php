@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Unit;
 use App\Imports\UnitsImport;
 use App\Exports\UnitsTemplateExport;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Url;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;
 
+#[Layout('components.layouts.app')]
 class ProjectView extends Component
 {
     use WithPagination, WithFileUploads;
