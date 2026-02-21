@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Cazador;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
-use App\Services\ClientService;
+use App\Services\Clients\ClientServiceCazador;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -13,9 +13,9 @@ class ValidationController extends Controller
 {
     use ApiResponse;
 
-    protected ClientService $clientService;
+    protected ClientServiceCazador $clientService;
 
-    public function __construct(ClientService $clientService)
+    public function __construct(ClientServiceCazador $clientService)
     {
         $this->clientService = $clientService;
     }

@@ -15,9 +15,6 @@
                     <flux:button icon="arrow-down-tray" size="xs" variant="outline" wire:click="exportClients">
                         Exportar Excel
                     </flux:button>
-                    <flux:button icon="plus" size="xs" color="primary" wire:click="openCreateModal">
-                        Nuevo Cliente
-                    </flux:button>
                 </div>
             </div>
         </div>
@@ -91,7 +88,6 @@
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Cliente</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Contacto</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Ciudad</th>
-                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Estado/Fuente</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor asignado</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Últ. Interacción</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Acciones</th>
@@ -130,24 +126,6 @@
                                     {{ $client->city?->name ?? '-' }}
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
-                                        {{ $client->status === 'nuevo'
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : ($client->status === 'contacto_inicial'
-                                                ? 'bg-yellow-100 text-yellow-800'
-                                                : ($client->status === 'en_seguimiento'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : ($client->status === 'cierre'
-                                                        ? 'bg-purple-100 text-purple-800'
-                                                        : 'bg-red-100 text-red-800'))) }}">
-                                        {{ ucfirst(str_replace('_', ' ', $client->status)) }}
-                                    </span>
-                                    <div class="text-[10px] text-gray-400">
-                                        {{ ucfirst(str_replace('_', ' ', $client->source)) }}
-                                    </div>
-                                </td>
-                                <td class="px-2 py-2 whitespace-nowrap">
                                     <div class="text-gray-900">
                                         {{ $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar' }}
                                     </div>
@@ -177,10 +155,6 @@
                                             title="Nueva reserva">
                                             <flux:icon name="bookmark" class="w-3 h-3" />
                                         </flux:button>
-                                        <flux:button size="xs" variant="outline"
-                                            wire:click="openCreateModal({{ $client->id }})">
-                                            <flux:icon name="pencil" class="w-3 h-3" />
-                                        </flux:button>
                                     </div>
                                 </td>
                             </tr>
@@ -190,10 +164,6 @@
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="users" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron clientes</p>
-                                        <flux:button size="xs" color="primary" class="mt-2"
-                                            wire:click="openCreateModal">
-                                            Crear primer cliente
-                                        </flux:button>
                                     </div>
                                 </td>
                             </tr>
@@ -213,182 +183,6 @@
             @endif
         </div>
     </div>
-
-    <!-- Modal de Creación/Edición de Cliente -->
-    <flux:modal variant="flyout" wire:model="showFormModal" size="md">
-        <div class="p-4">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-base font-semibold text-gray-900">
-                    {{ $editingClient ? 'Editar Cliente' : 'Nuevo Cliente' }}
-                </h3>
-            </div>
-
-            <form wire:submit.prevent="{{ $editingClient ? 'updateClient' : 'createClient' }}">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {{-- Modo de alta: DNI o Teléfono (crear y editar) --}}
-                    <div class="col-span-2">
-                        <div class="mt-1 flex items-center space-x-4 text-xs text-gray-700">
-                            <flux:radio.group wire:model.live="create_mode" label="Modo de alta">
-                                <flux:radio value="dni" label="DNI" />
-                                <flux:radio value="phone" label="Teléfono" />
-                            </flux:radio.group>
-                        </div>
-                    </div>
-
-                    {{-- Documento: obligatorio si modo DNI; en modo Teléfono solo se muestra al editar (opcional) --}}
-                    @if ($create_mode === 'dni')
-                        <div class="col-span-2">
-                            <flux:input.group class="flex items-end w-full">
-                                <flux:select wire:model.live="document_type" label="Tipo" size="xs" class="w-full">
-                                    <option value="DNI">DNI</option>
-                                    <option value="RUC">RUC</option>
-                                    <option value="CE">CE</option>
-                                    <option value="PASAPORTE">PASAPORTE</option>
-                                </flux:select>
-                                <flux:input mask="99999999" class="flex-1" label="Documento"
-                                    placeholder="Número de documento" wire:model="document_number" size="xs" />
-                                @if (!$editingClient)
-                                    <flux:button icon="magnifying-glass" wire:click="buscarDocumento"
-                                        variant="outline" size="xs" class="self-end"
-                                        wire:loading.attr="disabled" wire:target="buscarDocumento"
-                                        title="Buscar datos del documento">
-                                    </flux:button>
-                                    @if ($name || $birth_date)
-                                        <flux:button icon="x-mark" wire:click="clearSearchData" variant="outline"
-                                            size="xs" class="self-end" title="Limpiar datos de búsqueda">
-                                        </flux:button>
-                                    @endif
-                                @endif
-                            </flux:input.group>
-                            @error('document_number')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    @elseif ($editingClient)
-                        {{-- Modo Teléfono en edición: documento opcional --}}
-                        <div class="col-span-2">
-                            <flux:input.group class="flex items-end w-full">
-                                <flux:select wire:model.live="document_type" label="Tipo doc. (opcional)" size="xs" class="w-full">
-                                    <option value="">—</option>
-                                    <option value="DNI">DNI</option>
-                                    <option value="RUC">RUC</option>
-                                    <option value="CE">CE</option>
-                                    <option value="PASAPORTE">PASAPORTE</option>
-                                </flux:select>
-                                <flux:input class="flex-1" label="Documento (opcional)"
-                                    placeholder="Número de documento" wire:model="document_number" size="xs" />
-                            </flux:input.group>
-                        </div>
-                    @endif
-
-                    <div class="col-span-2">
-                        <flux:input label="Nombre completo (Cliente)" wire:model="name" size="xs"
-                            placeholder="Ej: Ing. Damián Ledesma Ávila Hijo" class="w-full" />
-                        @error('name')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="col-span-2">
-                        <flux:input label="Fecha de nacimiento" type="date" wire:model="birth_date"
-                            size="xs" placeholder="Fecha de nacimiento" class="w-full" />
-                        @error('birth_date')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="col-span-2">
-                        <flux:input mask="999999999" label="Teléfono" wire:model="phone" size="xs"
-                            placeholder="Ej: 993847888" class="w-full" />
-                        @error('phone')
-                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <flux:select label="Tipo Cliente" wire:model="client_type" size="xs" class="w-full">
-                            <option value="">Tipo Cliente *</option>
-                            <option value="inversor">Inversor</option>
-                            <option value="comprador">Comprador</option>
-                            <option value="empresa">Empresa</option>
-                            <option value="constructor">Constructor</option>
-                        </flux:select>
-                    </div>
-
-                    <div>
-                        <flux:select label="Fuente" wire:model="source" size="xs" class="w-full">
-                            <option value="">Fuente *</option>
-                            <option value="redes_sociales">Redes Sociales</option>
-                            <option value="ferias">Ferias</option>
-                            <option value="referidos">Referidos</option>
-                            <option value="formulario_web">Formulario Web</option>
-                            <option value="publicidad">Publicidad</option>
-                        </flux:select>
-                    </div>
-
-                    <div>
-                        <flux:select label="Estado" wire:model="status" size="xs" class="w-full">
-                            <option value="">Estado *</option>
-                            <option value="nuevo">Nuevo</option>
-                            <option value="contacto_inicial">Contacto Inicial</option>
-                            <option value="en_seguimiento">En Seguimiento</option>
-                            <option value="cierre">Cierre</option>
-                            <option value="perdido">Perdido</option>
-                        </flux:select>
-                    </div>
-
-                    <div>
-                        <flux:input label="Score" type="number" wire:model="score" min="0" max="100"
-                            size="xs" placeholder="Score *" class="w-full" />
-                    </div>
-
-                    <div>
-                        <flux:select label="Asesor asignado" wire:model="assigned_advisor_id" size="xs" class="w-full">
-                            <option value="">Sin asignar</option>
-                            @foreach ($advisors as $advisor)
-                                <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
-                            @endforeach
-                        </flux:select>
-                    </div>
-
-                    <div class="col-span-2">
-                        <flux:input label="Dirección" wire:model="address" size="xs" placeholder="Dirección" class="w-full" />
-                    </div>
-
-                    <div class="col-span-2">
-                        <flux:select label="Ciudad" wire:model="city_id" size="xs" class="w-full">
-                            <option value="">Sin ciudad</option>
-                            @foreach ($cities as $city)
-                                <option value="{{ $city->id }}">{{ $city->name }}</option>
-                            @endforeach
-                        </flux:select>
-                    </div>
-
-                    <div class="col-span-2">
-                        <flux:textarea label="Notas" wire:model="notes" rows="2" placeholder="Notas"
-                            class="w-full text-xs px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-400">
-                        </flux:textarea>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-gray-100">
-                    <flux:button type="button" variant="outline" size="xs" wire:click="closeModals">
-                        Cancelar
-                    </flux:button>
-                    <flux:button type="submit" color="primary" size="xs" wire:loading.attr="disabled"
-                        wire:loading.class="opacity-50 cursor-not-allowed">
-                        <span wire:loading.remove>
-                            {{ $editingClient ? 'Actualizar' : 'Crear' }}
-                        </span>
-                        <span wire:loading>
-                            <flux:icon name="arrow-path" class="w-4 h-4 animate-spin" />
-                            {{ $editingClient ? 'Actualizando...' : 'Creando...' }}
-                        </span>
-                    </flux:button>
-                </div>
-            </form>
-        </div>
-    </flux:modal>
 
     <!-- Modal de Nueva Actividad -->
     <flux:modal wire:model="showActivityModal" size="md">

@@ -62,6 +62,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('│   ├── Líder 1 (María González) → 1 vendedor → 1 datero');
         $this->command->info('│   └── Líder 2 (Carlos Rodríguez) → 1 vendedor → 1 datero');
         $this->command->info('');
-        $this->command->info('👥 CLIENTES: 15-30 por cada líder y vendedor (solo ven los asignados a ellos).');
+        $this->command->info('👥 CLIENTES: 15-30 por líder/vendedor, 5-15 por datero (lista datero en /clients-datero).');
     }
 }

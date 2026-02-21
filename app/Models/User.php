@@ -297,6 +297,54 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
+     * IDs de usuarios con rol datero que están bajo la responsabilidad de este usuario
+     * (por jerarquía lider_id). Admin: dateros de sus líderes/vendedores; Líder: solo
+     * dateros directos; Vendedor: sus dateros; resto: [].
+     *
+     * @return array<int>
+     */
+    public function getDateroIdsUnderResponsibility(): array
+    {
+        if ($this->isAdmin()) {
+            $lideresIds = User::where('lider_id', $this->id)
+                ->whereHas('roles', fn($q) => $q->where('name', 'lider'))
+                ->pluck('id')
+                ->toArray();
+            if (empty($lideresIds)) {
+                return [];
+            }
+            $vendedoresIds = User::whereIn('lider_id', $lideresIds)
+                ->whereHas('roles', fn($q) => $q->where('name', 'vendedor'))
+                ->pluck('id')
+                ->toArray();
+            if (empty($vendedoresIds)) {
+                return [];
+            }
+            return User::whereIn('lider_id', $vendedoresIds)
+                ->whereHas('roles', fn($q) => $q->where('name', 'datero'))
+                ->pluck('id')
+                ->toArray();
+        }
+
+        if ($this->isLider()) {
+            // Líder solo ve sus dateros directos (lider_id = líder)
+            return User::where('lider_id', $this->id)
+                ->whereHas('roles', fn($q) => $q->where('name', 'datero'))
+                ->pluck('id')
+                ->toArray();
+        }
+
+        if ($this->isAdvisor()) {
+            return User::where('lider_id', $this->id)
+                ->whereHas('roles', fn($q) => $q->where('name', 'datero'))
+                ->pluck('id')
+                ->toArray();
+        }
+
+        return [];
+    }
+
+    /**
      * Get the identifier that will be stored in the subject claim of the JWT.
      *
      * @return mixed

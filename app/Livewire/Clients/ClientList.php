@@ -4,10 +4,9 @@ namespace App\Livewire\Clients;
 
 use App\Models\Client;
 use App\Exports\ClientsExport;
-use App\Services\ClientService;
+use App\Services\Clients\ClientServiceWebCazador;
 use App\Services\ActivityService;
 use App\Services\TaskService;
-use App\Services\DocumentSearchService;
 use App\Services\ReservationService;
 use App\Models\User;
 use App\Models\City;
@@ -37,30 +36,12 @@ class ClientList extends Component
     public $searchMinLength = 2;
 
     // Modales
-    public $showFormModal = false;
-    public $editingClient = null;
     public $showActivityModal = false;
     public $showTaskModal = false;
     public $showReservationModal = false;
     public $selectedClientId = null;
     public $activityPage = 1;
     public $taskPage = 1;
-
-    // Campos del formulario
-    public $name = '';
-    public $phone = '';
-    public $document_type = 'DNI';
-    public $document_number = '';
-    public $create_mode = 'dni';
-    public $address = '';
-    public $city_id = null;
-    public $birth_date = '';
-    public $client_type = 'comprador';
-    public $source = 'redes_sociales';
-    public $status = 'nuevo';
-    public $score = 0;
-    public $notes = '';
-    public $assigned_advisor_id = '';
 
     // Campos de actividad
     public $activity_title = '';
@@ -90,33 +71,18 @@ class ClientList extends Component
     public $reservation_units = [];
 
     protected $clientService;
-    protected $documentSearchService;
     protected $activityService;
     protected $taskService;
     protected $reservationService;
     public $advisors = [];
     public $cities = [];
-    public $searchingDocument = false;
-
-    public function getRules(): array
-    {
-        $clientId = $this->editingClient ? $this->editingClient->id : null;
-        return $this->clientService->getValidationRules($clientId, $this->create_mode);
-    }
-    public function getMessages(): array
-    {
-        return $this->clientService->getValidationMessages();
-    }
-
     public function boot(
-        ClientService $clientService,
-        DocumentSearchService $documentSearchService,
+        ClientServiceWebCazador $clientService,
         ActivityService $activityService,
         TaskService $taskService,
         ReservationService $reservationService
     ) {
         $this->clientService = $clientService;
-        $this->documentSearchService = $documentSearchService;
         $this->activityService = $activityService;
         $this->taskService = $taskService;
         $this->reservationService = $reservationService;
@@ -133,7 +99,6 @@ class ClientList extends Component
         $this->cities = City::orderBy('name')->get(['id', 'name']);
 
         $this->advisorFilter = $user->id;
-        $this->status = 'nuevo';
         $this->reservation_projects = $this->reservationService->getActiveProjects();
     }
 
@@ -163,80 +128,11 @@ class ClientList extends Component
         $this->resetPage();
     }
 
-    public function updatedCreateMode(): void
-    {
-        if ($this->create_mode === 'phone') {
-            $this->document_type = '';
-            $this->document_number = '';
-        }
-
-        if ($this->create_mode === 'dni' && !$this->document_type) {
-            $this->document_type = 'DNI';
-        }
-
-        $this->resetErrorBag(['document_number', 'document_type']);
-    }
-
     public function clearFilters()
     {
         $this->reset(['search', 'statusFilter', 'typeFilter', 'sourceFilter', 'cityFilter', 'advisorFilter']);
         $this->advisorFilter = Auth::user()->id;
         $this->resetPage();
-    }
-
-    public function openCreateModal($clientId = null)
-    {
-        try {
-            if ($clientId) {
-                $this->openEditModal($clientId);
-            } else {
-                $this->openNewModal();
-            }
-            $this->showFormModal = true;
-        } catch (\Exception $e) {
-            Log::error('Error al abrir modal de cliente', [
-                'client_id' => $clientId,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage()
-            ]);
-            $this->error('Error al abrir el formulario: ' . $e->getMessage());
-        }
-    }
-
-    private function openEditModal($clientId): void
-    {
-        Log::info('Abriendo modal para editar cliente', [
-            'client_id' => $clientId,
-            'user_id' => Auth::id()
-        ]);
-
-        $this->editingClient = $this->clientService->getClientById($clientId);
-        if (!$this->editingClient) {
-            Log::warning('Cliente no encontrado al intentar editar', [
-                'client_id' => $clientId,
-                'user_id' => Auth::id()
-            ]);
-            $this->error('Cliente no encontrado.');
-            return;
-        }
-
-        $this->fillFormFromClient($this->editingClient);
-    }
-
-    private function openNewModal(): void
-    {
-        Log::info('Abriendo modal para crear nuevo cliente', [
-            'user_id' => Auth::id()
-        ]);
-        $this->resetForm();
-        $this->editingClient = null;
-    }
-
-
-    public function closeModals()
-    {
-        $this->reset(['showFormModal', 'editingClient']);
-        $this->resetForm();
     }
 
     public function closeActionModals(): void
@@ -254,32 +150,6 @@ class ClientList extends Component
         $this->reset(['showReservationModal', 'reservationClientId', 'reservationClientName']);
         $this->resetReservationForm();
         $this->resetErrorBag();
-    }
-
-    public function resetForm()
-    {
-        $this->reset([
-            'name',
-            'phone',
-            'document_type',
-            'document_number',
-            'create_mode',
-            'address',
-            'city_id',
-            'birth_date',
-            'client_type',
-            'source',
-            'status',
-            'score',
-            'notes',
-            'assigned_advisor_id'
-        ]);
-        $this->document_type = 'DNI';
-        $this->create_mode = 'dni';
-        $this->client_type = 'comprador';
-        $this->source = 'redes_sociales';
-        $this->status = 'nuevo';
-        $this->score = 0;
     }
 
     private function resetActivityForm(): void
@@ -324,24 +194,6 @@ class ClientList extends Component
             'reservation_units',
         ]);
         $this->reservation_amount = 0;
-    }
-
-    public function fillFormFromClient($client)
-    {
-        $this->name = $client->name;
-        $this->phone = $client->phone;
-        $this->document_type = $client->document_type;
-        $this->document_number = $client->document_number;
-        $this->create_mode = $client->create_mode ?? ($client->document_number ? 'dni' : 'phone');
-        $this->address = $client->address;
-        $this->city_id = $client->city_id;
-        $this->birth_date = $client->birth_date ? $client->birth_date->format('Y-m-d') : '';
-        $this->client_type = $client->client_type;
-        $this->source = $client->source;
-        $this->status = $client->status;
-        $this->score = $client->score;
-        $this->notes = $client->notes;
-        $this->assigned_advisor_id = $client->assigned_advisor_id;
     }
 
     public function openActivityModal(int $clientId): void
@@ -464,94 +316,6 @@ class ClientList extends Component
         }
     }
 
-    public function createClient()
-    {
-        try {
-            $this->validate($this->getRules(), $this->getMessages());
-
-            $formData = $this->getFormData();
-
-            Log::info('Intentando crear cliente', [
-                'user_id' => Auth::id(),
-                'document_number' => $formData['document_number'],
-                'document_type' => $formData['document_type']
-            ]);
-
-            $client = $this->clientService->createClient($formData);
-
-            Log::info('Cliente creado exitosamente', [
-                'client_id' => $client->id,
-                'user_id' => Auth::id()
-            ]);
-
-            $this->closeModals();
-            $this->resetPage(); // Refrescar la lista
-            $this->success('Cliente creado exitosamente.');
-        } catch (ValidationException $e) {
-            Log::warning('Error de validación al crear cliente', [
-                'user_id' => Auth::id(),
-                'errors' => $e->errors()
-            ]);
-            throw $e;
-        } catch (\Exception $e) {
-            Log::error('Error al crear cliente', [
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->error('Error al crear el cliente: ' . $e->getMessage());
-        }
-    }
-
-    public function updateClient()
-    {
-        try {
-            if (!$this->editingClient) {
-                Log::warning('Intento de actualizar cliente sin editingClient', [
-                    'user_id' => Auth::id()
-                ]);
-                $this->warning('No se puede actualizar: cliente no seleccionado.');
-                return;
-            }
-
-            $this->validate($this->getRules(), $this->getMessages());
-
-            $formData = $this->getFormData();
-
-            Log::info('Intentando actualizar cliente', [
-                'client_id' => $this->editingClient->id,
-                'user_id' => Auth::id(),
-            ]);
-
-            $this->clientService->updateClient($this->editingClient->id, $formData);
-
-            Log::info('Cliente actualizado exitosamente', [
-                'client_id' => $this->editingClient->id,
-                'user_id' => Auth::id()
-            ]);
-
-            $this->closeModals();
-            $this->resetPage(); // Refrescar la lista
-            $this->success('Cliente actualizado exitosamente.');
-        } catch (ValidationException $e) {
-            Log::warning('Error de validación al actualizar cliente', [
-                'client_id' => $this->editingClient->id ?? null,
-                'user_id' => Auth::id(),
-                'errors' => $e->errors()
-            ]);
-            throw $e;
-        } catch (\Exception $e) {
-            Log::error('Error al actualizar cliente', [
-                'client_id' => $this->editingClient->id ?? null,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->error('Error al actualizar el cliente: ' . $e->getMessage());
-        }
-    }
-
-
     public function changeStatus($clientId, $newStatus)
     {
         try {
@@ -612,34 +376,6 @@ class ClientList extends Component
             ]);
             $this->error('Error al actualizar el score: ' . $e->getMessage());
         }
-    }
-
-    private function getFormData(): array
-    {
-        $documentType = $this->document_type;
-        $documentNumber = $this->document_number;
-
-        if ($this->create_mode === 'phone' && $documentNumber === '') {
-            $documentType = null;
-            $documentNumber = null;
-        }
-
-        return [
-            'create_mode' => $this->create_mode,
-            'name' => $this->name,
-            'phone' => $this->phone,
-            'document_type' => $documentType,
-            'document_number' => $documentNumber,
-            'address' => $this->address,
-            'city_id' => $this->city_id ?: null,
-            'birth_date' => $this->birth_date ?: null,
-            'client_type' => $this->client_type,
-            'source' => $this->source,
-            'status' => $this->status,
-            'score' => $this->score,
-            'notes' => $this->notes,
-            'assigned_advisor_id' => $this->assigned_advisor_id ?: Auth::user()->id,
-        ];
     }
 
     private function getActivityData(): array
@@ -761,106 +497,6 @@ class ClientList extends Component
         return $this->taskService->getClientTasksPaginated($this->selectedClientId, 5, 'taskPage');
     }
 
-    public function buscarDocumento()
-    {
-        $this->searchingDocument = true;
-
-        try {
-            $tipo = strtolower($this->document_type);
-            $num_doc = trim($this->document_number);
-
-            if (empty($num_doc)) {
-                $this->error('Ingrese un número de documento');
-                $this->searchingDocument = false;
-                return;
-            }
-
-            // Validar formato antes de buscar
-            if ($tipo !== 'dni' || strlen($num_doc) !== 8) {
-                Log::warning('Formato de documento inválido para búsqueda', [
-                    'document_type' => $tipo,
-                    'document_number' => $num_doc,
-                    'user_id' => Auth::id()
-                ]);
-                $this->error('Ingrese un número de DNI válido (8 dígitos)');
-                $this->searchingDocument = false;
-                return;
-            }
-
-            Log::info('Buscando documento en API externa', [
-                'document_type' => $tipo,
-                'document_number' => $num_doc,
-                'user_id' => Auth::id()
-            ]);
-
-            $this->info('Buscando documento en la base de datos...');
-
-            // Usar el servicio para buscar
-            $result = $this->documentSearchService->searchAndProcessClient($tipo, $num_doc);
-
-            if ($result['exists_in_db']) {
-                $client = $result['client'];
-                $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
-
-                Log::info('Cliente ya existe en la base de datos', [
-                    'client_id' => $client->id,
-                    'document_type' => $tipo,
-                    'document_number' => $num_doc,
-                    'assigned_advisor' => $advisorName,
-                    'user_id' => Auth::id()
-                ]);
-
-                $this->warning('Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
-                $this->searchingDocument = false;
-                return;
-            }
-
-            if ($result['found'] && $result['data']) {
-                $clientData = $this->documentSearchService->extractClientData($result['data']);
-                $this->fillClientDataFromApi($clientData);
-
-                Log::info('Cliente encontrado en API externa', [
-                    'document_type' => $tipo,
-                    'document_number' => $num_doc,
-                    'name' => $this->name,
-                    'user_id' => Auth::id()
-                ]);
-
-                $this->success('Cliente encontrado: ' . $this->name);
-            } else {
-                Log::warning('Cliente no encontrado en API externa', [
-                    'document_type' => $tipo,
-                    'document_number' => $num_doc,
-                    'user_id' => Auth::id()
-                ]);
-                $this->error('Documento no encontrado en la base de datos. Por favor, complete los datos manualmente.');
-            }
-        } catch (\Exception $e) {
-            Log::error('Error al buscar documento', [
-                'document_type' => $this->document_type,
-                'document_number' => $this->document_number,
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->error('Error al buscar el documento: ' . $e->getMessage());
-        } finally {
-            $this->searchingDocument = false;
-        }
-    }
-
-    private function fillClientDataFromApi(array $clientData): void
-    {
-        $this->document_type = 'DNI';
-        $this->name = $clientData['name'] ?? '';
-        $this->birth_date = $clientData['birth_date'] ?? null;
-    }
-
-    public function clearSearchData(): void
-    {
-        $this->name = '';
-        $this->birth_date = '';
-    }
     public function render()
     {
         $filters = $this->buildFilters();

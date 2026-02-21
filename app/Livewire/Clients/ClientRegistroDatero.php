@@ -5,7 +5,7 @@ namespace App\Livewire\Clients;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
-use App\Services\ClientService;
+use App\Services\Clients\ClientServiceWebDatero;
 use App\Models\Client;
 use App\Models\User;
 use App\Traits\SearchDocument;
@@ -105,15 +105,16 @@ class ClientRegistroDatero extends Component
 
         return $messages;
     }
-    public function boot(ClientService $clientService)
+    public function boot(ClientServiceWebDatero $clientService)
     {
         $this->clientService = $clientService;
     }
 
     public function mount($id)
     {
+        /** @var \App\Models\User|null $user */
         $user = User::find($id);
-        if (!$user->isDatero()) {
+        if (!$user || !$user->isDatero()) {
             abort(404);
         } else {
             // El servicio establecerá assigned_advisor_id automáticamente basándose en lider_id

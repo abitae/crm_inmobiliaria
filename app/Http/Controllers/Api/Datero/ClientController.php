@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Datero;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use App\Models\Client;
-use App\Services\ClientService;
+use App\Services\Clients\ClientServiceDatero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -15,9 +15,9 @@ class ClientController extends Controller
 {
     use ApiResponse;
 
-    protected ClientService $clientService;
+    protected ClientServiceDatero $clientService;
 
-    public function __construct(ClientService $clientService)
+    public function __construct(ClientServiceDatero $clientService)
     {
         $this->clientService = $clientService;
     }

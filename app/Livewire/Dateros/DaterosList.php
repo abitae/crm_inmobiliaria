@@ -44,7 +44,7 @@ class DaterosList extends Component
     protected function loadVendedoresByRole(User $user): \Illuminate\Support\Collection
     {
         if ($user->isAdmin()) {
-            return $this->loadVendedoresForAdmin();
+            return $this->loadVendedoresForAdmin($user);
         } elseif ($user->isLider()) {
             return $this->loadVendedoresForLider($user);
         }
@@ -54,17 +54,24 @@ class DaterosList extends Component
     }
 
     /**
-     * Carga vendedores para admin (todos los vendedores que tienen dateros)
-     * 
+     * Carga vendedores para admin (solo vendedores a su cargo: bajo sus líderes)
+     *
+     * @param User $admin Usuario administrador
      * @return \Illuminate\Support\Collection
      */
-    protected function loadVendedoresForAdmin(): \Illuminate\Support\Collection
+    protected function loadVendedoresForAdmin(User $admin): \Illuminate\Support\Collection
     {
-        // Usar role() de Spatie que está optimizado y whereHas para subordinados con rol datero
-        return User::role('vendedor')
+        $lideresIds = User::where('lider_id', $admin->id)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'lider'))
+            ->pluck('id')
+            ->toArray();
+        if (empty($lideresIds)) {
+            return collect();
+        }
+        return User::whereIn('lider_id', $lideresIds)
+            ->role('vendedor')
             ->select('users.id', 'users.name')
-            ->whereHas('subordinados', function($query) {
-                // Usar role() directamente en lugar de whereHas('roles') anidado
+            ->whereHas('subordinados', function ($query) {
                 $query->role('datero');
             })
             ->orderBy('users.name')
@@ -72,40 +79,14 @@ class DaterosList extends Component
     }
 
     /**
-     * Carga vendedores para líder (sus vendedores + opción de dateros directos si aplica)
-     * 
+     * Líder solo tiene dateros directos; no usa filtro por vendedor en esta lista.
+     *
      * @param User $lider Usuario líder
      * @return \Illuminate\Support\Collection
      */
     protected function loadVendedoresForLider(User $lider): \Illuminate\Support\Collection
     {
-        // Obtener vendedores del líder que tienen dateros en una sola consulta optimizada
-        // Usar role() directamente que está optimizado por Spatie Permission
-        $vendedores = User::where('lider_id', $lider->id)
-            ->role('vendedor')
-            ->select('users.id', 'users.name')
-            ->whereHas('subordinados', function($query) {
-                // Usar role() directamente en lugar de whereHas('roles') anidado
-                $query->role('datero');
-            })
-            ->orderBy('users.name')
-            ->get();
-
-        // Verificar si el líder tiene dateros directos usando una consulta optimizada con exists()
-        // Esto es más eficiente que count() o get() ya que solo verifica existencia
-        $tieneDaterosDirectos = User::where('lider_id', $lider->id)
-            ->role('datero')
-            ->exists();
-
-        // Si tiene dateros directos, agregar la opción al inicio de la lista
-        if ($tieneDaterosDirectos) {
-            $vendedores->prepend((object)[
-                'id' => $lider->id,
-                'name' => 'Dateros directos'
-            ]);
-        }
-
-        return $vendedores;
+        return collect();
     }
 
     /**
@@ -143,41 +124,20 @@ class DaterosList extends Component
         $user = Auth::user();
         $query = User::role('datero');
 
-        // Aplicar filtros según el rol del usuario
+        // Aplicar filtros según el rol del usuario (solo dateros a su cargo)
         if ($user->isAdmin()) {
-            // Admin ve todos los dateros
-            // No se aplica ningún filtro adicional
-        } elseif ($user->isLider()) {
-            // Lider ve dateros directos + dateros de sus vendedores
-            $vendedoresIds = User::where('lider_id', $user->id)
-                ->whereHas('roles', function($query) {
-                    $query->where('name', 'vendedor');
-                })
-                ->pluck('id')
-                ->toArray();
-            
-            // Dateros directos del líder
-            $daterosDirectosIds = User::where('lider_id', $user->id)
-                ->whereHas('roles', function($query) {
-                    $query->where('name', 'datero');
-                })
-                ->pluck('id')
-                ->toArray();
-            
-            // Dateros de los vendedores
-            $daterosVendedoresIds = User::whereIn('lider_id', $vendedoresIds)
-                ->whereHas('roles', function($query) {
-                    $query->where('name', 'datero');
-                })
-                ->pluck('id')
-                ->toArray();
-            
-            $todosDaterosIds = array_merge($daterosDirectosIds, $daterosVendedoresIds);
-            
-            if (!empty($todosDaterosIds)) {
-                $query->whereIn('id', $todosDaterosIds);
+            $dateroIds = $user->getDateroIdsUnderResponsibility();
+            if (!empty($dateroIds)) {
+                $query->whereIn('id', $dateroIds);
             } else {
-                // Si no hay dateros, retornar query vacío
+                $query->whereRaw('1 = 0');
+            }
+        } elseif ($user->isLider()) {
+            // Líder solo ve sus dateros directos
+            $dateroIds = $user->getDateroIdsUnderResponsibility();
+            if (!empty($dateroIds)) {
+                $query->whereIn('id', $dateroIds);
+            } else {
                 $query->whereRaw('1 = 0');
             }
         } elseif ($user->isAdvisor()) {
@@ -188,15 +148,9 @@ class DaterosList extends Component
             $query->whereRaw('1 = 0');
         }
 
-        // Aplicar filtro de vendedor si está seleccionado
-        if ($this->vendedorFilter && $this->vendedorFilter !== '') {
-            if ($user->isLider() && $this->vendedorFilter == $user->id) {
-                // Si es "Dateros directos", filtrar por lider_id del líder
-                $query->where('lider_id', $user->id);
-            } else {
-                // Filtrar por el vendedor seleccionado
-                $query->where('lider_id', $this->vendedorFilter);
-            }
+        // Aplicar filtro de vendedor si está seleccionado (solo admin tiene vendedores en el filtro)
+        if ($this->vendedorFilter && $this->vendedorFilter !== '' && $user->isAdmin()) {
+            $query->where('lider_id', $this->vendedorFilter);
         }
 
         // Aplicar búsqueda

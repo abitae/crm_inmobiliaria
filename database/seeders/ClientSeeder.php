@@ -12,6 +12,8 @@ class ClientSeeder extends Seeder
 {
     private const CLIENTS_PER_ADVISOR_MIN = 15;
     private const CLIENTS_PER_ADVISOR_MAX = 30;
+    private const CLIENTS_PER_DATERO_MIN = 5;
+    private const CLIENTS_PER_DATERO_MAX = 15;
 
     /**
      * Run the database seeds.
@@ -157,12 +159,41 @@ class ClientSeeder extends Seeder
         }
         $this->command->info("  → Admin: {$adminCount} clientes.");
 
-        $total = $totalCreated + $fixedCount;
-        $this->command->info("Clientes creados: {$total} (assigned_advisor_id = created_by = updated_by por usuario).");
+        // Clientes creados por dateros (created_by = datero, assigned_advisor_id = vendedor del datero)
+        $dateros = User::role('datero')->get();
+        $dateroClientCount = 0;
+        foreach ($dateros as $datero) {
+            $count = random_int(self::CLIENTS_PER_DATERO_MIN, self::CLIENTS_PER_DATERO_MAX);
+            $assignedAdvisorId = $datero->lider_id ?? $datero->id;
+            for ($i = 0; $i < $count; $i++) {
+                $this->createClient([
+                    'name' => $faker->name(),
+                    'phone' => $faker->unique()->numerify('9########'),
+                    'document_type' => $faker->randomElement(['DNI', 'RUC']),
+                    'document_number' => null,
+                    'address' => $faker->streetAddress(),
+                    'birth_date' => $faker->dateTimeBetween('-65 years', '-18 years')->format('Y-m-d'),
+                    'client_type' => $clientTypes[array_rand($clientTypes)],
+                    'source' => $sources[array_rand($sources)],
+                    'status' => $statuses[array_rand($statuses)],
+                    'score' => rand(40, 100),
+                    'notes' => "Cliente registrado por datero {$datero->name}.",
+                ], $assignedAdvisorId, $cityId, $faker, $clientTypes, $sources, $statuses, $datero->id);
+                $dateroClientCount++;
+            }
+            $this->command->info("  → Datero {$datero->name}: {$count} clientes (created_by datero).");
+        }
+        if ($dateroClientCount > 0) {
+            $this->command->info("Clientes creados por dateros: {$dateroClientCount}.");
+        }
+
+        $total = $totalCreated + $fixedCount + $dateroClientCount;
+        $this->command->info("Clientes creados: {$total} (assigned_advisor_id = created_by = updated_by por usuario; dateros con create_type datero).");
     }
 
     /**
-     * Crea un cliente con assigned_advisor_id, created_by y updated_by = mismo usuario.
+     * Crea un cliente. Si $createdByDateroId es null: assigned_advisor_id, created_by y updated_by = advisorId, create_type = propio.
+     * Si se pasa createdByDateroId: created_by = datero, updated_by = datero, create_type = datero, assigned_advisor_id = advisorId (vendedor).
      */
     private function createClient(
         array $data,
@@ -171,12 +202,17 @@ class ClientSeeder extends Seeder
         $faker,
         array $clientTypes,
         array $sources,
-        array $statuses
+        array $statuses,
+        ?int $createdByDateroId = null
     ): Client {
         $documentType = $data['document_type'] ?? $faker->randomElement(['DNI', 'RUC']);
         $documentNumber = $data['document_number'] ?? ($documentType === 'RUC'
             ? $faker->unique()->numerify('20#########')
             : $faker->unique()->numerify('########'));
+
+        $createdBy = $createdByDateroId ?? $advisorId;
+        $updatedBy = $createdByDateroId ?? $advisorId;
+        $createType = $createdByDateroId ? 'datero' : 'propio';
 
         return Client::create([
             'name' => $data['name'],
@@ -193,9 +229,9 @@ class ClientSeeder extends Seeder
             'create_mode' => 'dni',
             'city_id' => $cityId,
             'assigned_advisor_id' => $advisorId,
-            'created_by' => $advisorId,
-            'updated_by' => $advisorId,
-            'create_type' => 'propio',
+            'created_by' => $createdBy,
+            'updated_by' => $updatedBy,
+            'create_type' => $createType,
         ]);
     }
 }
