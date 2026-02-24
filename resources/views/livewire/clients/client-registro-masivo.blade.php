@@ -7,19 +7,10 @@
 
             <div class="flex flex-col gap-2 sm:gap-3">
                 <div>
-                    <div class="mb-0.5 text-xs font-medium text-gray-600">{{ __('Modo de alta') }}</div>
-                    <div class="flex items-center gap-3 text-xs sm:text-sm text-gray-700">
-                        <label class="flex items-center gap-1">
-                            <input type="radio" wire:model.live="create_mode" value="dni"
-                                class="rounded border-gray-300 bg-white text-gray-700" />
-                            <span>{{ __('Por DNI') }}</span>
-                        </label>
-                        <label class="flex items-center gap-1">
-                            <input type="radio" wire:model.live="create_mode" value="phone"
-                                class="rounded border-gray-300 bg-white text-gray-700" />
-                            <span>{{ __('Por teléfono') }}</span>
-                        </label>
-                    </div>
+                    <flux:radio.group wire:model.live="create_mode" label="{{ __('Modo de alta') }}">
+                        <flux:radio value="dni" label="{{ __('Por DNI') }}" />
+                        <flux:radio value="phone" label="{{ __('Por teléfono') }}" />
+                    </flux:radio.group>
                     <p class="mt-0.5 text-[11px] sm:text-xs text-gray-500">
                         @if ($create_mode === 'dni')
                             {{ __('Por DNI: use el botón Buscar para rellenar nombre y fecha de nacimiento.') }}
