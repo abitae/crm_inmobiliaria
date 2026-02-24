@@ -70,7 +70,7 @@
                 @endcan
                 @can('view_dateros')
                 <flux:navlist.item icon="users" :href="route('dateros.index')"
-                    :current="request()->routeIs('dateros.index')" wire:navigate>{{ __('Dateros') }}
+                    :current="request()->routeIs('dateros.index')" wire:navigate>{{ __('Mis Dateros') }}
                 </flux:navlist.item>
                 @endcan
             </flux:navlist.group>

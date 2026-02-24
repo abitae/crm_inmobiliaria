@@ -47,9 +47,6 @@ class ClientRegistroMasivo extends Component
 
     public array $documentTypes = [
         'DNI' => 'DNI',
-        'RUC' => 'RUC',
-        'CE' => 'Carné de Extranjería',
-        'PASAPORTE' => 'Pasaporte',
     ];
     public array $clientTypes = [
         'inversor' => 'Inversor',

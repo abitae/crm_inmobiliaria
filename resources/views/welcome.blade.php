@@ -155,17 +155,9 @@
         <header class="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-blue-200/50 dark:border-blue-700/50 shadow-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <nav class="flex justify-between items-center py-4">
-                    <!-- Logo Mejorado -->
-                    <a href="#" class="group flex items-center gap-3 text-2xl font-bold text-primary-600 dark:text-primary-400 hover:scale-105 transition-all duration-300">
-                        <div class="relative">
-                            <div class="w-12 h-12 bg-gradient-to-br from-primary-600 via-cyan-500 to-accent-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:shadow-2xl transition-all duration-300 group-hover:rotate-12">
-                                9
-                            </div>
-                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-accent-500 rounded-full animate-pulse"></div>
-                        </div>
-                        <span class="bg-gradient-to-r from-primary-600 via-cyan-500 to-accent-600 bg-clip-text text-transparent group-hover:from-accent-600 group-hover:to-primary-600 transition-all duration-300">
-                            Open9 CRM
-                        </span>
+                    <!-- Logo Open9 -->
+                    <a href="#" class="group flex items-center gap-3 hover:scale-105 transition-all duration-300">
+                        <img src="{{ asset('images/Open9/logo_completo_sin_fondo.png') }}" alt="Open9" class="h-12 object-contain" />
                     </a>
 
                     <!-- Navegación Desktop -->

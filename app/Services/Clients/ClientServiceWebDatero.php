@@ -26,7 +26,8 @@ class ClientServiceWebDatero
                 $roleQuery->where('name', 'datero');
             });
         });
-        $query->where('assigned_advisor_id', Auth::user()->id);
+        $query->where('assigned_advisor_id', Auth::id());
+
         return $query;
     }
 
@@ -77,7 +78,7 @@ class ClientServiceWebDatero
 
     /**
      * Crear cliente desde el panel web (ClientRegistroDatero).
-     * createdById es el datero que registra; assigned_advisor_id = created_by.
+     * createdById es el datero que registra; assigned_advisor_id = lider_id del datero, created_by = datero.
      */
     public function createClient(array $formData, ?int $createdById = null): Client
     {
@@ -105,7 +106,7 @@ class ClientServiceWebDatero
         $documentTypeRules = $isPhoneMode ? ['nullable', 'in:DNI,RUC,CE,PASAPORTE'] : ['required', 'in:DNI,RUC,CE,PASAPORTE'];
         $documentNumberRules = $isPhoneMode ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'];
         if ($isPhoneMode) {
-            $uniqueRule = Rule::unique('clients', 'document_number')->where(fn ($q) => $q->where('document_number', '!=', '00000000'));
+            $uniqueRule = Rule::unique('clients', 'document_number')->where(fn($q) => $q->where('document_number', '!=', '00000000'));
             if ($clientId) {
                 $uniqueRule = $uniqueRule->ignore($clientId);
             }
@@ -150,7 +151,7 @@ class ClientServiceWebDatero
         ];
     }
 
-    protected function prepareFormData(array $formData, ?int $createdById = null, ?Client $editingClient = null): array
+    protected function prepareFormData(array $formData, ?int $createdById = null): array
     {
         $formData = $this->sanitizeFormData($formData);
         $createMode = $formData['create_mode'] ?? null;
@@ -173,28 +174,27 @@ class ClientServiceWebDatero
             'assigned_advisor_id' => $formData['assigned_advisor_id'] ?? null,
             'create_mode' => $createMode,
         ];
-        if (!$editingClient) {
-            $userId = $createdById ?? Auth::id();
-            if ($userId === null) {
-                throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
-            }
-            /** @var User|null $user */
-            $user = User::find($userId);
-            if (!$user) {
-                throw new \Exception('Usuario creador no encontrado');
-            }
-            $data['assigned_advisor_id'] = $userId;
-            $data['created_by'] = $userId;
-            $data['updated_by'] = $userId;
-            $data['create_type'] = $user->isDatero() ? 'datero' : 'propio';
-            if (!isset($formData['status'])) {
-                $data['status'] = 'nuevo';
-            }
-            if (!isset($formData['score'])) {
-                $data['score'] = 0;
-            }
-        } else {
-            $data['updated_by'] = Auth::id();
+        $userId = $createdById ?? Auth::id();
+        if ($userId === null) {
+            throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
+        }
+        /** @var User|null $user */
+        $user = User::find($userId);
+        if (!$user) {
+            throw new \Exception('Usuario creador no encontrado');
+        }
+        if ($user->lider_id === null) {
+            throw new \Exception('El datero debe tener un líder asignado.');
+        }
+        $data['assigned_advisor_id'] = $user->lider_id;
+        $data['created_by'] = $userId;
+        $data['updated_by'] = $userId;
+        $data['create_type'] = $user->isDatero() ? 'datero' : 'propio';
+        if (!isset($formData['status'])) {
+            $data['status'] = 'nuevo';
+        }
+        if (!isset($formData['score'])) {
+            $data['score'] = 0;
         }
         return $data;
     }

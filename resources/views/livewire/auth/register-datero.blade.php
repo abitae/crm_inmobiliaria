@@ -1,5 +1,5 @@
 <div class="flex flex-col p-3 sm:p-4 border-2 border-gray-300 gap-3 sm:gap-4 rounded-xl bg-white shadow-sm">
-    <x-auth-header :title="__('REGISTRO DATERO')" :description="__('Regístrate como datero para gestionar tus clientes')" />
+    <x-auth-header :title="__('REGISTRO DATERO')" :description="__('Registra a tus dateros')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center text-sm" :status="session('status')" />
@@ -18,24 +18,24 @@
             placeholder="999999999" />
 
         <!-- Banco -->
-        <flux:input size="xs" wire:model="banco" :label="__('Banco')" type="text" required autocomplete="banco"
+        <flux:input size="xs" wire:model="banco" :label="__('Banco')" type="text" autocomplete="banco"
             placeholder="Banco" />
 
         <!-- Cuenta bancaria -->
-        <flux:input size="xs" wire:model="cuenta_bancaria" :label="__('Cuenta bancaria')" type="text" required autocomplete="cuenta_bancaria"
+        <flux:input size="xs" wire:model="cuenta_bancaria" :label="__('Cuenta bancaria')" type="text" autocomplete="cuenta_bancaria"
             placeholder="Cuenta bancaria" />
 
         <!-- CCI bancaria -->
-        <flux:input size="xs" wire:model="cci_bancaria" :label="__('CCI bancaria')" type="text" required autocomplete="cci_bancaria"
+        <flux:input size="xs" wire:model="cci_bancaria" :label="__('CCI bancaria')" type="text" autocomplete="cci_bancaria"
             placeholder="CCI bancaria" />
 
-        <!-- Password -->
-        <flux:input size="xs" wire:model="password" :label="__('Contraseña')" type="password" required autocomplete="new-password"
-            :placeholder="__('Contraseña')" viewable />
+        <!-- PIN -->
+        <flux:input size="xs" wire:model="password" :label="__('PIN (6 dígitos)')" type="password" required autocomplete="new-password"
+            placeholder="6 dígitos" viewable />
 
-        <!-- Confirm Password -->
-        <flux:input size="xs" wire:model="password_confirmation" :label="__('Confirmar contraseña')" type="password" required
-            autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
+        <!-- Confirmar PIN -->
+        <flux:input size="xs" wire:model="password_confirmation" :label="__('Confirmar PIN')" type="password" required
+            autocomplete="new-password" placeholder="6 dígitos" viewable />
 
 
         <div class="flex items-center justify-end pt-1">
@@ -44,9 +44,4 @@
             </flux:button>
         </div>
     </form>
-
-    <div class="space-x-1 rtl:space-x-reverse text-center text-xs sm:text-sm text-gray-600">
-        <span>{{ __('Ya tienes una cuenta?') }}</span>
-        <flux:link :href="route('login')" wire:navigate size="xs">{{ __('Iniciar sesión') }}</flux:link>
-    </div>
 </div>

@@ -4,7 +4,7 @@ namespace App\Livewire\Clients;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Rule;
+use Illuminate\Validation\Rule;
 use App\Services\Clients\ClientServiceWebDatero;
 use App\Models\Client;
 use App\Models\User;
@@ -91,7 +91,7 @@ class ClientRegistroDatero extends Component
         $rules = $this->clientService->getValidationRules(null, $this->create_mode);
         if ($this->create_mode === 'dni') {
             $rules['document_type'] = 'required|in:DNI';
-            $rules['document_number'] .= '|size:8';
+            $rules['document_number'] = ['required', 'string', 'size:8', Rule::unique('clients', 'document_number')];
         }
         $rules['ocupacion'] = 'nullable|string|max:255';
 

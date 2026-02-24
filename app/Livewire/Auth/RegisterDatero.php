@@ -19,7 +19,6 @@ class RegisterDatero extends Component
     public string $phone = '';
     public string $password = '';
     public string $password_confirmation = '';
-    public ?int $lider_id = null;
     public string $banco = '';
     public string $cuenta_bancaria = '';
     public string $cci_bancaria = '';
@@ -35,7 +34,6 @@ class RegisterDatero extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'size:6', 'regex:/^[0-9]{6}$/', 'confirmed'],
-            'lider_id' => ['nullable', 'exists:users,id'],
             'banco' => ['nullable', 'string', 'max:255'],
             'cuenta_bancaria' => ['nullable', 'string', 'max:255'],
             'cci_bancaria' => ['nullable', 'string', 'max:255'],
@@ -61,8 +59,6 @@ class RegisterDatero extends Component
             'phone.required' => 'El teléfono es requerido',
             'phone.string' => 'El teléfono debe ser una cadena de texto',
             'phone.max' => 'El teléfono debe tener menos de 255 caracteres',
-            'lider_id.exists' => 'El líder no existe',
-            'lider_id.nullable' => 'El líder es opcional',
             'banco.required' => 'El banco es requerido',
             'banco.string' => 'El banco debe ser una cadena de texto',
             'banco.max' => 'El banco debe tener menos de 255 caracteres',
@@ -77,6 +73,7 @@ class RegisterDatero extends Component
         // PIN de 6 dígitos: se guarda en password y pin; pin siempre con Hash::make
         $validated['pin'] = Hash::make($validated['password']);
         unset($validated['password_confirmation']);
+        $validated['lider_id'] = Auth::id();
 
         event(new Registered(($user = User::create($validated))));
 
@@ -88,7 +85,7 @@ class RegisterDatero extends Component
         } catch (\Exception $e) {
             $this->reset([
                 'name', 'email', 'phone', 'password', 'password_confirmation',
-                'lider_id', 'banco', 'cuenta_bancaria', 'cci_bancaria'
+                'banco', 'cuenta_bancaria', 'cci_bancaria'
             ]);
             $this->error(__('Error'), $e->getMessage(), 'toast-top toast-center');
         }

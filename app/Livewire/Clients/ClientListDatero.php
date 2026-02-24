@@ -449,7 +449,6 @@ class ClientListDatero extends Component
 
         // Usar el nuevo método para obtener solo clientes de dateros
         $clients = $this->clientService->getClientsByDateros(15, $filters);
-
         return view('livewire.clients.client-list-datero', [
             'clients' => $clients,
             'clientActivities' => $this->getClientActivitiesPaginator(),

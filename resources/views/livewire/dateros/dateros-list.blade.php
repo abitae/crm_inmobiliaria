@@ -25,16 +25,6 @@
                         <option value="inactive">Inactivos</option>
                     </flux:select>
                 </div>
-                @if ((Auth::user()->isAdmin() || Auth::user()->isLider()) && $vendedores && $vendedores->count() > 0)
-                    <div>
-                        <flux:select size="xs" wire:model.live="vendedorFilter">
-                            <option value="">Todos los vendedores</option>
-                            @foreach ($vendedores as $vendedor)
-                                <option value="{{ $vendedor->id }}">{{ $vendedor->name }}</option>
-                            @endforeach
-                        </flux:select>
-                    </div>
-                @endif
                 <div>
                     <flux:button size="xs" variant="outline" wire:click="clearFilters">
                         Limpiar filtros
@@ -57,37 +47,37 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
-                        @forelse($dateros as $datero)
-                            <tr wire:key="datero-{{ $datero->id }}" class="hover:bg-gray-50">
+                        @forelse($vendedores as $vendedor)
+                            <tr wire:key="vendedor-{{ $vendedor->id }}" class="hover:bg-gray-50">
                                 <td class="px-2 py-2 whitespace-nowrap">
                                     <div class="flex items-center space-x-2">
                                         <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                                             <span class="text-purple-600 font-semibold text-xs">
-                                                {{ $datero->initials() }}
+                                                {{ $vendedor->initials() }}
                                             </span>
                                         </div>
                                         <div>
-                                            <div class="font-medium text-gray-900">{{ $datero->name }}</div>
-                                            <div class="text-gray-500">{{ $datero->email }}</div>
+                                            <div class="font-medium text-gray-900">{{ $vendedor->name }}</div>
+                                            <div class="text-gray-500">{{ $vendedor->email }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    @if($datero->phone)
-                                        <div class="text-gray-900">{{ $datero->phone }}</div>
+                                    @if($vendedor->phone)
+                                        <div class="text-gray-900">{{ $vendedor->phone }}</div>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    @if($datero->lider)
+                                    @if($vendedor->lider)
                                         <div class="flex items-center space-x-1">
-                                            <span class="text-gray-900">{{ $datero->lider->name }}</span>
-                                            @if($datero->lider->hasRole('vendedor'))
+                                            <span class="text-gray-900">{{ $vendedor->lider->name }}</span>
+                                            @if($vendedor->lider->hasRole('vendedor'))
                                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                                                     Vendedor
                                                 </span>
-                                            @elseif($datero->lider->hasRole('lider'))
+                                            @elseif($vendedor->lider->hasRole('lider'))
                                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                                     Líder
                                                 </span>
@@ -98,7 +88,7 @@
                                     @endif
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    @if($datero->is_active)
+                                    @if($vendedor->is_active)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                                             Activo
                                         </span>
@@ -110,10 +100,10 @@
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
                                     <div class="text-xs">
-                                        {{ $datero->created_at->format('d/m/Y') }}
+                                        {{ $vendedor->created_at }}
                                     </div>
                                     <div class="text-xs text-gray-400">
-                                        {{ $datero->created_at->format('H:i') }}
+                                        {{ $vendedor->created_at }}
                                     </div>
                                 </td>
                             </tr>
@@ -132,9 +122,9 @@
             </div>
 
             <!-- Paginación -->
-            @if($dateros->hasPages())
+            @if($vendedores->hasPages())
                 <div class="px-4 py-3 border-t border-gray-200">
-                    {{ $dateros->links() }}
+                    {{ $vendedores->links() }}
                 </div>
             @endif
         </div>

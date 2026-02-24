@@ -89,23 +89,6 @@ class ClientServiceWebCazador
         }
     }
 
-    public function getClientById(int $id): ?Client
-    {
-        try {
-            if ($id <= 0) throw new \Exception('ID de cliente inválido');
-            $query = Client::with([
-                'assignedAdvisor', 'createdBy', 'opportunities.project', 'activities', 'tasks'
-            ])->where('id', $id);
-            if (Auth::check()) {
-                $query->where('assigned_advisor_id', Auth::id());
-            }
-            return $query->first();
-        } catch (\Exception $e) {
-            Log::error("Error al obtener cliente ID {$id} (Web Cazador): " . $e->getMessage());
-            throw new \Exception('Error al obtener la información del cliente');
-        }
-    }
-
     public function createClient(array $formData, ?int $createdById = null): Client
     {
         try {
@@ -121,30 +104,6 @@ class ClientServiceWebCazador
         } catch (\Exception $e) {
             Log::error('Error al crear cliente cazador (Web): ' . $e->getMessage());
             throw new \Exception('Error al crear el cliente: ' . $e->getMessage());
-        }
-    }
-
-    public function updateClient(int $id, array $formData): bool
-    {
-        try {
-            if ($id <= 0) throw new \Exception('ID de cliente inválido');
-            $client = Client::find($id);
-            if (!$client) throw new \Exception('Cliente no encontrado');
-            if (Auth::check() && $client->assigned_advisor_id !== Auth::id()) {
-                throw new \Exception('No tienes permiso para actualizar este cliente');
-            }
-            $data = $this->prepareFormData($formData, null, $client);
-            $createMode = $formData['create_mode'] ?? null;
-            if (!$createMode) $createMode = empty($data['document_number']) ? 'phone' : 'dni';
-            $this->validateClientData($data, $id, $createMode);
-            $updated = $client->update($data);
-            if ($updated) Log::info("Cliente cazador actualizado ID: {$id} (Web)");
-            return (bool) $updated;
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            Log::error("Error al actualizar cliente cazador ID {$id} (Web): " . $e->getMessage());
-            throw new \Exception('Error al actualizar el cliente: ' . $e->getMessage());
         }
     }
 
@@ -208,7 +167,7 @@ class ClientServiceWebCazador
             ->first();
     }
 
-    public function prepareFormData(array $formData, ?int $createdById = null, ?Client $editingClient = null): array
+    public function prepareFormData(array $formData, ?int $createdById = null): array
     {
         $formData = $this->sanitizeFormData($formData);
         $createMode = $formData['create_mode'] ?? null;
@@ -220,20 +179,16 @@ class ClientServiceWebCazador
             'status' => $formData['status'] ?? null, 'score' => $formData['score'] ?? null, 'notes' => $formData['notes'] ?? null,
             'assigned_advisor_id' => $formData['assigned_advisor_id'] ?? null, 'create_mode' => $createMode,
         ];
-        if (!$editingClient) {
-            $userId = $createdById ?? Auth::id();
-            if ($userId === null) throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
-            $user = User::find($userId);
-            if (!$user) throw new \Exception('Usuario creador no encontrado');
-            $data['assigned_advisor_id'] = $userId;
-            $data['created_by'] = $userId;
-            $data['updated_by'] = $userId;
-            $data['create_type'] = $user->isDatero() ? 'datero' : 'propio';
-            if (!isset($formData['status'])) $data['status'] = 'nuevo';
-            if (!isset($formData['score'])) $data['score'] = 0;
-        } else {
-            $data['updated_by'] = Auth::id();
-        }
+        $userId = $createdById ?? Auth::id();
+        if ($userId === null) throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
+        $user = User::find($userId);
+        if (!$user) throw new \Exception('Usuario creador no encontrado');
+        $data['assigned_advisor_id'] = $userId;
+        $data['created_by'] = $userId;
+        $data['updated_by'] = $userId;
+        $data['create_type'] = $user->isDatero() ? 'datero' : 'propio';
+        if (!isset($formData['status'])) $data['status'] = 'nuevo';
+        if (!isset($formData['score'])) $data['score'] = 0;
         return $data;
     }
 

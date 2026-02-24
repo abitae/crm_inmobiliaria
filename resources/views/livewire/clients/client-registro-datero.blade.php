@@ -1,12 +1,12 @@
 <div class="flex flex-col p-3 sm:p-4 border-2 border-gray-300 gap-3 sm:gap-4 rounded-xl bg-white shadow-sm">
     <x-auth-header
-        :title="__('Registro Datero')"
+        title="{{ __('Registro Cliente') }}"
         :description="__('Completa el formulario para registrar un nuevo cliente.')"
     />
 
     <div class="flex flex-wrap justify-center gap-1.5 sm:gap-2">
         <flux:button size="xs" icon="qr-code" wire:click="verQR" variant="outline">
-            QR
+            {{ __('QR') }}
         </flux:button>
     </div>
 
@@ -16,49 +16,52 @@
 
             <div class="flex flex-col gap-2 sm:gap-3">
                 <div>
-                    <div class="mb-0.5 text-xs font-medium text-gray-600">{{ __('Modo de alta') }}</div>
-                    <div class="flex items-center gap-3 text-xs sm:text-sm text-gray-700">
-                        <label class="flex items-center gap-1">
-                            <input type="radio" wire:model.live="create_mode" value="dni" class="rounded border-gray-300 bg-white text-gray-700" />
-                            <span>{{ __('Por DNI') }}</span>
-                        </label>
-                        <label class="flex items-center gap-1">
-                            <input type="radio" wire:model.live="create_mode" value="phone" class="rounded border-gray-300 bg-white text-gray-700" />
-                            <span>{{ __('Por teléfono') }}</span>
-                        </label>
-                    </div>
+                    <flux:radio.group wire:model.live="create_mode" label="{{ __('Modo de alta') }}">
+                        <flux:radio value="dni" label="{{ __('Por DNI') }}" />
+                        <flux:radio value="phone" label="{{ __('Por teléfono') }}" />
+                    </flux:radio.group>
+                    <p class="mt-0.5 text-[11px] sm:text-xs text-gray-500">
+                        @if ($create_mode === 'dni')
+                            {{ __('Por DNI: use el botón Buscar para rellenar nombre y fecha de nacimiento.') }}
+                        @else
+                            {{ __('Por teléfono: ingrese directamente el nombre y el resto de datos.') }}
+                        @endif
+                    </p>
                 </div>
 
                 @if ($create_mode === 'dni')
                     <flux:input.group class="flex w-full items-end gap-1.5 sm:gap-2">
                         <flux:select wire:model.live="document_type" label="{{ __('Tipo') }}" size="xs" class="w-full">
-                            <option value="DNI">DNI</option>
+                            @foreach ($documentTypes as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
                         </flux:select>
-                        <flux:input mask="99999999" class="flex-1" label="{{ __('Documento') }}" placeholder="{{ __('Número de documento') }}"
-                            wire:model="document_number" size="xs" inputmode="numeric" autocomplete="off" />
+                        <flux:input mask="99999999" class="flex-1" label="{{ __('Documento') }}"
+                            placeholder="{{ __('Número de documento') }}" wire:model.live="document_number"
+                            size="xs" inputmode="numeric" autocomplete="off" />
                         @if ($document_type == 'DNI')
-                            <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline" size="xs" class="self-end min-h-[30px] px-2">{{ __('Buscar') }}</flux:button>
+                            <flux:button icon="magnifying-glass" wire:click="buscarDocumento" variant="outline"
+                                size="xs" class="self-end">{{ __('Buscar') }}</flux:button>
                         @endif
                     </flux:input.group>
                 @endif
 
-                <flux:input size="xs" label="{{ __('Nombre completo (Cliente)') }}" wire:model="name"
-                    @if ($create_mode === 'dni') disabled @endif
-                    placeholder="{{ __('Nombre completo del cliente') }}" />
+                <flux:input size="xs" label="{{ __('Nombre completo (Cliente)') }}" wire:model.live="name"
+                    placeholder="{{ __('Nombre completo del cliente') }}" required />
 
                 <flux:input size="xs" mask="999999999" label="{{ __('Teléfono') }}" wire:model="phone"
-                    placeholder="Ej: 999 999 999" inputmode="tel" autocomplete="tel" />
+                    placeholder="Ej: 999999999" inputmode="tel" autocomplete="tel" />
 
                 <flux:input size="xs" label="{{ __('Ocupación') }}" wire:model="ocupacion"
                     placeholder="{{ __('Ingrese la ocupación') }}" />
 
-                <flux:input size="xs" label="{{ __('Fecha de Nacimiento') }}" type="date" wire:model="birth_date"
-                    @if ($create_mode === 'dni') disabled @endif
-                />
+                <flux:input size="xs" label="{{ __('Fecha de Nacimiento') }}" type="date"
+                    wire:model.live="birth_date" />
 
                 <div>
                     <flux:label class="text-xs">{{ __('Dirección') }}</flux:label>
-                    <flux:textarea wire:model="address" rows="2" placeholder="{{ __('Ingrese la dirección') }}" size="xs" class="mt-0.5" />
+                    <flux:textarea wire:model="address" rows="2" placeholder="{{ __('Ingrese la dirección') }}"
+                        size="xs" class="mt-0.5" />
                 </div>
 
                 <flux:select size="xs" label="{{ __('Ciudad') }}" wire:model="city_id" class="w-full">
@@ -98,17 +101,25 @@
                         @endforeach
                     </flux:select>
                 </div>
-                <flux:input size="xs" label="{{ __('Score (0-100)') }}" type="number" wire:model="score" min="0" max="100" />
+                <flux:input size="xs" label="{{ __('Score (0-100)') }}" type="number" wire:model="score"
+                    min="0" max="100" />
             </div>
 
             <div>
                 <flux:label class="mb-0.5 text-xs">{{ __('Notas') }}</flux:label>
-                <flux:textarea wire:model="notes" rows="2" placeholder="{{ __('Ingrese cualquier información adicional sobre el cliente') }}" size="xs" class="mt-0.5" />
+                <flux:textarea wire:model="notes" rows="2"
+                    placeholder="{{ __('Información adicional sobre el cliente') }}" size="xs"
+                    class="mt-0.5" />
             </div>
         </div>
 
         <div class="flex flex-col gap-1.5 sm:flex-row sm:justify-end sm:gap-2 pt-1">
-            <flux:button icon="x-mark" type="button" variant="outline" wire:click="resetForm" size="xs" class="w-full sm:w-auto">
+            <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index-datero') }}" variant="outline"
+                wire:navigate class="w-full sm:w-auto">
+                {{ __('Lista') }}
+            </flux:button>
+            <flux:button icon="x-mark" type="button" variant="outline" wire:click="resetForm" size="xs"
+                class="w-full sm:w-auto">
                 {{ __('Limpiar') }}
             </flux:button>
             <flux:button icon="plus" type="submit" variant="primary" size="xs" class="w-full sm:w-auto">
