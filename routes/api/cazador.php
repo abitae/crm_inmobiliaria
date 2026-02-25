@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\Cazador\AuthController as CazadorAuthController;
 use App\Http\Controllers\Api\Cazador\ClientController as CazadorClientController;
 use App\Http\Controllers\Api\Cazador\ClientActivityController;
-use App\Http\Controllers\Api\Cazador\ClientTaskController;
+use App\Http\Controllers\Api\Cazador\CityController as CazadorCityController;
 use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectController;
 use App\Http\Controllers\Api\Cazador\ReservationController as CazadorReservationController;
 use App\Http\Controllers\Api\Cazador\DateroController as CazadorDateroController;
@@ -93,9 +93,13 @@ Route::prefix('cazador')->group(function () {
 
         Route::match(['put', 'patch'], '/{client}/activities/{activity}', [ClientActivityController::class, 'update'])
             ->name('api.cazador.clients.activities.update');
+    });
 
-        Route::post('/{client}/tasks', [ClientTaskController::class, 'store'])
-            ->name('api.cazador.clients.tasks.store');
+    // Rutas de ciudades (protegidas con JWT y middleware cazador)
+    Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('cities')->group(function () {
+        Route::get('/', [CazadorCityController::class, 'index'])
+            ->middleware('cache.headers:public;max_age=300')
+            ->name('api.cazador.cities.index');
     });
 
     // Rutas de proyectos (protegidas con JWT y middleware cazador)
@@ -195,4 +199,3 @@ Route::prefix('cazador')->group(function () {
             ->name('api.cazador.reports.sales');
     });
 });
-

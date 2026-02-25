@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Datero\AuthController as DateroAuthController;
 use App\Http\Controllers\Api\Datero\ClientController as DateroClientController;
+use App\Http\Controllers\Api\Datero\CityController as DateroCityController;
 use App\Http\Controllers\Api\Datero\CommissionController as DateroCommissionController;
 use App\Http\Controllers\Api\Datero\ProfileController as DateroProfileController;
 use App\Http\Controllers\Api\DocumentController;
@@ -43,6 +44,12 @@ Route::prefix('datero')->group(function () {
             Route::post('/change-pin', [DateroAuthController::class, 'changePin'])
                 ->name('api.datero.auth.change-pin');
         });
+    });
+
+    // Rutas de ciudades (protegidas con JWT y middleware datero)
+    Route::middleware(['auth:api', 'datero', 'throttle:60,1'])->prefix('cities')->group(function () {
+        Route::get('/', [DateroCityController::class, 'index'])
+            ->name('api.datero.cities.index');
     });
 
     // Rutas de clientes (protegidas con JWT y middleware datero)
