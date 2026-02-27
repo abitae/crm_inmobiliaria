@@ -17,9 +17,27 @@ class ClientController extends Controller
 
     protected ClientServiceCazador $clientService;
 
+    private const STORE_KEYS = [
+        'name', 'phone', 'document_type', 'document_number', 'address', 'city_id',
+        'birth_date', 'client_type', 'source', 'status', 'create_type', 'create_mode', 'score', 'notes',
+    ];
+
     public function __construct(ClientServiceCazador $clientService)
     {
         $this->clientService = $clientService;
+    }
+
+    private function getStoreFormData(Request $request): array
+    {
+        return $this->normalizeFormData($request->only(self::STORE_KEYS));
+    }
+
+    private function normalizeFormData(array $data): array
+    {
+        if (empty($data['create_mode'])) {
+            $data['create_mode'] = empty($data['document_number'] ?? null) ? 'phone' : 'dni';
+        }
+        return $data;
     }
 
     /**
@@ -197,59 +215,26 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+        $formData = $this->getStoreFormData($request);
         try {
-            // Preparar datos del formulario
-            $formData = $request->only([
-                'name',
-                'phone',
-                'document_type',
-                'document_number',
-                'address',
-                'city_id',
-                'birth_date',
-                'client_type',
-                'source',
-                'status',
-                'create_type',
-                'create_mode',
-                'score',
-                'notes'
-            ]);
-            if (empty($formData['create_mode'])) {
-                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
-            }
-
-            // Crear el cliente usando el servicio
             $client = $this->clientService->createClient($formData);
-
-            // Recargar con relaciones necesarias
             $client->load('assignedAdvisor:id,name,email');
-
             return $this->successResponse(
                 ['client' => $this->formatClient($client)],
                 'Cliente creado exitosamente',
                 201
             );
         } catch (ValidationException $e) {
-            $duplicateOwner = $this->getDuplicateOwnerInfo(
-                $formData['phone'] ?? null,
-                $formData['document_number'] ?? null
-            );
-            if ($duplicateOwner) {
-                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
+            $duplicate = $this->getDuplicateOwnerInfo($formData['phone'] ?? null, $formData['document_number'] ?? null);
+            if ($duplicate) {
+                return $this->errorResponse($this->buildDuplicateMessage($duplicate), [
                     'errors' => $e->errors(),
-                    'duplicate_owner' => $duplicateOwner,
+                    'duplicate_owner' => $duplicate,
                 ], 422);
             }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            Log::error('Error al crear cliente (Cazador)', [
-                'user_id' => Auth::id(),
-                'data' => $request->except(['password', 'password_confirmation']),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
+            Log::error('Error al crear cliente (Cazador)', ['user_id' => Auth::id(), 'error' => $e->getMessage()]);
             return $this->serverErrorResponse($e, 'Error al crear el cliente en Cazador');
         }
     }
@@ -319,25 +304,7 @@ class ClientController extends Controller
             try {
                 $clientId = isset($payload['id']) ? (int) $payload['id'] : null;
 
-                $formData = collect($payload)->only([
-                    'name',
-                    'phone',
-                    'document_type',
-                    'document_number',
-                    'address',
-                    'city_id',
-                    'birth_date',
-                    'client_type',
-                    'source',
-                    'status',
-                    'create_type',
-                    'create_mode',
-                    'score',
-                    'notes'
-                ])->toArray();
-                if (empty($formData['create_mode'])) {
-                    $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
-                }
+                $formData = $this->normalizeFormData(collect($payload)->only(self::STORE_KEYS)->toArray());
 
                 if ($clientId) {
                     /** @var Client|null $client */

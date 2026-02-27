@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\Cazador\ProjectController as CazadorProjectControll
 use App\Http\Controllers\Api\Cazador\ReservationController as CazadorReservationController;
 use App\Http\Controllers\Api\Cazador\DateroController as CazadorDateroController;
 use App\Http\Controllers\Api\Cazador\DashboardController as CazadorDashboardController;
-use App\Http\Controllers\Api\Cazador\ValidationController as CazadorValidationController;
 use App\Http\Controllers\Api\Cazador\SyncController as CazadorSyncController;
 use App\Http\Controllers\Api\Cazador\ExportController as CazadorExportController;
 use App\Http\Controllers\Api\DocumentController;
@@ -49,9 +48,6 @@ Route::prefix('cazador')->group(function () {
 
     // Rutas de clientes (protegidas con JWT y middleware cazador)
     Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('clients')->group(function () {
-        Route::post('/validate', [CazadorValidationController::class, 'validateClient'])
-            ->name('api.cazador.clients.validate');
-
         Route::get('/export', [CazadorExportController::class, 'clients'])
             ->name('api.cazador.clients.export');
 
@@ -147,9 +143,6 @@ Route::prefix('cazador')->group(function () {
 
     // Rutas de reservas (protegidas con JWT y middleware cazador)
     Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('reservations')->group(function () {
-        Route::post('/validate', [CazadorValidationController::class, 'validateReservation'])
-            ->name('api.cazador.reservations.validate');
-
         Route::get('/export', [CazadorExportController::class, 'reservations'])
             ->name('api.cazador.reservations.export');
 
@@ -182,9 +175,6 @@ Route::prefix('cazador')->group(function () {
 
     // Rutas de búsqueda de documentos (protegidas con JWT y middleware cazador)
     Route::middleware(['auth:api', 'cazador', 'throttle:30,1'])->prefix('documents')->group(function () {
-        Route::post('/validate-dni', [CazadorValidationController::class, 'validateDni'])
-            ->name('api.cazador.documents.validate-dni');
-
         Route::post('/search', [DocumentController::class, 'search'])
             ->name('api.cazador.documents.search');
     });

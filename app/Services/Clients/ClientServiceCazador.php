@@ -82,24 +82,20 @@ class ClientServiceCazador
 
     public function getValidationRules(?int $clientId = null, ?string $createMode = null): array
     {
-        $isPhoneMode = $createMode === 'phone';
-        $documentTypeRules = $isPhoneMode ? ['nullable', 'in:DNI,RUC,CE,PASAPORTE'] : ['required', 'in:DNI,RUC,CE,PASAPORTE'];
-        $documentNumberRules = $isPhoneMode ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'];
-        if ($isPhoneMode) {
-            $uniqueRule = Rule::unique('clients', 'document_number')->where(fn ($q) => $q->where('document_number', '!=', '00000000'));
-            if ($clientId) {
-                $uniqueRule = $uniqueRule->ignore($clientId);
-            }
-            $documentNumberRules[] = $uniqueRule;
-        } else {
-            $documentNumberRules[] = $clientId ? Rule::unique('clients', 'document_number')->ignore($clientId) : Rule::unique('clients', 'document_number');
+        $docNumberUnique = Rule::unique('clients', 'document_number')->where(function ($q) {
+            $q->whereNotNull('document_number')->where('document_number', '!=', '00000000');
+        });
+        if ($clientId) {
+            $docNumberUnique = $docNumberUnique->ignore($clientId);
         }
         return [
-            'create_mode' => 'required|in:dni,phone',
+            'create_mode' => 'nullable|in:dni,phone',
             'name' => 'required|string|max:255',
-            'phone' => $clientId ? ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone,' . $clientId] : ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone'],
-            'document_type' => $documentTypeRules,
-            'document_number' => $documentNumberRules,
+            'phone' => $clientId
+                ? ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone,' . $clientId]
+                : ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone'],
+            'document_type' => ['nullable', 'in:DNI,RUC,CE,PASAPORTE'],
+            'document_number' => ['nullable', 'string', 'max:20', $docNumberUnique],
             'address' => 'nullable|string|max:500',
             'city_id' => 'required|exists:cities,id',
             'birth_date' => 'required|date',
@@ -119,8 +115,6 @@ class ClientServiceCazador
             'phone.required' => 'El teléfono es obligatorio.',
             'phone.regex' => 'El teléfono debe tener 9 dígitos y comenzar con el número 9.',
             'phone.unique' => 'El teléfono ya está en uso.',
-            'document_type.required' => 'El tipo de documento es obligatorio.',
-            'document_number.required' => 'El número de documento es obligatorio.',
             'document_number.unique' => 'El número de documento ya está en uso.',
             'city_id.required' => 'La ciudad es obligatoria.',
             'birth_date.required' => 'La fecha de nacimiento es obligatoria.',
