@@ -73,7 +73,7 @@ class ClientServiceCazador
     public function getFormOptions(): array
     {
         return [
-            'document_types' => ['DNI' => 'DNI', 'RUC' => 'RUC', 'CE' => 'Carné de Extranjería', 'PASAPORTE' => 'Pasaporte'],
+            'document_types' => ['DNI' => 'DNI'],
             'client_types' => ['inversor' => 'Inversor', 'comprador' => 'Comprador', 'empresa' => 'Empresa', 'constructor' => 'Constructor'],
             'sources' => ['redes_sociales' => 'Redes Sociales', 'ferias' => 'Ferias', 'referidos' => 'Referidos', 'formulario_web' => 'Formulario Web', 'publicidad' => 'Publicidad'],
             'statuses' => ['nuevo' => 'Nuevo', 'contacto_inicial' => 'Contacto Inicial', 'en_seguimiento' => 'En Seguimiento', 'cierre' => 'Cierre', 'perdido' => 'Perdido'],
@@ -94,7 +94,7 @@ class ClientServiceCazador
             'phone' => $clientId
                 ? ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone,' . $clientId]
                 : ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone'],
-            'document_type' => ['nullable', 'in:DNI,RUC,CE,PASAPORTE'],
+            'document_type' => ['nullable', 'in:DNI'],
             'document_number' => ['nullable', 'string', 'max:20', $docNumberUnique],
             'address' => 'nullable|string|max:500',
             'city_id' => 'required|exists:cities,id',
@@ -189,7 +189,7 @@ class ClientServiceCazador
         }
         if (array_key_exists('document_type', $data)) {
             $documentType = trim((string) $data['document_type']);
-            $data['document_type'] = $documentType === '' ? null : strtoupper($documentType);
+            $data['document_type'] = $documentType === '' ? null : 'DNI';
         }
         if (array_key_exists('document_number', $data)) {
             $documentNumber = trim((string) $data['document_number']);
@@ -197,10 +197,7 @@ class ClientServiceCazador
                 $data['document_number'] = null;
                 return $data;
             }
-            $documentType = $data['document_type'] ?? null;
-            $data['document_number'] = in_array($documentType, ['DNI', 'RUC'], true)
-                ? preg_replace('/[^0-9]/', '', $documentNumber)
-                : strtoupper(preg_replace('/\s+/', '', $documentNumber));
+            $data['document_number'] = preg_replace('/[^0-9]/', '', $documentNumber);
         }
         if (isset($data['address'])) {
             $data['address'] = trim((string) $data['address']);
