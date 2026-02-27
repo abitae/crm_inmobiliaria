@@ -48,6 +48,9 @@ Route::prefix('cazador')->group(function () {
 
     // Rutas de clientes (protegidas con JWT y middleware cazador)
     Route::middleware(['auth:api', 'cazador', 'throttle:60,1'])->prefix('clients')->group(function () {
+        Route::post('/validate', [CazadorClientController::class, 'validateClient'])
+            ->name('api.cazador.clients.validate');
+
         Route::get('/export', [CazadorExportController::class, 'clients'])
             ->name('api.cazador.clients.export');
 

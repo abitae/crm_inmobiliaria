@@ -9,6 +9,7 @@ use App\Services\Clients\ClientServiceCazador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
@@ -30,6 +31,29 @@ class ClientController extends Controller
     private function getStoreFormData(Request $request): array
     {
         return $this->normalizeFormData($request->only(self::STORE_KEYS));
+    }
+
+    /**
+     * Valida datos de cliente sin crear (para la app móvil que llama POST /clients/validate).
+     */
+    public function validateClient(Request $request)
+    {
+        $formData = $this->getStoreFormData($request);
+        $rules = $this->clientService->getValidationRules(null, $formData['create_mode'] ?? null);
+        $messages = $this->clientService->getValidationMessages();
+        $validator = Validator::make($formData, $rules, $messages);
+
+        if ($validator->fails()) {
+            $duplicate = $this->getDuplicateOwnerInfo($formData['phone'] ?? null, $formData['document_number'] ?? null);
+            $message = $duplicate ? $this->buildDuplicateMessage($duplicate) : 'Validación de cliente fallida';
+            return $this->successResponse([
+                'valid' => false,
+                'errors' => $validator->errors(),
+                'duplicate_owner' => $duplicate,
+            ], $message);
+        }
+
+        return $this->successResponse(['valid' => true], 'Validación de cliente exitosa');
     }
 
     private function normalizeFormData(array $data): array
