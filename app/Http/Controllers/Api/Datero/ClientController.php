@@ -9,6 +9,7 @@ use App\Services\Clients\ClientServiceDatero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
@@ -17,9 +18,50 @@ class ClientController extends Controller
 
     protected ClientServiceDatero $clientService;
 
+    private const STORE_KEYS = [
+        'name', 'phone', 'document_type', 'document_number', 'address', 'city_id',
+        'birth_date', 'client_type', 'source', 'status', 'create_type', 'create_mode', 'score', 'notes',
+    ];
+
     public function __construct(ClientServiceDatero $clientService)
     {
         $this->clientService = $clientService;
+    }
+
+    private function getStoreFormData(Request $request): array
+    {
+        return $this->normalizeFormData($request->only(self::STORE_KEYS));
+    }
+
+    private function normalizeFormData(array $data): array
+    {
+        if (empty($data['create_mode'])) {
+            $data['create_mode'] = empty($data['document_number'] ?? null) ? 'phone' : 'dni';
+        }
+        return $data;
+    }
+
+    /**
+     * Valida datos de cliente sin crear (para app móvil que llama POST /clients/validate).
+     */
+    public function validateClient(Request $request)
+    {
+        $formData = $this->getStoreFormData($request);
+        $rules = $this->clientService->getValidationRules(null, $formData['create_mode'] ?? null);
+        $messages = $this->clientService->getValidationMessages();
+        $validator = Validator::make($formData, $rules, $messages);
+
+        if ($validator->fails()) {
+            $duplicate = $this->getDuplicateOwnerInfo($formData['phone'] ?? null, $formData['document_number'] ?? null);
+            $message = $duplicate ? $this->buildDuplicateMessage($duplicate) : 'Validación de cliente fallida';
+            return $this->successResponse([
+                'valid' => false,
+                'errors' => $validator->errors(),
+                'duplicate_owner' => $duplicate,
+            ], $message);
+        }
+
+        return $this->successResponse(['valid' => true], 'Validación de cliente exitosa');
     }
 
     /**
@@ -152,14 +194,7 @@ class ClientController extends Controller
 
             return $this->successResponse([
                 'clients' => $formattedClients,
-                'pagination' => [
-                    'current_page' => $clients->currentPage(),
-                    'per_page' => $clients->perPage(),
-                    'total' => $clients->total(),
-                    'last_page' => $clients->lastPage(),
-                    'from' => $clients->firstItem(),
-                    'to' => $clients->lastItem(),
-                ]
+                'pagination' => $this->formatPagination($clients),
             ], 'Clientes obtenidos exitosamente');
         } catch (\Exception $e) {
             Log::error('Error al obtener clientes (Datero)', [
@@ -210,65 +245,30 @@ class ClientController extends Controller
     }
 
     /**
-     * Crear un nuevo cliente
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    /**
-     * Crear un nuevo cliente (misma lógica y patrón que API Cazador; incluye city_id)
+     * Crear un nuevo cliente (misma lógica y patrón que API Cazador).
      */
     public function store(Request $request)
     {
+        $formData = $this->getStoreFormData($request);
         try {
-            $formData = $request->only([
-                'name',
-                'phone',
-                'document_type',
-                'document_number',
-                'address',
-                'city_id',
-                'birth_date',
-                'client_type',
-                'source',
-                'status',
-                'create_type',
-                'create_mode',
-                'score',
-                'notes',
-            ]);
-            if (empty($formData['create_mode'])) {
-                $formData['create_mode'] = empty($formData['document_number']) ? 'phone' : 'dni';
-            }
-
             $client = $this->clientService->createClient($formData, Auth::id());
             $client->load(['assignedAdvisor:id,name,email', 'city:id,name']);
-
             return $this->successResponse(
                 ['client' => $this->formatClient($client)],
                 'Cliente creado exitosamente',
                 201
             );
         } catch (ValidationException $e) {
-            $duplicateOwner = $this->getDuplicateOwnerInfo(
-                $formData['phone'] ?? null,
-                $formData['document_number'] ?? null
-            );
-            if ($duplicateOwner) {
-                return $this->errorResponse($this->buildDuplicateMessage($duplicateOwner), [
+            $duplicate = $this->getDuplicateOwnerInfo($formData['phone'] ?? null, $formData['document_number'] ?? null);
+            if ($duplicate) {
+                return $this->errorResponse($this->buildDuplicateMessage($duplicate), [
                     'errors' => $e->errors(),
-                    'duplicate_owner' => $duplicateOwner,
+                    'duplicate_owner' => $duplicate,
                 ], 422);
             }
             return $this->validationErrorResponse($e->errors());
         } catch (\Exception $e) {
-            Log::error('Error al crear cliente (Datero)', [
-                'user_id' => Auth::id(),
-                'data' => $request->except(['password', 'password_confirmation']),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
+            Log::error('Error al crear cliente (Datero)', ['user_id' => Auth::id(), 'error' => $e->getMessage()]);
             return $this->serverErrorResponse($e, 'Error al crear el cliente');
         }
     }
@@ -284,7 +284,7 @@ class ClientController extends Controller
             if (!$client) {
                 return $this->notFoundResponse('Cliente');
             }
-
+            /** @var Client $client */
             if ($forbidden = $this->ensureClientOwnership($client)) {
                 return $forbidden;
             }
@@ -379,5 +379,23 @@ class ClientController extends Controller
         $name = $duplicateOwner['name'] ?? 'Desconocido';
 
         return $label . ' registrado por "' . $name . '"';
+    }
+
+    protected function formatPagination($paginator): array
+    {
+        return [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
+            'last_page' => $paginator->lastPage(),
+            'from' => $paginator->firstItem(),
+            'to' => $paginator->lastItem(),
+            'links' => [
+                'first' => $paginator->url(1),
+                'last' => $paginator->url($paginator->lastPage()),
+                'prev' => $paginator->previousPageUrl(),
+                'next' => $paginator->nextPageUrl(),
+            ],
+        ];
     }
 }

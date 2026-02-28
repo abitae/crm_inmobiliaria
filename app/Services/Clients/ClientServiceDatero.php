@@ -49,6 +49,7 @@ class ClientServiceDatero
             if ($id <= 0) {
                 throw new \Exception('ID de cliente inválido');
             }
+            /** @var Client|null $client */
             $client = Client::find($id);
             if (!$client) {
                 throw new \Exception('Cliente no encontrado');
@@ -79,7 +80,7 @@ class ClientServiceDatero
     public function getFormOptions(): array
     {
         return [
-            'document_types' => ['DNI' => 'DNI', 'RUC' => 'RUC', 'CE' => 'Carné de Extranjería', 'PASAPORTE' => 'Pasaporte'],
+            'document_types' => ['DNI' => 'DNI'],
             'client_types' => ['inversor' => 'Inversor', 'comprador' => 'Comprador', 'empresa' => 'Empresa', 'constructor' => 'Constructor'],
             'sources' => ['redes_sociales' => 'Redes Sociales', 'ferias' => 'Ferias', 'referidos' => 'Referidos', 'formulario_web' => 'Formulario Web', 'publicidad' => 'Publicidad'],
             'statuses' => ['nuevo' => 'Nuevo', 'contacto_inicial' => 'Contacto Inicial', 'en_seguimiento' => 'En Seguimiento', 'cierre' => 'Cierre', 'perdido' => 'Perdido']
@@ -112,6 +113,7 @@ class ClientServiceDatero
         if (!$editingClient) {
             $userId = $createdById ?? Auth::id();
             if ($userId === null) throw new \Exception('No se puede crear un cliente sin especificar el usuario creador (created_by)');
+            /** @var User|null $user */
             $user = User::find($userId);
             if (!$user) throw new \Exception('Usuario creador no encontrado');
             $data['assigned_advisor_id'] = $userId;
@@ -137,7 +139,7 @@ class ClientServiceDatero
         }
         if (array_key_exists('document_type', $data)) {
             $documentType = trim((string) $data['document_type']);
-            $data['document_type'] = $documentType === '' ? null : strtoupper($documentType);
+            $data['document_type'] = $documentType === '' ? null : 'DNI';
         }
         if (array_key_exists('document_number', $data)) {
             $documentNumber = trim((string) $data['document_number']);
@@ -145,10 +147,7 @@ class ClientServiceDatero
                 $data['document_number'] = null;
                 return $data;
             }
-            $documentType = $data['document_type'] ?? null;
-            $data['document_number'] = in_array($documentType, ['DNI', 'RUC'], true)
-                ? preg_replace('/[^0-9]/', '', $documentNumber)
-                : strtoupper(preg_replace('/\s+/', '', $documentNumber));
+            $data['document_number'] = preg_replace('/[^0-9]/', '', $documentNumber);
         }
         if (isset($data['address'])) $data['address'] = trim((string) $data['address']);
         if (isset($data['notes'])) $data['notes'] = trim((string) $data['notes']);
@@ -157,22 +156,18 @@ class ClientServiceDatero
 
     public function getValidationRules(?int $clientId = null, ?string $createMode = null): array
     {
-        $isPhoneMode = $createMode === 'phone';
-        $documentTypeRules = $isPhoneMode ? ['nullable', 'in:DNI,RUC,CE,PASAPORTE'] : ['required', 'in:DNI,RUC,CE,PASAPORTE'];
-        $documentNumberRules = $isPhoneMode ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'];
-        if ($isPhoneMode) {
-            $uniqueRule = Rule::unique('clients', 'document_number')->where(fn($q) => $q->where('document_number', '!=', '00000000'));
-            if ($clientId) $uniqueRule = $uniqueRule->ignore($clientId);
-            $documentNumberRules[] = $uniqueRule;
-        } else {
-            $documentNumberRules[] = $clientId ? Rule::unique('clients', 'document_number')->ignore($clientId) : Rule::unique('clients', 'document_number');
+        $docNumberUnique = Rule::unique('clients', 'document_number')->where(function ($q) {
+            $q->whereNotNull('document_number')->where('document_number', '!=', '00000000');
+        });
+        if ($clientId) {
+            $docNumberUnique = $docNumberUnique->ignore($clientId);
         }
         return [
-            'create_mode' => 'required|in:dni,phone',
+            'create_mode' => 'nullable|in:dni,phone',
             'name' => 'required|string|max:255',
             'phone' => $clientId ? ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone,' . $clientId] : ['required', 'string', 'regex:/^9[0-9]{8}$/', 'unique:clients,phone'],
-            'document_type' => $documentTypeRules,
-            'document_number' => $documentNumberRules,
+            'document_type' => ['nullable', 'in:DNI'],
+            'document_number' => ['nullable', 'string', 'max:20', $docNumberUnique],
             'address' => 'nullable|string|max:500',
             'city_id' => 'required|exists:cities,id',
             'birth_date' => 'required|date',
@@ -192,8 +187,6 @@ class ClientServiceDatero
             'phone.required' => 'El teléfono es obligatorio.',
             'phone.regex' => 'El teléfono debe tener 9 dígitos y comenzar con el número 9.',
             'phone.unique' => 'El teléfono ya está en uso.',
-            'document_type.required' => 'El tipo de documento es obligatorio.',
-            'document_number.required' => 'El número de documento es obligatorio.',
             'document_number.unique' => 'El número de documento ya está en uso.',
             'city_id.required' => 'La ciudad es obligatoria.',
             'birth_date.required' => 'La fecha de nacimiento es obligatoria.',

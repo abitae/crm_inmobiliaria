@@ -8,7 +8,7 @@ Documentación de referencia de la API para la aplicación Cazador (vendedores/a
 
 | Concepto | Valor |
 |----------|--------|
-| **Base URL** | `{{base_url}}/api/cazador` (ej. `https://api.ejemplo.com/api/cazador`) |
+| **Base URL** | `{{base_url}}/api/cazador` (prueba . `https://v1.lotesenremate.pe/api/cazador`; produccion . `https://crm.lotesenremate.pe/api/cazador`) |
 | **Autenticación** | JWT en header: `Authorization: Bearer <token>` |
 | **Content-Type** | `application/json` para bodies JSON |
 | **Middleware** | Rutas protegidas: `auth:api` + `cazador` (solo Admin, Líder, Cazador/vendedor) |

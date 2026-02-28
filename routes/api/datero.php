@@ -64,6 +64,9 @@ Route::prefix('datero')->group(function () {
         Route::post('/', [DateroClientController::class, 'store'])
             ->name('api.datero.clients.store');
 
+        Route::post('/validate', [DateroClientController::class, 'validateClient'])
+            ->name('api.datero.clients.validate');
+
         Route::get('/{id}', [DateroClientController::class, 'show'])
             ->name('api.datero.clients.show');
 
