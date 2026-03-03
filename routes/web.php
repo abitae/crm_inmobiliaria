@@ -20,6 +20,7 @@ use App\Livewire\Settings\CityList;
 use App\Livewire\Actividades\ActivityList;
 use App\Livewire\Auth\RegisterDatero;
 use App\Livewire\Clients\ClientListDatero;
+use App\Livewire\Clients\ClientIndex;
 use App\Livewire\Logs\LogViewer;
 use App\Livewire\Settings\UserDatero;
 use App\Livewire\Dateros\DaterosList;
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Clientes
     Route::get('/clients', ClientList::class)->middleware('permission:view_clients')->name('clients.index');
+    Route::get('/clients-all', ClientIndex::class)->middleware('permission:view_clients')->name('clients.index-all');
     // Gestión de Clientes Datero
     Route::get('/clients-datero', ClientListDatero::class)->middleware('permission:view_clients')->name('clients.index-datero');
     Route::get('/clients/registro-masivo/{id?}', ClientRegistroMasivo::class)->middleware('permission:create_clients')->name('clients.registro-masivo');

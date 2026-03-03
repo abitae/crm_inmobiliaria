@@ -153,6 +153,11 @@
                     :current="request()->routeIs('logs.index')" wire:navigate>{{ __('Logs') }}
                 </flux:navlist.item>
                 @endcan
+                @can('view_clients')
+                <flux:navlist.item icon="users" :href="route('clients.index-all')"
+                    :current="request()->routeIs('clients.index-all')" wire:navigate>{{ __('Clientes Todos') }}
+                </flux:navlist.item>
+                @endcan
             </flux:navlist.group>
             @endif
 
