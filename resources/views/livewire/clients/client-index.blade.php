@@ -6,9 +6,14 @@
                     <h1 class="text-xl font-semibold text-gray-900">Todos los clientes</h1>
                     <p class="text-sm text-gray-600">Listado general con filtros por ciudad, modo de alta, asesor asignado y creado por.</p>
                 </div>
-                <flux:button size="xs" icon="arrow-up-tray" variant="outline" wire:click="openImportModal">
-                    Importar Excel
-                </flux:button>
+                <div class="flex items-center gap-2">
+                    <flux:button size="xs" icon="arrow-down-tray" variant="outline" wire:click="exportClients">
+                        Exportar Excel
+                    </flux:button>
+                    <flux:button size="xs" icon="arrow-up-tray" variant="outline" wire:click="openImportModal">
+                        Importar Excel
+                    </flux:button>
+                </div>
             </div>
         </div>
     </div>
@@ -84,6 +89,7 @@
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor asignado</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Creado por</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Últ. interacción</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
@@ -134,10 +140,23 @@
                                         Sin actividad
                                     @endif
                                 </td>
+                                <td class="px-2 py-2 whitespace-nowrap">
+                                    @can('edit_clients')
+                                        <flux:button
+                                            size="xs"
+                                            variant="outline"
+                                            icon="pencil-square"
+                                            href="{{ route('clients.edit', $client->id) }}"
+                                            wire:navigate
+                                        >
+                                            Editar
+                                        </flux:button>
+                                    @endcan
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="users" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron clientes</p>

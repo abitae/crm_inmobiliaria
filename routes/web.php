@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Gestión de Clientes
     Route::get('/clients', ClientList::class)->middleware('permission:view_clients')->name('clients.index');
     Route::get('/clients-all', ClientIndex::class)->middleware('permission:view_clients')->name('clients.index-all');
+    Route::get('/clients/{clientId}/edit', ClientRegistroMasivo::class)->middleware('permission:edit_clients')->name('clients.edit');
     // Gestión de Clientes Datero
     Route::get('/clients-datero', ClientListDatero::class)->middleware('permission:view_clients')->name('clients.index-datero');
     Route::get('/clients/registro-masivo/{id?}', ClientRegistroMasivo::class)->middleware('permission:create_clients')->name('clients.registro-masivo');

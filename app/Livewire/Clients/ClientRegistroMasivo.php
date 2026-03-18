@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use App\Services\Clients\ClientServiceWebCazador;
 use App\Traits\SearchDocument;
 use App\Models\City;
+use App\Models\Client;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -39,6 +40,9 @@ class ClientRegistroMasivo extends Component
     public int $score = self::DEFAULT_SCORE;
     public ?string $notes = null;
     public ?int $assigned_advisor_id = null;
+    public ?int $editingClientId = null;
+    public bool $isEditing = false;
+    public string $backRoute = 'clients.index';
 
     public bool $showSuccessMessage = false;
     public string $successMessage = '';
@@ -77,11 +81,15 @@ class ClientRegistroMasivo extends Component
 
     protected function rules(): array
     {
-        $rules = $this->clientService->getValidationRules(null, $this->create_mode);
+        $rules = $this->clientService->getValidationRules($this->editingClientId, $this->create_mode);
 
         if ($this->create_mode === 'dni') {
             $rules['document_type'] = ['required', 'in:DNI'];
-            $rules['document_number'] = ['required', 'string', 'size:8', Rule::unique('clients', 'document_number')];
+            $documentNumberRule = Rule::unique('clients', 'document_number');
+            if ($this->editingClientId) {
+                $documentNumberRule = $documentNumberRule->ignore($this->editingClientId);
+            }
+            $rules['document_number'] = ['required', 'string', 'size:8', $documentNumberRule];
         }
 
         return $rules;
@@ -100,11 +108,17 @@ class ClientRegistroMasivo extends Component
         $this->clientService = $clientService;
     }
 
-    public function mount(?int $id = null): void
+    public function mount(?int $id = null, ?int $clientId = null): void
     {
+        $this->cities = City::orderBy('name')->get(['id', 'name']);
+
+        if ($clientId !== null) {
+            $this->loadClientForEditing($clientId);
+            return;
+        }
+
         $this->assigned_advisor_id = $id ?? Auth::id();
         $this->setDefaultValues();
-        $this->cities = City::orderBy('name')->get(['id', 'name']);
     }
 
     public function updatedCreateMode(): void
@@ -125,15 +139,24 @@ class ClientRegistroMasivo extends Component
 
         try {
             $data = $this->prepareFormData();
-            $data['created_by'] = Auth::id();
             $data['updated_by'] = Auth::id();
 
+            if ($this->isEditing) {
+                $client = $this->getEditingClient();
+                $client->update($data);
+                $this->success(__('Éxito'), "Cliente '{$client->name}' actualizado exitosamente.", 'toast-top toast-center');
+                return;
+            }
+
+            $data['created_by'] = Auth::id();
             $client = $this->clientService->createClient($data);
 
             $this->resetForm();
             $this->success(__('Éxito'), "Cliente '{$client->name}' registrado exitosamente.", 'toast-top toast-center');
         } catch (\Exception $e) {
-            $this->resetForm();
+            if (!$this->isEditing) {
+                $this->resetForm();
+            }
             $this->error(__('Error'), $e->getMessage(), 'toast-top toast-center');
         }
     }
@@ -201,6 +224,11 @@ class ClientRegistroMasivo extends Component
 
     public function resetForm(): void
     {
+        if ($this->isEditing) {
+            $this->loadClientForEditing($this->editingClientId);
+            return;
+        }
+
         $this->reset([
             'name', 'phone', 'document_type', 'document_number', 'address', 'city_id', 'birth_date',
             'client_type', 'source', 'status', 'score', 'notes',
@@ -270,6 +298,9 @@ class ClientRegistroMasivo extends Component
     protected function clientExists(string $tipo, string $num_doc): bool
     {
         $client = $this->clientService->clientExists($tipo, $num_doc);
+        if ($client && $this->isEditing && $client->id === $this->editingClientId) {
+            return false;
+        }
         if ($client) {
             $advisorName = $client->assignedAdvisor ? $client->assignedAdvisor->name : 'Sin asignar';
             $this->handleError('Cliente ya existe en la base de datos, asesor asignado: ' . $advisorName);
@@ -303,5 +334,34 @@ class ClientRegistroMasivo extends Component
         } else {
             $this->handleError('Ingrese un número de documento válido');
         }
+    }
+
+    private function loadClientForEditing(int $clientId): void
+    {
+        $client = Client::findOrFail($clientId);
+
+        $this->editingClientId = $client->id;
+        $this->isEditing = true;
+        $this->backRoute = 'clients.index-all';
+
+        $this->name = $client->name ?? '';
+        $this->phone = $client->phone ?? '';
+        $this->document_type = $client->document_type ?: 'DNI';
+        $this->document_number = $client->document_number ?? '';
+        $this->create_mode = $client->create_mode ?: ($client->document_number ? 'dni' : 'phone');
+        $this->address = $client->address;
+        $this->city_id = $client->city_id;
+        $this->birth_date = $client->birth_date?->format('Y-m-d');
+        $this->client_type = $client->client_type ?: 'comprador';
+        $this->source = $client->source ?: 'formulario_web';
+        $this->status = $client->status ?: 'nuevo';
+        $this->score = $client->score ?? self::DEFAULT_SCORE;
+        $this->notes = $client->notes;
+        $this->assigned_advisor_id = $client->assigned_advisor_id;
+    }
+
+    private function getEditingClient(): Client
+    {
+        return Client::findOrFail($this->editingClientId);
     }
 }

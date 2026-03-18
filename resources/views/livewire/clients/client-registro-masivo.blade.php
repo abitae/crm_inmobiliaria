@@ -1,5 +1,9 @@
 <div class="flex flex-col p-3 sm:p-4 border-2 border-gray-300 gap-3 sm:gap-4 rounded-xl bg-white shadow-sm">
-    <x-auth-header title="Cazador" :description="__('Completa el formulario para registrar un nuevo cliente')" />
+    <x-auth-header
+        title="{{ $isEditing ? 'Editar cliente' : 'Cazador' }}"
+        :description="$isEditing
+            ? __('Actualiza la información del cliente seleccionado')
+            : __('Completa el formulario para registrar un nuevo cliente')" />
 
     <form wire:submit.prevent="save" class="flex flex-col gap-3 sm:gap-4">
         <div class="flex flex-col gap-2 sm:gap-3">
@@ -103,16 +107,17 @@
         </div>
 
         <div class="flex flex-col gap-1.5 sm:flex-row sm:justify-end sm:gap-2 pt-1">
-            <flux:button size="xs" icon="list-bullet" href="{{ route('clients.index') }}" variant="outline"
+            <flux:button size="xs" icon="list-bullet" href="{{ route($backRoute) }}" variant="outline"
                 wire:navigate class="w-full sm:w-auto">
-                {{ __('Lista') }}
+                {{ __('Volver') }}
             </flux:button>
             <flux:button icon="x-mark" type="button" variant="outline" wire:click="resetForm" size="xs"
                 class="w-full sm:w-auto">
-                {{ __('Limpiar') }}
+                {{ $isEditing ? __('Restablecer') : __('Limpiar') }}
             </flux:button>
-            <flux:button icon="plus" type="submit" variant="primary" size="xs" class="w-full sm:w-auto">
-                {{ __('Registrar Cliente') }}
+            <flux:button icon="{{ $isEditing ? 'pencil-square' : 'plus' }}" type="submit" variant="primary"
+                size="xs" class="w-full sm:w-auto">
+                {{ $isEditing ? __('Actualizar Cliente') : __('Registrar Cliente') }}
             </flux:button>
         </div>
     </form>

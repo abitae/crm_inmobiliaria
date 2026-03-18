@@ -2,13 +2,16 @@
 
 namespace App\Livewire\Clients;
 
+use App\Exports\AllClientsExport;
 use App\Exports\ClientsReportExport;
 use App\Imports\ClientsReportImport;
 use App\Models\Client;
 use App\Models\City;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -188,6 +191,39 @@ class ClientIndex extends Component
         return Excel::download(new ClientsReportExport($this->importResults), $filename);
     }
 
+    public function exportClients()
+    {
+        try {
+            $clients = $this->buildFilteredClientsQuery()
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($clients->isEmpty()) {
+                $this->warning('No hay clientes para exportar con los filtros actuales.');
+                return null;
+            }
+
+            $filename = 'todos_los_clientes_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+            $this->success('Exportacion iniciada. El archivo se descargara automaticamente.');
+
+            return Excel::download(new AllClientsExport($clients), $filename);
+        } catch (\Throwable $e) {
+            Log::error('Error al exportar todos los clientes', [
+                'user_id' => Auth::id(),
+                'search' => $this->search,
+                'city_filter' => $this->cityFilter,
+                'create_mode_filter' => $this->createModeFilter,
+                'assigned_advisor_filter' => $this->assignedAdvisorFilter,
+                'created_by_filter' => $this->createdByFilter,
+                'error' => $e->getMessage(),
+            ]);
+
+            $this->error('Error al exportar clientes: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     /**
      * Obtiene el valor de una fila por una de las claves posibles (cabeceras pueden variar).
      * @param array<string, mixed> $row
@@ -215,7 +251,7 @@ class ClientIndex extends Component
         return null;
     }
 
-    public function render()
+    private function buildFilteredClientsQuery(): Builder
     {
         $query = Client::query()
             ->select([
@@ -258,7 +294,14 @@ class ClientIndex extends Component
             $query->where('created_by', $this->createdByFilter);
         }
 
-        $clients = $query->orderBy('created_at', 'desc')->paginate(15);
+        return $query;
+    }
+
+    public function render()
+    {
+        $clients = $this->buildFilteredClientsQuery()
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
         return view('livewire.clients.client-index', [
             'clients' => $clients,
