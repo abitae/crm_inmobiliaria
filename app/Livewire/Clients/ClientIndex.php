@@ -31,6 +31,8 @@ class ClientIndex extends Component
 
     /** Filtros */
     public string $cityFilter = '';
+    public string $createdFromFilter = '';
+    public string $createdToFilter = '';
     public string $createModeFilter = '';
     public string $assignedAdvisorFilter = '';
     public string $createdByFilter = '';
@@ -50,6 +52,7 @@ class ClientIndex extends Component
     public function mount(): void
     {
         $this->cities = City::orderBy('name')->get(['id', 'name']);
+        $this->setDefaultDateFilters();
 
         $user = Auth::user();
         $cacheKey = 'available_advisors_' . $user->id;
@@ -62,6 +65,16 @@ class ClientIndex extends Component
     }
 
     public function updatedCityFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCreatedFromFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCreatedToFilter(): void
     {
         $this->resetPage();
     }
@@ -90,6 +103,7 @@ class ClientIndex extends Component
             'assignedAdvisorFilter',
             'createdByFilter',
         ]);
+        $this->setDefaultDateFilters();
         $this->resetPage();
     }
 
@@ -213,6 +227,8 @@ class ClientIndex extends Component
                 'user_id' => Auth::id(),
                 'search' => $this->search,
                 'city_filter' => $this->cityFilter,
+                'created_from_filter' => $this->createdFromFilter,
+                'created_to_filter' => $this->createdToFilter,
                 'create_mode_filter' => $this->createModeFilter,
                 'assigned_advisor_filter' => $this->assignedAdvisorFilter,
                 'created_by_filter' => $this->createdByFilter,
@@ -282,6 +298,14 @@ class ClientIndex extends Component
             $query->where('city_id', $this->cityFilter);
         }
 
+        if ($this->createdFromFilter !== '') {
+            $query->whereDate('created_at', '>=', $this->createdFromFilter);
+        }
+
+        if ($this->createdToFilter !== '') {
+            $query->whereDate('created_at', '<=', $this->createdToFilter);
+        }
+
         if ($this->createModeFilter !== '') {
             $query->where('create_mode', $this->createModeFilter);
         }
@@ -312,5 +336,11 @@ class ClientIndex extends Component
     {
         $value = trim(preg_replace('/\s+/', ' ', $value));
         return $value === '' ? '' : (function_exists('mb_strtolower') ? mb_strtolower($value) : strtolower($value));
+    }
+
+    private function setDefaultDateFilters(): void
+    {
+        $this->createdToFilter = now()->toDateString();
+        $this->createdFromFilter = now()->subDays(15)->toDateString();
     }
 }

@@ -43,6 +43,22 @@
                     </flux:select>
                 </div>
                 <div>
+                    <flux:input
+                        size="xs"
+                        type="date"
+                        wire:model.live="createdFromFilter"
+                        label="Creado desde"
+                    />
+                </div>
+                <div>
+                    <flux:input
+                        size="xs"
+                        type="date"
+                        wire:model.live="createdToFilter"
+                        label="Creado hasta"
+                    />
+                </div>
+                <div>
                     <flux:select size="xs" wire:model.live="createModeFilter">
                         <option value="">Modo de alta</option>
                         <option value="dni">DNI</option>
@@ -77,7 +93,7 @@
             <div
                 class="overflow-x-auto"
                 wire:loading.class="opacity-60"
-                wire:target="search,cityFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters"
+                wire:target="search,cityFilter,createdFromFilter,createdToFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters"
             >
                 <table class="min-w-full divide-y divide-gray-200 text-xs">
                     <thead class="bg-gray-50">
@@ -170,7 +186,7 @@
             <div
                 class="px-2 py-1 text-[11px] text-gray-500"
                 wire:loading
-                wire:target="search,cityFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters"
+                wire:target="search,cityFilter,createdFromFilter,createdToFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters"
             >
                 Buscando...
             </div>
