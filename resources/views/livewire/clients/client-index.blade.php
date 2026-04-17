@@ -7,8 +7,11 @@
                     <p class="text-sm text-gray-600">Listado general con filtros por ciudad, modo de alta, asesor asignado y creado por.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <flux:button size="xs" icon="arrow-down-tray" variant="outline" wire:click="exportClients">
-                        Exportar Excel
+                    <flux:button size="xs" icon="arrow-down-tray" variant="outline" wire:click="exportViewClients">
+                        Exportar vista
+                    </flux:button>
+                    <flux:button size="xs" icon="document-duplicate" variant="outline" wire:click="exportAllClients">
+                        Exportar total
                     </flux:button>
                     <flux:button size="xs" icon="arrow-up-tray" variant="outline" wire:click="openImportModal">
                         Importar Excel
@@ -104,6 +107,7 @@
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Modo alta</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Asesor asignado</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Creado por</th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Fecha creación</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Últ. interacción</th>
                             <th class="px-2 py-2 text-left font-semibold text-gray-500 uppercase">Acciones</th>
                         </tr>
@@ -147,6 +151,9 @@
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-600">
                                     {{ $client->createdBy?->name ?? '-' }}
                                 </td>
+                                <td class="px-2 py-2 whitespace-nowrap text-gray-600">
+                                    {{ $client->created_at?->format('d/m/Y H:i') ?? '-' }}
+                                </td>
                                 <td class="px-2 py-2 whitespace-nowrap text-gray-500">
                                     @if ($client->activities && $client->activities->count() > 0)
                                         {{ $client->activities->first()->title ?? 'Sin actividad' }}
@@ -172,7 +179,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <flux:icon name="users" class="w-12 h-12 text-gray-300 mb-2" />
                                         <p>No se encontraron clientes</p>

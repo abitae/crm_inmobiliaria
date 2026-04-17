@@ -205,39 +205,24 @@ class ClientIndex extends Component
         return Excel::download(new ClientsReportExport($this->importResults), $filename);
     }
 
-    public function exportClients()
+    public function exportViewClients()
     {
-        try {
-            $clients = $this->buildFilteredClientsQuery()
-                ->orderBy('created_at', 'desc')
-                ->get();
+        return $this->downloadClientsExport(
+            applyFilters: true,
+            filenamePrefix: 'clientes_vista',
+            emptyMessage: 'No hay clientes para exportar con los filtros actuales.',
+            logAction: 'vista'
+        );
+    }
 
-            if ($clients->isEmpty()) {
-                $this->warning('No hay clientes para exportar con los filtros actuales.');
-                return null;
-            }
-
-            $filename = 'todos_los_clientes_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
-
-            $this->success('Exportacion iniciada. El archivo se descargara automaticamente.');
-
-            return Excel::download(new AllClientsExport($clients), $filename);
-        } catch (\Throwable $e) {
-            Log::error('Error al exportar todos los clientes', [
-                'user_id' => Auth::id(),
-                'search' => $this->search,
-                'city_filter' => $this->cityFilter,
-                'created_from_filter' => $this->createdFromFilter,
-                'created_to_filter' => $this->createdToFilter,
-                'create_mode_filter' => $this->createModeFilter,
-                'assigned_advisor_filter' => $this->assignedAdvisorFilter,
-                'created_by_filter' => $this->createdByFilter,
-                'error' => $e->getMessage(),
-            ]);
-
-            $this->error('Error al exportar clientes: ' . $e->getMessage());
-            return null;
-        }
+    public function exportAllClients()
+    {
+        return $this->downloadClientsExport(
+            applyFilters: false,
+            filenamePrefix: 'clientes_total',
+            emptyMessage: 'No hay clientes para exportar.',
+            logAction: 'total'
+        );
     }
 
     /**
@@ -267,7 +252,7 @@ class ClientIndex extends Component
         return null;
     }
 
-    private function buildFilteredClientsQuery(): Builder
+    private function buildClientsQuery(bool $applyFilters = true): Builder
     {
         $query = Client::query()
             ->select([
@@ -282,6 +267,10 @@ class ClientIndex extends Component
                 'activities' => fn ($q) => $q->select('id', 'client_id', 'title', 'start_date')
                     ->latest('start_date')->limit(1),
             ]);
+
+        if (!$applyFilters) {
+            return $query;
+        }
 
         $search = $this->normalizeSearch($this->search);
         $searchReady = $search !== '' && (function_exists('mb_strlen') ? mb_strlen($search) : strlen($search)) >= $this->searchMinLength;
@@ -323,7 +312,7 @@ class ClientIndex extends Component
 
     public function render()
     {
-        $clients = $this->buildFilteredClientsQuery()
+        $clients = $this->buildClientsQuery()
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -342,5 +331,45 @@ class ClientIndex extends Component
     {
         $this->createdToFilter = now()->toDateString();
         $this->createdFromFilter = now()->subDays(15)->toDateString();
+    }
+
+    private function downloadClientsExport(
+        bool $applyFilters,
+        string $filenamePrefix,
+        string $emptyMessage,
+        string $logAction
+    ) {
+        try {
+            $clients = $this->buildClientsQuery($applyFilters)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($clients->isEmpty()) {
+                $this->warning($emptyMessage);
+                return null;
+            }
+
+            $filename = $filenamePrefix . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+            $this->success('Exportacion iniciada. El archivo se descargara automaticamente.');
+
+            return Excel::download(new AllClientsExport($clients), $filename);
+        } catch (\Throwable $e) {
+            Log::error('Error al exportar clientes (' . $logAction . ')', [
+                'user_id' => Auth::id(),
+                'apply_filters' => $applyFilters,
+                'search' => $this->search,
+                'city_filter' => $this->cityFilter,
+                'created_from_filter' => $this->createdFromFilter,
+                'created_to_filter' => $this->createdToFilter,
+                'create_mode_filter' => $this->createModeFilter,
+                'assigned_advisor_filter' => $this->assignedAdvisorFilter,
+                'created_by_filter' => $this->createdByFilter,
+                'error' => $e->getMessage(),
+            ]);
+
+            $this->error('Error al exportar clientes: ' . $e->getMessage());
+            return null;
+        }
     }
 }
