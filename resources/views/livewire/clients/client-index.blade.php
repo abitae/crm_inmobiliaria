@@ -96,7 +96,7 @@
             <div
                 class="overflow-x-auto"
                 wire:loading.class="opacity-60"
-                wire:target="search,cityFilter,createdFromFilter,createdToFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters"
+                wire:target="search,cityFilter,createdFromFilter,createdToFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters,openEditModal,openChangeAdvisorModal,saveEditClient,saveAdvisorAssignment,openReleaseModal,confirmReleaseClient"
             >
                 <table class="min-w-full divide-y divide-gray-200 text-xs">
                     <thead class="bg-gray-50">
@@ -164,17 +164,37 @@
                                     @endif
                                 </td>
                                 <td class="px-2 py-2 whitespace-nowrap">
-                                    @can('edit_clients')
-                                        <flux:button
-                                            size="xs"
-                                            variant="outline"
-                                            icon="pencil-square"
-                                            href="{{ route('clients.edit', $client->id) }}"
-                                            wire:navigate
-                                        >
-                                            Editar
-                                        </flux:button>
-                                    @endcan
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        @can('edit_clients')
+                                            <flux:button
+                                                size="xs"
+                                                variant="outline"
+                                                icon="pencil-square"
+                                                wire:click="openEditModal({{ $client->id }})"
+                                            >
+                                                Editar
+                                            </flux:button>
+                                            <flux:button
+                                                size="xs"
+                                                variant="outline"
+                                                icon="users"
+                                                wire:click="openChangeAdvisorModal({{ $client->id }})"
+                                            >
+                                                Asesor
+                                            </flux:button>
+                                        @endcan
+                                        @can('delete_clients')
+                                            <flux:button
+                                                size="xs"
+                                                variant="outline"
+                                                color="danger"
+                                                icon="lock-open"
+                                                wire:click="openReleaseModal({{ $client->id }})"
+                                            >
+                                                Liberar
+                                            </flux:button>
+                                        @endcan
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -193,7 +213,7 @@
             <div
                 class="px-2 py-1 text-[11px] text-gray-500"
                 wire:loading
-                wire:target="search,cityFilter,createdFromFilter,createdToFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters"
+                wire:target="search,cityFilter,createdFromFilter,createdToFilter,createModeFilter,assignedAdvisorFilter,createdByFilter,clearFilters,openEditModal,openChangeAdvisorModal,saveEditClient,saveAdvisorAssignment,openReleaseModal,confirmReleaseClient"
             >
                 Buscando...
             </div>
@@ -286,6 +306,163 @@
                 >
                     <span wire:loading.remove wire:target="processImport">Procesar archivo</span>
                     <span wire:loading wire:target="processImport">Procesando...</span>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal editar cliente -->
+    <flux:modal wire:model="showEditModal" class="max-h-[90vh]" size="xl">
+        <div class="flex max-h-[inherit] flex-col p-4">
+            <h3 class="mb-1 text-lg font-semibold text-gray-900">Editar cliente</h3>
+            <p class="mb-4 text-sm text-gray-600">Actualiza los datos del cliente y el asesor asignado.</p>
+            @if ($errors->any())
+                <div class="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                    <ul class="list-disc space-y-0.5 pl-4">
+                        @foreach (array_unique($errors->all()) as $message)
+                            <li>{{ $message }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                <div>
+                    <flux:radio.group wire:model.live="create_mode" label="Modo de alta" size="xs">
+                        <flux:radio value="dni" label="Por DNI" />
+                        <flux:radio value="phone" label="Por teléfono" />
+                    </flux:radio.group>
+                </div>
+                @if ($create_mode === 'dni')
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <flux:select wire:model.live="document_type" label="Tipo de documento" size="xs">
+                            @foreach ($documentTypes as $value => $label)
+                                <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
+                        <flux:input
+                            wire:model.live="document_number"
+                            label="Número de documento"
+                            size="xs"
+                            placeholder="Número"
+                        />
+                    </div>
+                @endif
+                <flux:input wire:model="name" label="Nombre completo" size="xs" required />
+                <flux:input wire:model="phone" label="Teléfono" size="xs" mask="999999999" placeholder="Ej: 999999999" />
+                <flux:input wire:model.live="birth_date" label="Fecha de nacimiento" type="date" size="xs" />
+                <div>
+                    <flux:label class="text-xs">Dirección</flux:label>
+                    <flux:textarea wire:model="address" rows="2" placeholder="Dirección" size="xs" class="mt-0.5" />
+                </div>
+                <flux:select wire:model="city_id" label="Ciudad" size="xs">
+                    <option value="">Seleccione ciudad</option>
+                    @foreach ($cities as $city)
+                        <option value="{{ $city->id }}">{{ $city->name }}</option>
+                    @endforeach
+                </flux:select>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <flux:select wire:model="client_type" label="Tipo de cliente" size="xs">
+                        @foreach ($clientTypes as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:select wire:model="source" label="Fuente" size="xs">
+                        @foreach ($sources as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:select wire:model="status" label="Estado" size="xs">
+                        @foreach ($statuses as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </flux:select>
+                    <flux:input wire:model="score" label="Score (0-100)" type="number" size="xs" min="0" max="100" />
+                </div>
+                <div>
+                    <flux:label class="text-xs">Notas</flux:label>
+                    <flux:textarea wire:model="notes" rows="2" placeholder="Notas adicionales" size="xs" class="mt-0.5" />
+                </div>
+                <flux:select wire:model="assigned_advisor_id" label="Asesor asignado" size="xs">
+                    <option value="">Sin asignar</option>
+                    @foreach ($advisors as $advisor)
+                        <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
+                    @endforeach
+                </flux:select>
+            </div>
+            <div class="mt-4 flex justify-end gap-2 border-t border-gray-100 pt-3">
+                <flux:button variant="outline" size="xs" wire:click="closeEditModal">Cancelar</flux:button>
+                <flux:button
+                    color="primary"
+                    size="xs"
+                    wire:click="saveEditClient"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50"
+                >
+                    <span wire:loading.remove wire:target="saveEditClient">Guardar cambios</span>
+                    <span wire:loading wire:target="saveEditClient">Guardando...</span>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal cambiar asesor -->
+    <flux:modal wire:model="showAdvisorModal" size="md">
+        <div class="p-4">
+            <h3 class="mb-1 text-lg font-semibold text-gray-900">Cambiar asesor asignado</h3>
+            <p class="mb-4 text-sm text-gray-600">
+                Cliente: <span class="font-medium text-gray-900">{{ $advisorModalClientName }}</span>
+            </p>
+            <flux:select wire:model="advisorModalAssignedId" label="Asesor asignado" size="xs">
+                <option value="">Sin asignar</option>
+                @foreach ($advisors as $advisor)
+                    <option value="{{ $advisor->id }}">{{ $advisor->name }}</option>
+                @endforeach
+            </flux:select>
+            @error('advisorModalAssignedId')
+                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+            <div class="mt-4 flex justify-end gap-2 border-t border-gray-100 pt-3">
+                <flux:button variant="outline" size="xs" wire:click="closeAdvisorModal">Cancelar</flux:button>
+                <flux:button
+                    color="primary"
+                    size="xs"
+                    wire:click="saveAdvisorAssignment"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50"
+                >
+                    <span wire:loading.remove wire:target="saveAdvisorAssignment">Guardar</span>
+                    <span wire:loading wire:target="saveAdvisorAssignment">Guardando...</span>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    <!-- Modal confirmar liberar cliente -->
+    <flux:modal wire:model="showReleaseModal" size="md">
+        <div class="p-4">
+            <h3 class="mb-1 text-lg font-semibold text-gray-900">Liberar cliente</h3>
+            <p class="text-sm text-gray-600">
+                Vas a eliminar de forma lógica al cliente
+                <span class="font-semibold text-gray-900">{{ $releaseClientName }}</span>
+                (ID {{ $releaseClientId }}). Dejará de aparecer en los listados habituales. Esta acción requiere tu confirmación.
+            </p>
+            <p class="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                Si no estás seguro, pulsa Cancelar. Para continuar, pulsa Liberar definitivamente.
+            </p>
+            <div class="mt-4 flex justify-end gap-2 border-t border-gray-100 pt-3">
+                <flux:button variant="outline" size="xs" icon="x-mark" wire:click="closeReleaseModal">
+                    Cancelar
+                </flux:button>
+                <flux:button
+                    size="xs"
+                    color="danger"
+                    icon="lock-open"
+                    wire:click="confirmReleaseClient"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50"
+                >
+                    <span wire:loading.remove wire:target="confirmReleaseClient">Liberar definitivamente</span>
+                    <span wire:loading wire:target="confirmReleaseClient">Liberando...</span>
                 </flux:button>
             </div>
         </div>

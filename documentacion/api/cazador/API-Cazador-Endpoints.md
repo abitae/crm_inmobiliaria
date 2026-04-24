@@ -351,16 +351,29 @@ Valida los datos del formulario de cliente **sin crear** el cliente. Pensado par
 }
 ```
 
-**Respuesta 200 (inválido):** Se devuelve 200 con `valid: false` y los errores (y opcionalmente quién tiene el teléfono/documento si ya existe).
+**Respuesta 200 (inválido):** Se devuelve 200 con `valid: false` y los errores. Si el conflicto es por teléfono o DNI ya existente, `message` y `duplicate_owner` describen al **cliente** ya registrado (nombre y fecha de alta).
+
+- `duplicate_owner.client_name`, `duplicate_owner.client_id`, `duplicate_owner.registered_at` (ISO8601 en zona `app.timezone`, p. ej. `America/Lima`).
+- `duplicate_owner.field`: `phone` o `document_number`.
+- Compatibilidad: si existe usuario creador o asesor asociado, también se envían `owner_name`, `owner_user_id` y los alias legacy `name`, `user_id` (mismo significado que `owner_*`).
 
 ```json
 {
   "success": true,
-  "message": "Telefono registrado por \"Ana López\"",
+  "message": "Este teléfono ya está registrado a nombre de «María García» desde el 15/03/2024 10:30.",
   "data": {
     "valid": false,
     "errors": { "phone": ["El teléfono ya está en uso."] },
-    "duplicate_owner": { "name": "Ana López", "user_id": 3, "client_id": 10, "field": "phone" }
+    "duplicate_owner": {
+      "client_id": 10,
+      "client_name": "María García",
+      "registered_at": "2024-03-15T10:30:00-05:00",
+      "field": "phone",
+      "owner_name": "Ana López",
+      "owner_user_id": 3,
+      "name": "Ana López",
+      "user_id": 3
+    }
   }
 }
 ```
@@ -458,20 +471,26 @@ Crea un cliente asignado al cazador autenticado (`assigned_advisor_id` y `create
 }
 ```
 
-**Respuesta 422 (validación – duplicado):** Si el teléfono o el documento ya existen, se incluye información del titular:
+**Respuesta 422 (validación – duplicado):** Si el teléfono o el documento ya existen, `message` resume en una sola frase el nombre del **cliente** duplicado y la fecha de registro. Los detalles estructurados van en `errors.duplicate_owner` (el objeto `errors` de nivel superior agrupa las claves de validación de Laravel bajo `errors` y el bloque `duplicate_owner`).
 
 ```json
 {
   "success": false,
-  "message": "Telefono registrado por \"Ana López\"",
+  "message": "Este teléfono ya está registrado a nombre de «María García» desde el 15/03/2024 10:30.",
   "errors": {
-    "phone": ["El teléfono ya está en uso."]
-  },
-  "duplicate_owner": {
-    "name": "Ana López",
-    "user_id": 3,
-    "client_id": 10,
-    "field": "phone"
+    "errors": {
+      "phone": ["El teléfono ya está en uso."]
+    },
+    "duplicate_owner": {
+      "client_id": 10,
+      "client_name": "María García",
+      "registered_at": "2024-03-15T10:30:00-05:00",
+      "field": "phone",
+      "owner_name": "Ana López",
+      "owner_user_id": 3,
+      "name": "Ana López",
+      "user_id": 3
+    }
   }
 }
 ```
@@ -525,7 +544,7 @@ Crea y/o actualiza varios clientes en una sola petición. Cada ítem del array p
       { "id": 5, "name": "...", "assigned_advisor_id": 2, ... }
     ],
     "errors": [
-      { "index": 2, "errors": { "phone": ["El teléfono ya está en uso."] }, "duplicate_owner": { ... }, "message": "..." }
+      { "index": 2, "errors": { "phone": ["El teléfono ya está en uso."] }, "duplicate_owner": { "client_id": 10, "client_name": "María García", "registered_at": "2024-03-15T10:30:00-05:00", "field": "phone" }, "message": "Este teléfono ya está registrado a nombre de «María García» desde el 15/03/2024 10:30." }
     ]
   }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Datero;
 
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
+use App\Traits\ResolvesDuplicateClientInfo;
 use App\Models\Client;
 use App\Services\Clients\ClientServiceDatero;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ use Illuminate\Validation\ValidationException;
 class ClientController extends Controller
 {
     use ApiResponse;
+    use ResolvesDuplicateClientInfo;
 
     protected ClientServiceDatero $clientService;
 
@@ -323,62 +325,6 @@ class ClientController extends Controller
         } catch (\Exception $e) {
             return $this->serverErrorResponse($e, 'Error al obtener las opciones');
         }
-    }
-
-    private function getDuplicateOwnerInfo(?string $phone, ?string $documentNumber): ?array
-    {
-        $normalizedPhone = $phone ? preg_replace('/[^0-9]/', '', (string) $phone) : null;
-        $normalizedDocument = $documentNumber ? trim((string) $documentNumber) : null;
-
-        if ($normalizedDocument !== null && $normalizedDocument !== '') {
-            if (preg_match('/^[0-9]+$/', $normalizedDocument)) {
-                $normalizedDocument = preg_replace('/[^0-9]/', '', $normalizedDocument);
-            } else {
-                $normalizedDocument = strtoupper(preg_replace('/\s+/', '', $normalizedDocument));
-            }
-        }
-
-        if (!$normalizedPhone && !$normalizedDocument) {
-            return null;
-        }
-
-        $client = Client::query()
-            ->where(function ($q) use ($normalizedPhone, $normalizedDocument) {
-                if ($normalizedPhone) {
-                    $q->orWhere('phone', $normalizedPhone);
-                }
-                if ($normalizedDocument) {
-                    $q->orWhere('document_number', $normalizedDocument);
-                }
-            })
-            ->with(['assignedAdvisor:id,name', 'createdBy:id,name'])
-            ->first();
-
-        if (!$client) {
-            return null;
-        }
-
-        $owner = $client->createdBy ?: $client->assignedAdvisor;
-        if (!$owner) {
-            return null;
-        }
-
-        $field = $normalizedPhone && $client->phone === $normalizedPhone ? 'phone' : 'document_number';
-
-        return [
-            'name' => $owner->name,
-            'user_id' => $owner->id,
-            'client_id' => $client->id,
-            'field' => $field,
-        ];
-    }
-
-    private function buildDuplicateMessage(array $duplicateOwner): string
-    {
-        $label = ($duplicateOwner['field'] ?? '') === 'phone' ? 'Telefono' : 'DNI';
-        $name = $duplicateOwner['name'] ?? 'Desconocido';
-
-        return $label . ' registrado por "' . $name . '"';
     }
 
     protected function formatPagination($paginator): array

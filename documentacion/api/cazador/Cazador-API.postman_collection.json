@@ -411,6 +411,7 @@
         {
           "name": "Validate client",
           "request": {
+            "description": "Si valid=false por teléfono/DNI duplicado: message incluye nombre del cliente y fecha de registro; duplicate_owner incluye client_name, registered_at (ISO8601), field, y opcionalmente owner_name/owner_user_id (alias legacy name/user_id).",
             "method": "POST",
             "header": [
               {

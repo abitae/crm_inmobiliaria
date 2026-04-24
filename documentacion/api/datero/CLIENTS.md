@@ -264,6 +264,8 @@ curl -X POST "https://tu-dominio.com/api/datero/clients" \
 }
 ```
 
+Si el error es por **teléfono o documento duplicado**, el cuerpo puede incluir el mismo patrón que la API Cazador: `message` con una sola frase (nombre del cliente ya registrado + fecha de registro en `d/m/Y H:i`) y, en creación, `errors.duplicate_owner` con `client_id`, `client_name`, `registered_at` (ISO8601), `field` (`phone` | `document_number`), más `owner_name` / `owner_user_id` y alias legacy `name` / `user_id` cuando exista usuario asociado.
+
 ---
 
 ### 4. Actualizar Cliente
