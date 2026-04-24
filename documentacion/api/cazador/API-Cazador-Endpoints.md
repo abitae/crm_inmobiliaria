@@ -8,7 +8,7 @@ Documentación de referencia de la API para la aplicación Cazador (vendedores/a
 
 | Concepto | Valor |
 |----------|--------|
-| **Base URL** | `{{base_url}}/api/cazador` (prueba . `https://v1.lotesenremate.pe/api/cazador`; produccion . `https://crm.lotesenremate.pe/api/cazador`) |
+| **Base URL** | `{{base_url}}/api/cazador` (ejemplo prueba: `https://v1.lotesenremate.pe/api/cazador`; producción: `https://crm.lotesenremate.pe/api/cazador`). Las mismas rutas están duplicadas bajo **`/api/v1/cazador`** si usas el prefijo versionado. |
 | **Autenticación** | JWT en header: `Authorization: Bearer <token>` |
 | **Content-Type** | `application/json` para bodies JSON |
 | **Middleware** | Rutas protegidas: `auth:api` + `cazador` (solo Admin, Líder, Cazador/vendedor) |
@@ -589,17 +589,85 @@ Actualiza un cliente. En la API Cazador **solo se puede cambiar el asesor asigna
 
 ### GET `/clients/export`
 
-Exporta los clientes del cazador a CSV. Query params de filtro iguales que GET `/clients` (search, status, type, source, create_type, etc.). Respuesta: contenido CSV con headers apropiados.
+Exporta los clientes del cazador a **CSV** (descarga de archivo). Mismos filtros que en listado, según implementación actual: `search`, `status`, `type` (tipo de cliente), `source`. No incluye `create_type` en el export del controlador.
+
+**Respuesta:** `Content-Type: text/csv` con columnas: `id`, `name`, `phone`, `status`, `client_type`, `source`, `document_number`.
 
 ---
 
 ### Actividades del cliente
 
-- **GET `/clients/{client}/activities`** — Lista actividades del cliente (paginada; query: per_page, status, activity_type, priority, fechas, search).
-- **POST `/clients/{client}/activities`** — Crea una actividad (body según ActivityService: title, activity_type, start_date, etc.).
-- **PUT/PATCH `/clients/{client}/activities/{activity}`** — Actualiza actividad (status, result, notes, start_date, assigned_to).
+Rutas bajo `/clients/{client}/...` donde `{client}` es el **ID numérico** del cliente. El cliente debe tener `assigned_advisor_id` igual al usuario autenticado.
 
-El `client` en la ruta es el ID del cliente; debe estar asignado al cazador.
+#### GET `/clients/{client}/activities`
+
+Lista paginada.
+
+| Query param | Descripción |
+|-------------|---------------|
+| per_page | Por página (default 15, max 100) |
+| page | Número de página |
+| status | Filtrar por estado de la actividad |
+| activity_type | Filtrar por tipo |
+| priority | Filtrar por prioridad |
+| start_date_from, start_date_to | Rango de fechas (fecha de inicio) |
+| search | Texto en título, descripción o notas |
+
+#### POST `/clients/{client}/activities`
+
+Crea una actividad. El controlador asigna `client_id` automáticamente. Por defecto el servicio aplica `status`: `programada`, `priority`: `media`, `created_by` / `updated_by`: usuario actual.
+
+**Body JSON (campos validados):**
+
+| Campo | Requerido | Descripción |
+|-------|-----------|-------------|
+| title | Sí | Título (max 255) |
+| activity_type | Sí | `llamada`, `reunion`, `visita`, `seguimiento`, `tarea` |
+| status | Sí* | `programada`, `en_progreso`, `completada`, `cancelada` (*si se omite, default `programada`) |
+| priority | Sí* | `baja`, `media`, `alta`, `urgente` (*si se omite, default `media`) |
+| start_date | Sí | Fecha/hora de inicio (formato date/datetime aceptado por Laravel) |
+| project_id | No | ID proyecto |
+| unit_id | No | ID unidad |
+| opportunity_id | No | ID oportunidad |
+| advisor_id | No | ID usuario asesor |
+| assigned_to | No | ID usuario asignado |
+| notes | No | Notas |
+| description | No | Descripción |
+| duration | No | Entero minutos (min 1) |
+| location | No | Ubicación (max 255) |
+| reminder_before | No | Recordatorio N minutos antes (min 1) |
+
+**Ejemplo mínimo:**
+
+```json
+{
+  "title": "Llamada de seguimiento",
+  "activity_type": "llamada",
+  "start_date": "2026-04-25 10:00:00"
+}
+```
+
+#### PUT / PATCH `/clients/{client}/activities/{activity}`
+
+Actualiza campos parciales:
+
+| Campo | Reglas |
+|-------|--------|
+| status | `programada`, `en_progreso`, `completada`, `cancelada` |
+| result | string opcional |
+| notes | string opcional |
+| start_date | date opcional |
+| assigned_to | ID usuario existente o null |
+
+**Ejemplo:**
+
+```json
+{
+  "status": "completada",
+  "result": "Cliente confirmó interés en visita",
+  "notes": "Reagendar para la próxima semana"
+}
+```
 
 ---
 
@@ -659,11 +727,15 @@ Prefijo: `/projects`. Acceso a lista completa de proyectos (no solo publicados).
 | GET | `/projects` | Lista proyectos (filtros, include) |
 | GET | `/projects/suggestions` | Sugerencias por texto (`q`, `limit`) |
 | GET | `/projects/{id}` | Detalle de proyecto |
-| GET | `/projects/{id}/units` | Unidades del proyecto |
+| GET | `/projects/{id}/units` | Unidades disponibles del proyecto (paginado) |
 
-**GET `/projects`** — Query: `per_page`, `search`, `project_type`, `lote_type`, `stage`, `legal_status`, `status`, `district`, `province`, `region`, `has_available_units`, `include`.
+**GET `/projects`** — Query: `per_page` (default 15, max 100), `search`, `project_type`, `lote_type`, `stage`, `legal_status`, `status`, `district`, `province`, `region`, `has_available_units` (boolean), `include` (`advisors`, `reservations`, separados por coma).
 
-**GET `/projects/{id}`** — Opcionales: `include_units`, `units_per_page`, `include`.
+**GET `/projects/suggestions`** — `q` (mín. 2 caracteres), `limit` (default 10, max 20).
+
+**GET `/projects/{id}`** — Query: `include_units` (default true), `units_per_page` (default 15, max 100; solo si `include_units` es true), `include` (`advisors`, `reservations`). La respuesta incluye `project` con unidades paginadas en `units` y `units_pagination` cuando aplica.
+
+**GET `/projects/{id}/units`** — Solo unidades con estado disponible. Query: `per_page` (default 15, max 100), `page`.
 
 ---
 
@@ -678,7 +750,36 @@ Prefijo: `/dateros`. Solo usuarios con acceso a API Cazador (Admin, Líder, Caza
 | GET | `/dateros/{id}` | Detalle de un datero |
 | PUT / PATCH | `/dateros/{id}` | Actualiza datero |
 
-**POST `/dateros`** — Body: `name`, `email`, `phone`, `dni`, `pin` (requeridos); `ocupacion`, `banco`, `cuenta_bancaria`, `cci_bancaria` (opcionales). El datero queda con `lider_id` = id del usuario que hace la petición.
+**POST `/dateros`** — Registra un usuario con rol Datero. Body JSON:
+
+| Campo | Requerido | Descripción |
+|-------|-----------|-------------|
+| name | Sí | Nombre completo |
+| email | Sí | Email único en `users` |
+| phone | Sí | Teléfono (max 20) |
+| dni | Sí | 8 dígitos numéricos, único |
+| pin | Sí | PIN 6 dígitos numéricos (se guarda como PIN y contraseña) |
+| ocupacion, banco, cuenta_bancaria, cci_bancaria | No | Opcionales |
+
+El datero queda con `lider_id` = ID del usuario autenticado.
+
+**Ejemplo:**
+
+```json
+{
+  "name": "Pedro Datero",
+  "email": "datero.ejemplo@mail.com",
+  "phone": "999888777",
+  "dni": "40123456",
+  "pin": "123456",
+  "ocupacion": "Independiente",
+  "banco": "BCP",
+  "cuenta_bancaria": "191-1234567890-1",
+  "cci_bancaria": "00219111234567890123"
+}
+```
+
+**PUT / PATCH `/dateros/{id}`** — Actualización parcial. Campos: `name`, `email`, `phone`, `dni`, `pin` o `password` (6 dígitos; ambos actualizan PIN+password), `ocupacion`, `banco`, `cuenta_bancaria`, `cci_bancaria`, `is_active` (boolean). Solo dateros cuyo `lider_id` coincide con el usuario autenticado.
 
 ---
 
@@ -688,13 +789,13 @@ Prefijo: `/dateros`. Solo usuarios con acceso a API Cazador (Admin, Líder, Caza
 |--------|------|-------------|------|
 | GET | `/dashboard/stats` | Estadísticas (clientes, dateros, proyectos, reservas) | JWT |
 
-**GET `/dashboard/stats`** — Query opcionales de fechas/filtros. Respuesta: objeto con métricas según rol. Cache típico: 60 s.
+**GET `/dashboard/stats`** — Sin query params en la implementación actual. Respuesta en `data`: contadores de `clients` (total, by_status, by_type), `dateros` (total, active, inactive), `projects` (total, with_available_units), `reservations` (total, by_status, by_payment_status). Para vendedores solo se consideran sus clientes/reservas y dateros bajo su `lider_id`; admin/líder ven ámbito global. Respuesta cacheada ~300 s por usuario.
 
 ---
 
 ## 7. Reservas (Reservations)
 
-Prefijo: `/reservations`. Si el usuario no es admin/líder, solo ve sus propias reservas.
+Prefijo: `/reservations`. Si el usuario no es admin/líder, solo ve sus propias reservas (`advisor_id` = usuario actual).
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
@@ -703,16 +804,54 @@ Prefijo: `/reservations`. Si el usuario no es admin/líder, solo ve sus propias 
 | POST | `/reservations` | Crea reserva (estado activa) |
 | POST | `/reservations/batch` | Crea reservas en lote |
 | GET | `/reservations/{id}` | Detalle |
-| PUT / PATCH | `/reservations/{id}` | Actualiza reserva activa |
+| PUT / PATCH | `/reservations/{id}` | Actualiza reserva **solo si status = activa** |
 | POST | `/reservations/{id}/confirm` | Confirma (sube comprobante, multipart) |
 | POST | `/reservations/{id}/cancel` | Cancela (body: cancel_note) |
-| POST | `/reservations/{id}/convert-to-sale` | Convierte a venta |
+| POST | `/reservations/{id}/convert-to-sale` | Convierte a venta (sin body) |
 
-**POST `/reservations`** — Body: `client_id`, `project_id`, `unit_id`, `reservation_amount` (requeridos); `payment_method`, `payment_reference`, `notes`, `terms_conditions` (opcionales). Se asigna `advisor_id` al usuario autenticado.
+**GET `/reservations`** — Query validados: `per_page` (1–100), `search` (min 2 caracteres si se envía), `include` (max 200; ej. `client,project,unit,advisor`), `status` (`activa`, `confirmada`, `cancelada`, `vencida`, `convertida_venta`), `payment_status` (`pendiente`, `pagado`, `parcial`), `project_id`, `client_id`, `advisor_id` (solo admin/líder suelen filtrar por otro asesor).
 
-**POST `/reservations/{id}/confirm`** — Multipart: `image` (file requerido); opcionales: `reservation_date`, `expiration_date`, `reservation_amount`, `payment_method`, `payment_status`, `payment_reference`.
+**GET `/reservations/export`** — Filtros query: `search`, `status`, `payment_status`, `project_id`, `client_id`. CSV con columnas de reserva (id, número, cliente, proyecto, unidad, estados, fechas, monto, etc. según implementación).
 
-**POST `/reservations/{id}/cancel`** — Body: `cancel_note` (string, min 10, max 500).
+**POST `/reservations`** — Body JSON:
+
+| Campo | Requerido | Descripción |
+|-------|-----------|-------------|
+| client_id | Sí | Debe existir en `clients` |
+| project_id | Sí | Debe existir |
+| unit_id | Sí | Unidad **disponible** y perteneciente al `project_id` |
+| reservation_amount | Sí | numérico ≥ 0 |
+| payment_method | No | string max 255 |
+| payment_reference | No | string max 255 |
+| notes | No | string |
+| terms_conditions | No | string |
+
+`advisor_id` se asigna al usuario autenticado.
+
+**Ejemplo:**
+
+```json
+{
+  "client_id": 1,
+  "project_id": 2,
+  "unit_id": 15,
+  "reservation_amount": 5000,
+  "payment_method": "Transferencia",
+  "payment_reference": "OP-2026-001",
+  "notes": "Cliente prioriza entrega 2027",
+  "terms_conditions": "Acepta condiciones estándar"
+}
+```
+
+**POST `/reservations/batch`** — Body: `{ "reservations": [ { ...mismos campos que POST /reservations... }, ... ] }`. Respuesta: `created` (array) y `errors` (array con `index` y `errors`).
+
+**PUT / PATCH `/reservations/{id}`** — Solo reserva en estado `activa`. Campos opcionales/sometimes según validación: `client_id`, `advisor_id`, `reservation_type` (`pre_reserva`, `reserva_firmada`, `reserva_confirmada`), `reservation_date`, `expiration_date` (debe ser posterior a `reservation_date` si ambos se envían), `reservation_amount`, `payment_method`, `payment_status`, `payment_reference`, `notes`, `terms_conditions`.
+
+**POST `/reservations/{id}/confirm`** — `multipart/form-data`: campo archivo **`image`** obligatorio (jpeg, png, jpg, gif, webp; max 10 MB). Opcionales como campos de formulario: `reservation_date`, `expiration_date`, `reservation_amount`, `payment_method`, `payment_status` (`pendiente`, `pagado`, `parcial`), `payment_reference`.
+
+**POST `/reservations/{id}/cancel`** — Body JSON: `cancel_note` (string, **min 10**, max 500).
+
+**POST `/reservations/{id}/convert-to-sale`** — Sin body. Solo si la reserva puede convertirse (p. ej. estado confirmada) y la unidad puede venderse.
 
 ---
 
@@ -720,9 +859,36 @@ Prefijo: `/reservations`. Si el usuario no es admin/líder, solo ve sus propias 
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
-| POST | `/documents/search` | Búsqueda en servicio externo de documentos | JWT |
+| POST | `/documents/search` | Consulta DNI/RUC en servicio externo (Facturalahoy) | JWT |
 
-Throttle: 30 req/min. La validación de datos (incl. DNI) se realiza en los controladores que crean/actualizan recursos (clientes, etc.), no en un endpoint separado de validación.
+Prefijo: `/documents`. Throttle: 30 req/min.
+
+**Body JSON:**
+
+| Campo | Requerido | Descripción |
+|-------|-----------|-------------|
+| document_type | Sí | `dni` o `ruc` (minúsculas en validación) |
+| document_number | Sí | Solo dígitos; **8** dígitos para DNI, **11** para RUC |
+
+**Ejemplo DNI:**
+
+```json
+{
+  "document_type": "dni",
+  "document_number": "40123456"
+}
+```
+
+**Ejemplo RUC:**
+
+```json
+{
+  "document_type": "ruc",
+  "document_number": "20123456789"
+}
+```
+
+Si el documento ya existe como cliente en el CRM, la API puede responder **409** con datos del asesor asignado (`client_registered`, `assigned_advisor`, etc.). Si la consulta externa falla, se devuelve error con el mensaje del proveedor.
 
 ---
 
@@ -732,8 +898,13 @@ Throttle: 30 req/min. La validación de datos (incl. DNI) se realiza en los cont
 |--------|------|-------------|------|
 | GET | `/sync` | Sincroniza cambios desde una fecha | JWT |
 
-**Query:** `since` (ej. `2026-01-01T00:00:00Z`).  
-**Respuesta:** `clients`, `reservations`, `projects`, `sync_timestamp`. Throttle: 30 req/min.
+**Query:** `since` — **obligatorio**. Fecha/hora parseable por Carbon (ej. `2026-01-01T00:00:00Z`, `2026-04-20 08:00:00`).
+
+**Ejemplo:** `GET /api/cazador/sync?since=2026-04-01T00:00:00-05:00`
+
+**Respuesta 200:** `data` incluye registros con `updated_at` posterior a `since`: `clients` (solo asignados al cazador si no es admin/líder), `reservations` (misma regla por `advisor_id`), `projects` (todos los actualizados) y `sync_timestamp` (ISO8601 del servidor).
+
+**Errores:** 422 si falta `since`. Throttle: 30 req/min.
 
 ---
 
@@ -743,7 +914,13 @@ Throttle: 30 req/min. La validación de datos (incl. DNI) se realiza en los cont
 |--------|------|-------------|------|
 | GET | `/reports/sales` | Reporte de ventas en CSV | JWT |
 
-**Query:** `date_from`, `date_to` (opcionales). Throttle: 30 req/min.
+**Query:** `date_from`, `date_to` (opcionales, formato fecha aceptado por la aplicación). Respuesta: descarga CSV. Throttle: 30 req/min.
+
+---
+
+## Colección Postman
+
+Se incluye el archivo importable **`Cazador-API.postman_collection.json`** (misma carpeta que este documento) con variables `base_url` y `token`, carpetas por módulo y ejemplos de body (JSON o form-data donde aplica). Tras **Login**, puedes copiar el `token` de la respuesta a la variable de colección o usar el script de prueba del request si está habilitado.
 
 ---
 

@@ -527,7 +527,6 @@ class ClientController extends Controller
             })
             ->with(['assignedAdvisor:id,name', 'createdBy:id,name'])
             ->first();
-
         if (!$client) {
             return null;
         }
